@@ -18,7 +18,7 @@
             <input type="hidden" name="entry_id" value="<?php t($_view['entry']['id']) ?>">
             <?php if (empty($_SESSION['auth']['user']['id'])) : ?>
             <div class="form-group mb-2">
-                <label>お名前 <span class="badge bg-danger">必須</span></label>
+                <label>お名前 <span class="badge text-bg-danger">必須</span></label>
                 <input type="text" name="name" value="<?php t($_view['comment']['name']) ?>" class="form-control">
             </div>
             <div class="form-group mb-2">
@@ -38,7 +38,7 @@
             </div>
             <?php endif ?>
             <div class="form-group mb-2">
-                <label>コメント内容 <span class="badge bg-danger">必須</span></label>
+                <label>コメント内容 <span class="badge text-bg-danger">必須</span></label>
                 <textarea name="message" rows="10" cols="50" class="form-control"><?php t($_view['comment']['message']) ?></textarea>
             </div>
             <div class="form-group mt-4">

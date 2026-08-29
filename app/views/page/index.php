@@ -7,7 +7,7 @@
         <?php if (!empty($_view['entry']['category_sets'])) : ?>
         <div class="category mb-4">
             <?php foreach ($_view['entry']['category_sets'] as $category_sets) : ?>
-            <span class="badge text-light bg-secondary"><?php h($category_sets['category_name']) ?></span>
+            <span class="badge text-bg-secondary"><?php h($category_sets['category_name']) ?></span>
             <?php endforeach ?>
         </div>
         <?php endif ?>

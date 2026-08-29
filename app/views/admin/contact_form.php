@@ -41,23 +41,23 @@
                                 <input type="text" size="30" value="<?php t($_view['contact']['created']) ?>" readonly class="form-control">
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">名前 <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">名前 <span class="badge text-bg-danger">必須</span></label>
                                 <input type="text" name="name" size="30" value="<?php t($_view['contact']['name']) ?>" class="form-control">
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">メールアドレス <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">メールアドレス <span class="badge text-bg-danger">必須</span></label>
                                 <input type="text" name="email" size="30" value="<?php t($_view['contact']['email']) ?>" class="form-control">
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">お問い合わせ件名 <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">お問い合わせ件名 <span class="badge text-bg-danger">必須</span></label>
                                 <input type="text" name="subject" size="30" value="<?php t($_view['contact']['subject']) ?>" class="form-control">
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">お問い合わせ内容 <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">お問い合わせ内容 <span class="badge text-bg-danger">必須</span></label>
                                 <textarea name="message" rows="10" cols="50" class="form-control"><?php t($_view['contact']['message']) ?></textarea>
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">状況 <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">状況 <span class="badge text-bg-danger">必須</span></label>
                                 <select name="status" class="form-select" style="width: 200px;">
                                     <?php foreach ($GLOBALS['config']['option']['contact']['status'] as $key => $value) : ?>
                                     <option value="<?php t($key) ?>"<?php $key == $_view['contact']['status'] ? e(' selected="selected"') : '' ?>><?php t($value) ?></option>
@@ -65,7 +65,7 @@
                                 </select>
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">メモ <span class="badge text-light bg-secondary" data-bs-toggle="tooltip" title="公開されないテキストです。">？</span></label>
+                                <label class="fw-bold">メモ <span class="badge text-bg-secondary" data-bs-toggle="tooltip" title="公開されないテキストです。">？</span></label>
                                 <textarea name="memo" rows="10" cols="50" class="form-control"><?php t($_view['contact']['memo']) ?></textarea>
                             </div>
                             <div class="form-group mt-4">

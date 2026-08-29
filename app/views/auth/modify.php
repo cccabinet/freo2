@@ -24,7 +24,7 @@
                 <form action="<?php t(MAIN_FILE) ?>/auth/modify" method="post" class="register validate">
                     <input type="hidden" name="_token" value="<?php t($_view['token']) ?>" class="token">
                     <div class="form-group mb-2">
-                        <label class="fw-bold">ユーザー名 <span class="badge bg-danger">必須</span></label>
+                        <label class="fw-bold">ユーザー名 <span class="badge text-bg-danger">必須</span></label>
                         <input type="text" name="username" size="30" value="<?php t($_view['user']['username']) ?>" class="form-control">
                     </div>
                     <div class="form-group mb-2">
@@ -40,7 +40,7 @@
                         <input type="text" name="name" size="30" value="<?php t($_view['user']['name']) ?>" class="form-control">
                     </div>
                     <div class="form-group mb-2">
-                        <label class="fw-bold">メールアドレス <span class="badge bg-danger">必須</span></label>
+                        <label class="fw-bold">メールアドレス <span class="badge text-bg-danger">必須</span></label>
                         <input type="text" name="email" size="30" value="<?php t($_view['user']['email']) ?>" class="form-control">
                     </div>
                     <div class="form-group mb-2">

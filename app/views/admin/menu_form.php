@@ -36,15 +36,15 @@
                         </div>
                         <div class="card-body">
                             <div class="form-group mb-2">
-                                <label class="fw-bold">タイトル <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">タイトル <span class="badge text-bg-danger">必須</span></label>
                                 <input type="text" name="title" size="30" value="<?php t($_view['menu']['title']) ?>" class="form-control">
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">URL <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">URL <span class="badge text-bg-danger">必須</span></label>
                                 <input type="text" name="url" size="30" value="<?php t($_view['menu']['url']) ?>" class="form-control">
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">有効 <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">有効 <span class="badge text-bg-danger">必須</span></label>
                                 <select name="enabled" class="form-select" style="width: 200px;">
                                     <?php foreach ($GLOBALS['config']['option']['menu']['enabled'] as $key => $value) : ?>
                                     <option value="<?php t($key) ?>"<?php $key == $_view['menu']['enabled'] ? e(' selected="selected"') : '' ?>><?php t($value) ?></option>
@@ -52,7 +52,7 @@
                                 </select>
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">メモ <span class="badge text-light bg-secondary" data-bs-toggle="tooltip" title="公開されないテキスト。">？</span></label>
+                                <label class="fw-bold">メモ <span class="badge text-bg-secondary" data-bs-toggle="tooltip" title="公開されないテキスト。">？</span></label>
                                 <textarea name="memo" rows="10" cols="50" class="form-control"><?php t($_view['menu']['memo']) ?></textarea>
                             </div>
                             <div class="form-group mt-4">

@@ -17,11 +17,11 @@
             <input type="hidden" name="_token" value="<?php t($_view['token']) ?>" class="token">
             <?php if (empty($_SESSION['auth']['user']['id'])) : ?>
             <div class="form-group mb-2">
-                <label>お名前 <span class="badge bg-danger">必須</span></label>
+                <label>お名前 <span class="badge text-bg-danger">必須</span></label>
                 <input type="text" name="name" value="<?php t($_view['contact']['name']) ?>" class="form-control">
             </div>
             <div class="form-group mb-2">
-                <label>メールアドレス <span class="badge bg-danger">必須</span></label>
+                <label>メールアドレス <span class="badge text-bg-danger">必須</span></label>
                 <input type="text" name="email" value="<?php t($_view['contact']['email']) ?>" class="form-control">
             </div>
             <?php else : ?>
@@ -33,11 +33,11 @@
             </div>
             <?php endif ?>
             <div class="form-group mb-2">
-                <label>お問い合わせ件名 <span class="badge bg-danger">必須</span></label>
+                <label>お問い合わせ件名 <span class="badge text-bg-danger">必須</span></label>
                 <input type="text" name="subject" value="<?php t($_view['contact']['subject']) ?>" class="form-control">
             </div>
             <div class="form-group mb-2">
-                <label>お問い合わせ内容 <span class="badge bg-danger">必須</span></label>
+                <label>お問い合わせ内容 <span class="badge text-bg-danger">必須</span></label>
                 <textarea name="message" rows="10" cols="50" class="form-control"><?php t($_view['contact']['message']) ?></textarea>
             </div>
             <div class="form-group mt-4">

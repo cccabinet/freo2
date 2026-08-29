@@ -36,15 +36,15 @@
                         </div>
                         <div class="card-body">
                             <div class="form-group mb-2">
-                                <label class="fw-bold">コード <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">コード <span class="badge text-bg-danger">必須</span></label>
                                 <input type="text" name="code" size="30" value="<?php t($_view['category']['code']) ?>" class="form-control">
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">名前 <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">名前 <span class="badge text-bg-danger">必須</span></label>
                                 <input type="text" name="name" size="30" value="<?php t($_view['category']['name']) ?>" class="form-control">
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">対象 <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">対象 <span class="badge text-bg-danger">必須</span></label>
                                 <select name="type_id" class="form-select" style="width: 200px;">
                                     <option value=""></option>
                                     <?php foreach ($_view['types'] as $type) : ?>
@@ -53,7 +53,7 @@
                                 </select>
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">メモ <span class="badge text-light bg-secondary" data-bs-toggle="tooltip" title="公開されないテキストです。">？</span></label>
+                                <label class="fw-bold">メモ <span class="badge text-bg-secondary" data-bs-toggle="tooltip" title="公開されないテキストです。">？</span></label>
                                 <textarea name="memo" rows="10" cols="50" class="form-control"><?php t($_view['category']['memo']) ?></textarea>
                             </div>
                             <div class="form-group mt-4">
