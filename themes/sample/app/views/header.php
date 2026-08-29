@@ -18,7 +18,7 @@
             <header class="navbar ms-3 pt-0 pb-1 mt-3 me-1">
                 <h1 class="my-1 my-md-0"><a href="<?php t(MAIN_FILE) ?>/"><?php h($GLOBALS['setting']['title']) ?></a></h1>
                 <button class="navbar-toggler position-absolute top-0 end-0 d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#globalMenu" aria-controls="globalMenu" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+                    <span class="navbar-toggler-icon" aria-hidden="true"></span>
                 </button>
             </header>
             <div class="container-fluid mb-4">

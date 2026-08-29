@@ -17,7 +17,7 @@
         <header class="navbar sticky-top flex-md-nowrap p-0 shadow-sm">
             <h1 class="navbar-brand col-md-3 col-lg-2 me-0 pt-4 pt-md-3 pb-2 ps-3 ps-md-0 text-center"><a href="<?php t(MAIN_FILE) ?>/admin/"><?php h($GLOBALS['setting']['admin_title'] ? $GLOBALS['setting']['admin_title'] : $GLOBALS['setting']['title']) ?></a></h1>
             <button class="navbar-toggler position-absolute top-0 end-0 mt-3 me-1 d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+                <span class="navbar-toggler-icon" aria-hidden="true"></span>
             </button>
             <div class="w-100 d-none d-md-block">
                 <span class="px-2 float-end">
