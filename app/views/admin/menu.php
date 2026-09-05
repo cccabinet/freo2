@@ -20,7 +20,7 @@
                 <p>公開ページに設置するリンクを管理します。</p>
                 <p><a href="<?php t(MAIN_FILE) ?>/admin/menu_form" class="btn btn-primary" role="button">メニュー登録</a></p>
                 <?php if (isset($_GET['ok'])) : ?>
-                <div class="alert alert-success">
+                <div class="alert alert-success" role="alert">
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
                     <?php if ($_GET['ok'] === 'post') : ?>
                     メニューを登録しました。
@@ -31,7 +31,7 @@
                     <?php endif ?>
                 </div>
                 <?php elseif (isset($_GET['warning'])) : ?>
-                <div class="alert alert-danger">
+                <div class="alert alert-danger" role="alert">
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
                     <?php if ($_GET['warning'] === 'delete') : ?>
                     削除対象が選択されていません。

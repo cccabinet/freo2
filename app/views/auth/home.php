@@ -11,13 +11,13 @@
             <div class="card-header heading"><?php h($_view['title']) ?></div>
             <div class="card-body">
                 <?php if (isset($_GET['verify']) && $_GET['verify'] === 'send') : ?>
-                <div class="alert alert-success">
+                <div class="alert alert-success" role="alert">
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
                     登録されたメールアドレスに、メールアドレスの存在確認が送信されました。
                 </div>
                 <?php endif ?>
                 <?php if (!$_view['_user']['email_verified']) : ?>
-                <div class="alert alert-warning">
+                <div class="alert alert-warning" role="alert">
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
                     <a href="<?php t(MAIN_FILE) ?>/auth/email_send">メールアドレスの存在を確認してください。</a>
                 </div>

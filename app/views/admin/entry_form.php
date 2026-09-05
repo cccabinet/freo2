@@ -37,7 +37,7 @@
                 <p><a href="#" class="close">閉じる</a></p>
             <?php else : ?>
                 <?php if (isset($_view['warnings'])) : ?>
-                <div class="alert alert-danger">
+                <div class="alert alert-danger" role="alert">
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
                     <?php foreach ($_view['warnings'] as $warning) : ?>
                     <?php h($warning) ?>
