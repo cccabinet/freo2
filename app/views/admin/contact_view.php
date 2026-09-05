@@ -51,7 +51,7 @@
                         コメント
                     </div>
                     <div class="card-body">
-                        <p><a href="<?php t(MAIN_FILE) ?>/admin/comment_form?contact_id=<?php t($_view['contact']['id']) ?>" class="btn btn-primary">コメント登録</a></p>
+                        <p><a href="<?php t(MAIN_FILE) ?>/admin/comment_form?contact_id=<?php t($_view['contact']['id']) ?>" class="btn btn-primary" role="button">コメント登録</a></p>
                         <?php if (!empty($_view['comments'])) : ?>
                         <div id="comment">
                             <?php foreach ($_view['comments'] as $comment) : ?>

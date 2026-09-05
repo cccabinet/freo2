@@ -18,7 +18,7 @@
             <div class="card-header heading"><?php h($_view['title']) ?></div>
             <div class="card-body">
                 <p>ユーザーの属性を管理します。</p>
-                <p><a href="<?php t(MAIN_FILE) ?>/admin/attribute_form" class="btn btn-primary">属性登録</a></p>
+                <p><a href="<?php t(MAIN_FILE) ?>/admin/attribute_form" class="btn btn-primary" role="button">属性登録</a></p>
                 <?php if (isset($_GET['ok'])) : ?>
                 <div class="alert alert-success">
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
@@ -61,7 +61,7 @@
                             <tr id="sort_<?php h($attribute['id']) ?>">
                                 <td><?php h(truncate($attribute['name'], 50)) ?></td>
                                 <td class="d-none d-md-table-cell"><span class="handle text-nowrap"><span class="handle text-nowrap"><svg class="bi flex-shrink-0 me-1 mb-1" width="16" height="16"><use xlink:href="#symbol-arrow-down-up"/></svg></span></span></td>
-                                <td><a href="<?php t(MAIN_FILE) ?>/admin/attribute_form?id=<?php t($attribute['id']) ?>" class="btn btn-primary btn-sm text-nowrap">編集</a></td>
+                                <td><a href="<?php t(MAIN_FILE) ?>/admin/attribute_form?id=<?php t($attribute['id']) ?>" class="btn btn-primary btn-sm text-nowrap" role="button">編集</a></td>
                             </tr>
                             <?php endforeach ?>
                         </tbody>

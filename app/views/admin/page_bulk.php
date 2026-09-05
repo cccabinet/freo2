@@ -23,7 +23,7 @@
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
                     一括削除対象が選択されていません。
                 </div>
-                <p><a href="<?php t(MAIN_FILE) ?>/admin/page" class="btn btn-secondary px-4">戻る</a></p>
+                <p><a href="<?php t(MAIN_FILE) ?>/admin/page" class="btn btn-secondary px-4" role="button">戻る</a></p>
             <?php else : ?>
                 <p>以下のページが削除されます。よろしければ削除ボタンを押してください。</p>
 
@@ -33,7 +33,7 @@
                     <input type="hidden" name="list[]" value="<?php t($entry_bulk) ?>">
                     <?php endforeach ?>
                     <div class="form-group my-4">
-                        <a href="<?php t(MAIN_FILE) ?>/admin/page" class="btn btn-secondary px-4">戻る</a>
+                        <a href="<?php t(MAIN_FILE) ?>/admin/page" class="btn btn-secondary px-4" role="button">戻る</a>
                         <button type="submit" class="btn btn-danger px-4">削除</button>
                     </div>
                 </form>

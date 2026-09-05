@@ -18,7 +18,7 @@
             <div class="card-header heading"><?php h($_view['title']) ?></div>
             <div class="card-body">
                 <p>時系列ではない記事を管理します。</p>
-                <p><a href="<?php t(MAIN_FILE) ?>/admin/page_form" class="btn btn-primary">ページ登録</a></p>
+                <p><a href="<?php t(MAIN_FILE) ?>/admin/page_form" class="btn btn-primary" role="button">ページ登録</a></p>
                 <?php if (isset($_GET['ok'])) : ?>
                 <div class="alert alert-success">
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
@@ -94,7 +94,7 @@
                                     <?php endforeach ?>
                                 </td>
                                 <?php endif ?>
-                                <td><a href="<?php t(MAIN_FILE) ?>/admin/page_form?id=<?php t($entry['id']) ?>" class="btn btn-primary btn-sm text-nowrap">編集</a></td>
+                                <td><a href="<?php t(MAIN_FILE) ?>/admin/page_form?id=<?php t($entry['id']) ?>" class="btn btn-primary btn-sm text-nowrap" role="button">編集</a></td>
                             </tr>
                             <?php endforeach ?>
                         </tbody>

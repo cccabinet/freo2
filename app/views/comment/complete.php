@@ -11,7 +11,7 @@
         </div>
         <?php endif ?>
 
-        <p><a href="<?php t(MAIN_FILE) ?><?php t($_view['entry']['type_code'] === 'page' ? '/page/' : '/' . $_view['entry']['type_code'] . '/detail/') ?><?php t($_view['entry']['code']) ?>" class="btn btn-secondary"><?php h($GLOBALS['string']['text_goto_entry']) ?></a></p>
+        <p><a href="<?php t(MAIN_FILE) ?><?php t($_view['entry']['type_code'] === 'page' ? '/page/' : '/' . $_view['entry']['type_code'] . '/detail/') ?><?php t($_view['entry']['code']) ?>" class="btn btn-secondary" role="button"><?php h($GLOBALS['string']['text_goto_entry']) ?></a></p>
     </div>
 
     <?php e($_view['widget_sets']['public_page']) ?>
