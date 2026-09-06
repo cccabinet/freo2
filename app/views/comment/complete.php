@@ -5,7 +5,7 @@
         <?php e($GLOBALS['setting']['text_comment_complete']) ?>
 
         <?php if ($GLOBALS['setting']['comment_use_approve']) : ?>
-        <div class="alert alert-warning" role="alert">
+        <div class="alert alert-warning">
             <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
             コメントは管理者の承認後に表示されます。
         </div>
