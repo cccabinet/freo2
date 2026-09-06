@@ -21,7 +21,7 @@
                 <dd class="col-sm-9"><?php h($_view['contact']['message']) ?></dd>
             </dl>
             <div class="form-group mt-4">
-                <a href="<?php t(MAIN_FILE) ?>/contact/?referer=preview" class="btn btn-secondary px-4" role="button"><?php h($GLOBALS['string']['button_contact_back']) ?></a>
+                <a href="<?php t(MAIN_FILE) ?>/contact/?referer=preview" class="btn btn-secondary px-4"><?php h($GLOBALS['string']['button_contact_back']) ?></a>
                 <button type="submit" class="btn btn-primary px-4"><?php h($GLOBALS['string']['button_contact']) ?></button>
             </div>
         </form>

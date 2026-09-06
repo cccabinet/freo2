@@ -57,7 +57,7 @@
                                 <input type="text" name="directory" size="30" value="<?php t($_GET['directory']) ?>" class="form-control">
                             </div>
                             <div class="form-group mt-4">
-                                <a href="<?php t(MAIN_FILE) ?>/admin/media?directory=<?php t($_GET['directory'] === '' ? '' : $_GET['directory']) ?><?php t(empty($_REQUEST['_type']) ? '' : '&_type=' . $_REQUEST['_type']) ?>" class="btn btn-secondary px-4" role="button">戻る</a>
+                                <a href="<?php t(MAIN_FILE) ?>/admin/media?directory=<?php t($_GET['directory'] === '' ? '' : $_GET['directory']) ?><?php t(empty($_REQUEST['_type']) ? '' : '&_type=' . $_REQUEST['_type']) ?>" class="btn btn-secondary px-4">戻る</a>
                                 <button type="submit" class="btn btn-primary px-4">登録</button>
                             </div>
                         </div>
@@ -78,7 +78,7 @@
                                 <input type="text" name="rename" size="30" value="<?php t($_GET['name']) ?>" class="form-control">
                             </div>
                             <div class="form-group mt-4">
-                                <a href="<?php t(MAIN_FILE) ?>/admin/media?directory=<?php t($_GET['directory'] === '' ? '' : $_GET['directory']) ?><?php t(empty($_REQUEST['_type']) ? '' : '&_type=' . $_REQUEST['_type']) ?>" class="btn btn-secondary px-4" role="button">戻る</a>
+                                <a href="<?php t(MAIN_FILE) ?>/admin/media?directory=<?php t($_GET['directory'] === '' ? '' : $_GET['directory']) ?><?php t(empty($_REQUEST['_type']) ? '' : '&_type=' . $_REQUEST['_type']) ?>" class="btn btn-secondary px-4">戻る</a>
                                 <button type="submit" class="btn btn-primary px-4">登録</button>
                             </div>
                         </div>

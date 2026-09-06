@@ -18,7 +18,7 @@
             <div class="card-header heading"><?php h($_view['title']) ?></div>
             <div class="card-body">
                 <p>エントリーの分類を管理します。</p>
-                <p><a href="<?php t(MAIN_FILE) ?>/admin/category_form" class="btn btn-primary" role="button">カテゴリー登録</a></p>
+                <p><a href="<?php t(MAIN_FILE) ?>/admin/category_form" class="btn btn-primary">カテゴリー登録</a></p>
                 <?php if (isset($_GET['ok'])) : ?>
                 <div class="alert alert-success" role="alert">
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
@@ -67,7 +67,7 @@
                                 <td class="d-none d-md-table-cell"><code class="text-dark"><?php h(truncate($category['code'], 50)) ?></code></td>
                                 <td><?php h(truncate($category['name'], 50)) ?></td>
                                 <td><span class="handle text-nowrap"><svg class="bi flex-shrink-0 me-1 mb-1" width="16" height="16"><use xlink:href="#symbol-arrow-down-up"/></svg></span></td>
-                                <td><a href="<?php t(MAIN_FILE) ?>/admin/category_form?id=<?php t($category['id']) ?>" class="btn btn-primary btn-sm text-nowrap" role="button">編集</a></td>
+                                <td><a href="<?php t(MAIN_FILE) ?>/admin/category_form?id=<?php t($category['id']) ?>" class="btn btn-primary btn-sm text-nowrap">編集</a></td>
                             </tr>
                             <?php endforeach ?>
                         </tbody>

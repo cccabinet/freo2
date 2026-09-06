@@ -18,7 +18,7 @@
             <div class="card-header heading"><?php h($_view['title']) ?></div>
             <div class="card-body">
                 <p>システムにログインできるユーザーを管理します。</p>
-                <p><a href="<?php t(MAIN_FILE) ?>/admin/user_form" class="btn btn-primary" role="button">ユーザー登録</a></p>
+                <p><a href="<?php t(MAIN_FILE) ?>/admin/user_form" class="btn btn-primary">ユーザー登録</a></p>
                 <?php if (isset($_GET['ok'])) : ?>
                 <div class="alert alert-success" role="alert">
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
@@ -81,7 +81,7 @@
                                 <?php endif ?>
                             </td>
                             <td><span class="badge <?php t(app_badge('enabled', $user['enabled'])) ?>"><?php h($GLOBALS['config']['option']['user']['enabled'][$user['enabled']]) ?></span></td>
-                            <td><a href="<?php t(MAIN_FILE) ?>/admin/user_form?id=<?php t($user['id']) ?>" class="btn btn-primary btn-sm text-nowrap" role="button">編集</a></td>
+                            <td><a href="<?php t(MAIN_FILE) ?>/admin/user_form?id=<?php t($user['id']) ?>" class="btn btn-primary btn-sm text-nowrap">編集</a></td>
                         </tr>
                         <?php endforeach ?>
                     </tbody>
