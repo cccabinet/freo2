@@ -8,4 +8,4 @@ CREATE TABLE IF NOT EXISTS themes(
     enabled   TINYINT(1) UNSIGNED NOT NULL                COMMENT '有効',
     setting   TEXT                                        COMMENT '設定',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'テーマ';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT 'テーマ';

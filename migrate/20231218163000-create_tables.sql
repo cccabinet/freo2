@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users(
     token_code     VARCHAR(80)                                 COMMENT '認証コード',
     token_expire   DATETIME                                    COMMENT '認証期限',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'ユーザー';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT 'ユーザー';
 
 CREATE TABLE IF NOT EXISTS authorities(
     id       INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '代理キー',
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS authorities(
     power    INT UNSIGNED NOT NULL                COMMENT '権力',
     memo     TEXT                                 COMMENT 'メモ',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '権限';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT '権限';
 
 CREATE TABLE IF NOT EXISTS sessions(
     id       VARCHAR(255)        NOT NULL COMMENT 'セッションID',
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS sessions(
     keep     TINYINT(1) UNSIGNED NOT NULL COMMENT 'ログイン状態の保持',
     expire   DATETIME            NOT NULL COMMENT 'セッションの有効期限',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'セッション';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT 'セッション';
 
 CREATE TABLE IF NOT EXISTS types(
     id       INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '代理キー',
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS types(
     memo     TEXT                                 COMMENT 'メモ',
     sort     INT UNSIGNED NOT NULL                COMMENT '並び順',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '型';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT '型';
 
 CREATE TABLE IF NOT EXISTS entries(
     id           INT UNSIGNED        NOT NULL AUTO_INCREMENT COMMENT '代理キー',
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS entries(
     picture      VARCHAR(80)                                 COMMENT '画像',
     thumbnail    VARCHAR(80)                                 COMMENT 'サムネイル',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'エントリー';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT 'エントリー';
 
 CREATE TABLE IF NOT EXISTS categories(
     id       INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '代理キー',
@@ -89,12 +89,12 @@ CREATE TABLE IF NOT EXISTS categories(
     memo     TEXT                                 COMMENT 'メモ',
     sort     INT UNSIGNED NOT NULL                COMMENT '並び順',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'カテゴリー';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT 'カテゴリー';
 
 CREATE TABLE IF NOT EXISTS category_sets(
     category_id INT UNSIGNED NOT NULL COMMENT '外部キー カテゴリー',
     entry_id    INT UNSIGNED NOT NULL COMMENT '外部キー エントリー'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'カテゴリー ひも付け';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT 'カテゴリー ひも付け';
 
 CREATE TABLE IF NOT EXISTS fields(
     id         INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '代理キー',
@@ -109,13 +109,13 @@ CREATE TABLE IF NOT EXISTS fields(
     memo       TEXT                                 COMMENT 'メモ',
     sort       INT UNSIGNED NOT NULL                COMMENT '並び順',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'フィールド';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT 'フィールド';
 
 CREATE TABLE IF NOT EXISTS field_sets(
     field_id INT UNSIGNED NOT NULL COMMENT '外部キー フィールド',
     entry_id INT UNSIGNED          COMMENT '外部キー エントリー',
     text     TEXT                  COMMENT 'テキスト'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'フィールド ひも付け';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT 'フィールド ひも付け';
 
 CREATE TABLE IF NOT EXISTS attributes(
     id       INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '代理キー',
@@ -126,13 +126,13 @@ CREATE TABLE IF NOT EXISTS attributes(
     memo     TEXT                                 COMMENT 'メモ',
     sort     INT UNSIGNED NOT NULL                COMMENT '並び順',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '属性';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT '属性';
 
 CREATE TABLE IF NOT EXISTS attribute_sets(
     attribute_id INT UNSIGNED NOT NULL COMMENT '外部キー 属性',
     user_id      INT UNSIGNED          COMMENT '外部キー ユーザー',
     entry_id     INT UNSIGNED          COMMENT '外部キー エントリー'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '属性 ひも付け';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT '属性 ひも付け';
 
 CREATE TABLE IF NOT EXISTS menus(
     id       INT UNSIGNED        NOT NULL AUTO_INCREMENT COMMENT '代理キー',
@@ -145,7 +145,7 @@ CREATE TABLE IF NOT EXISTS menus(
     memo     TEXT                                        COMMENT 'メモ',
     sort     INT UNSIGNED        NOT NULL                COMMENT '並び順',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'メニュー';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT 'メニュー';
 
 CREATE TABLE IF NOT EXISTS widgets(
     id       INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '代理キー',
@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS widgets(
     memo     TEXT                                 COMMENT 'メモ',
     sort     INT UNSIGNED NOT NULL                COMMENT '並び順',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'ウィジェット';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT 'ウィジェット';
 
 CREATE TABLE IF NOT EXISTS contacts(
     id       INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '代理キー',
@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS contacts(
     status   VARCHAR(20)  NOT NULL                COMMENT '状況',
     memo     TEXT                                 COMMENT 'メモ',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'お問い合わせ';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT 'お問い合わせ';
 
 CREATE TABLE IF NOT EXISTS plugins(
     id        INT UNSIGNED        NOT NULL AUTO_INCREMENT COMMENT '代理キー',
@@ -183,13 +183,13 @@ CREATE TABLE IF NOT EXISTS plugins(
     version   VARCHAR(20)         NOT NULL                COMMENT 'バージョン',
     enabled   TINYINT(1) UNSIGNED NOT NULL                COMMENT '有効',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'プラグイン';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT 'プラグイン';
 
 CREATE TABLE IF NOT EXISTS settings(
     id       VARCHAR(255) NOT NULL COMMENT '設定ID',
     value    TEXT                  COMMENT '値',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '設定';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT '設定';
 
 CREATE TABLE IF NOT EXISTS logs(
     id       INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '代理キー',
@@ -204,4 +204,4 @@ CREATE TABLE IF NOT EXISTS logs(
     model    VARCHAR(80)                          COMMENT '対象モデル',
     exec     VARCHAR(80)                          COMMENT '操作内容',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '操作ログ';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT '操作ログ';
