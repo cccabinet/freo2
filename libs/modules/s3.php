@@ -182,8 +182,10 @@ function s3_remove($key)
                 'Delimiter' => '/',
             ]);
 
-            foreach ($result['Contents'] as $content) {
-                s3_remove($content['Key']);
+            if (!empty($result['Contents'])) {
+                foreach ($result['Contents'] as $content) {
+                    s3_remove($content['Key']);
+                }
             }
         } catch (S3Exception $e) {
             error('S3Exception: ' . $e->getMessage());

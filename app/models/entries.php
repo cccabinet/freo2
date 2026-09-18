@@ -956,7 +956,7 @@ function set_file_entries($entry_id, $files, $picture_files)
     ]);
     if (empty($entries)) {
         error('編集データが見つかりません。');
-    } else {
+    } elseif (!empty($entries[0]['pictures'])) {
         $pictures = explode("\n", $entries[0]['pictures']);
 
         foreach ($pictures as $picture) {
