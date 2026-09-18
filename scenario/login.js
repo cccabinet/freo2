@@ -1,32 +1,39 @@
 test.scenario = [
     // 初期ページからログインページに移動
     function() {
-        $('a:contains("ログイン")')[0].click();
+        test.assertExists('a:contains("ログイン")', '初期ページにログインへのリンクがありません。');
+        test.click('a:contains("ログイン")');
     },
     // 管理者用ページにログイン
     function() {
         var form = $('form:eq(0)');
 
+        test.assert(form.find('input[name="username"]').length === 1, 'ログインフォームが表示されていません。');
+
         form.find('input[name="username"]').val('admin');
         form.find('input[name="password"]').val('abcd1234');
-        form.find('button[type="submit"]').click();
+        test.click('form:eq(0) button[type="submit"]');
     },
-    // ホームに移動
+    // ログインできたことを確認してホームに移動
     function() {
-        $('a:contains("ホーム")')[0].click();
+        test.assertText('body', '管理者さん', 'ログインできていません。');
+        test.click('a:contains("ホーム")');
     },
     // 管理者用ページからログアウト
     function() {
-        $('a:contains("管理者さん")')[0].click();
+        test.assertExists('a:contains("管理者さん")', '管理者用ページが表示されていません。');
+
+        test.click('a:contains("管理者さん")');
         setTimeout(function() {
-            $('a:contains("ログアウト")')[0].click();
+            test.click('a:contains("ログアウト")');
         }, 500);
     },
-    // 初期ページに戻る
+    // ログアウトできたことを確認して初期ページに戻る
     function() {
         //test.saveScreenshot('login_' + test.date + test.time + '.png', function() {
-        //    $('a:contains("トップページへ戻る")')[0].click();
+        //    $('a:contains("ホームページへ戻る")')[0].click();
         //});
-        $('a:contains("ホームページへ戻る")')[0].click();
+        test.assertExists('input[name="username"]', 'ログアウトできていません。');
+        test.click('a:contains("ホームページへ戻る")');
     }
 ];
