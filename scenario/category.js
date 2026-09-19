@@ -1,77 +1,105 @@
+/* カテゴリー一覧から、コードで対象の行を取得する */
+var categoryRow = function(code) {
+    return $('table tbody tr').filter(function() {
+        return $(this).find('td code').text().trim() === code;
+    });
+};
+
 test.scenario = [
     // 初期ページからログインページに移動
     function() {
-        $('a:contains("ログイン")')[0].click();
+        test.assertExists('a:contains("ログイン")', '初期ページにログインへのリンクがありません。');
+        test.click('a:contains("ログイン")');
     },
     // 管理者用ページにログイン
     function() {
         var form = $('form:eq(0)');
 
+        test.assert(form.find('input[name="username"]').length === 1, 'ログインフォームが表示されていません。');
+
         form.find('input[name="username"]').val('admin');
         form.find('input[name="password"]').val('abcd1234');
-        form.find('button[type="submit"]').click();
+        test.click('form:eq(0) button[type="submit"]');
     },
-    // カテゴリー管理ページに移動
+    // ログインできたことを確認してカテゴリー管理ページに移動
     function() {
-        $('a:contains("カテゴリー管理")')[0].click();
+        test.assertText('body', '管理者さん', 'ログインできていません。');
+        test.click('a:contains("カテゴリー管理")');
     },
-    // カテゴリー登録ページに移動
+    // 前回のテストデータが残っていないことを確認してカテゴリー登録ページに移動
     function() {
-        $('a:contains("カテゴリー登録")')[0].click();
+        test.assert(categoryRow('test1').length === 0, 'カテゴリー test1 が残っています。前回のテストが中断した可能性があります。');
+        test.assert(categoryRow('test2').length === 0, 'カテゴリー test2 が残っています。前回のテストが中断した可能性があります。');
+        test.click('a:contains("カテゴリー登録")');
     },
     // カテゴリーを登録
     function() {
-        var form = $('form:eq(0)');
+        var form = $('form.register');
+
+        test.assert(form.find('input[name="code"]').length === 1, 'カテゴリー登録フォームが表示されていません。');
+        test.assert(form.find('select[name="type_id"] option[value="1"]').length === 1, '対象に指定する型(types.id = 1)がありません。');
 
         form.find('input[name="code"]').val('test1');
         form.find('input[name="name"]').val('テスト1');
         form.find('select[name="type_id"]').val('1');
-        form.find('button[type="submit"]').click();
+        test.click('form.register button[type="submit"]');
     },
-    // カテゴリー管理ページに移動
+    // 登録できたことを確認してカテゴリー編集ページに移動
     function() {
-        $('a:contains("カテゴリー管理")')[0].click();
-    },
-    // カテゴリー編集ページに移動
-    function() {
-        $('table:eq(0) a:eq(0)')[0].click();
+        test.assertText('div.alert-success', 'カテゴリーを登録しました。', 'カテゴリーを登録できていません。');
+        test.assert(categoryRow('test1').length === 1, '登録したカテゴリー test1 が一覧にありません。');
+        test.assertText(categoryRow('test1'), 'テスト1', '登録したカテゴリーの名前が「テスト1」になっていません。');
+
+        test.click(categoryRow('test1').find('a'), '一覧の test1 の編集リンクが見つかりません。');
     },
     // カテゴリーを編集
     function() {
-        var form = $('form:eq(0)');
+        var form = $('form.register');
+
+        test.assertValue('form.register input[name="code"]', 'test1', '編集対象が test1 ではありません。');
 
         form.find('input[name="code"]').val('test2');
         form.find('input[name="name"]').val('テスト2');
-        form.find('button[type="submit"]').click();
+        test.click('form.register button[type="submit"]');
     },
-    // カテゴリー管理ページに移動
+    // 編集できたことを確認してカテゴリー編集ページに移動
     function() {
-        $('a:contains("カテゴリー管理")')[0].click();
-    },
-    // カテゴリー編集ページに移動
-    function() {
-        $('table:eq(0) a:eq(0)')[0].click();
+        test.assertText('div.alert-success', 'カテゴリーを登録しました。', 'カテゴリーを編集できていません。');
+        test.assert(categoryRow('test2').length === 1, '編集したカテゴリー test2 が一覧にありません。');
+        test.assert(categoryRow('test1').length === 0, '編集前のカテゴリー test1 が一覧に残っています。');
+        test.assertText(categoryRow('test2'), 'テスト2', '編集したカテゴリーの名前が「テスト2」になっていません。');
+
+        test.click(categoryRow('test2').find('a'), '一覧の test2 の編集リンクが見つかりません。');
     },
     // カテゴリーを削除
     function() {
-        var form = $('form:eq(1)');
+        var form = $('form.delete');
+
+        test.assertValue('form.register input[name="code"]', 'test2', '削除対象が test2 ではありません。');
+        test.assert(form.length === 1, '削除フォームが表示されていません。');
 
         form.off('submit');
-        form.find('button[type="submit"]').click();
+        test.click('form.delete button[type="submit"]');
     },
-    // ホームに移動
+    // 削除できたことを確認してホームに移動
     function() {
-        $('a:contains("ホーム")')[0].click();
+        test.assertText('div.alert-success', 'カテゴリーを削除しました。', 'カテゴリーを削除できていません。');
+        test.assert(categoryRow('test2').length === 0, '削除したカテゴリー test2 が一覧に残っています。');
+
+        test.click('a:contains("ホーム")');
     },
     // 管理者用ページからログアウト
     function() {
-        $('a:contains("管理者さん")')[0].click();
+        test.assertExists('a:contains("管理者さん")', '管理者用ページが表示されていません。');
+
+        test.click('a:contains("管理者さん")');
         setTimeout(function() {
-            $('a:contains("ログアウト")')[0].click();
+            test.click('a:contains("ログアウト")');
         }, 500);
     },
-    // 初期ページに戻る
+    // ログアウトできたことを確認して初期ページに戻る
     function() {
-        $('a:contains("ホームページへ戻る")')[0].click();
+        test.assertExists('input[name="username"]', 'ログアウトできていません。');
+        test.click('a:contains("ホームページへ戻る")');
     }
 ];

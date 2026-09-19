@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title><?php isset($_view['title']) ? h($_view['title'] . ' | ') : '' ?><?php h($GLOBALS['setting']['title']) ?></title>
         <meta name="description" content="<?php t($GLOBALS['setting']['description']) ?>">
-        <?php e($_view['widget_sets']['public_initial']) ?>
+        <?php isset($_view['widget_sets']['public_initial']) ? e($_view['widget_sets']['public_initial']) : '' ?>
         <link rel="alternate" href="<?php h($GLOBALS['config']['http_url']) ?>/entry/feed" type="application/rss+xml" title="RSS">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
         <link rel="stylesheet" href="<?php t($GLOBALS['config']['http_path']) ?><?php t(loader_css('common.css')) ?>">
@@ -22,18 +22,18 @@
                 <nav id="globalMenu" class="collapse d-md-block mt-2">
                     <h2 class="d-block d-md-none"><?php h($GLOBALS['string']['heading_menu']) ?></h2>
                     <ul class="list-group list-group-horizontal-md mb-0">
-                        <?php foreach ($_view['menus'] as $menu) : ?>
+                        <?php if (!empty($_view['menus'])) : foreach ($_view['menus'] as $menu) : ?>
                         <li class="list-group-item border-0 p-0 ms-md-4 mb-1 mb-md-0"><a href="<?php h($menu['url']) ?>"><?php h($menu['title']) ?></a></li>
-                        <?php endforeach ?>
-                        <?php foreach ($GLOBALS['menu_contents']['public']['home'] as $work_key => $work_value) : if ($work_value['show']) : ?>
+                        <?php endforeach; endif ?>
+                        <?php if (!empty($GLOBALS['menu_contents'])) : foreach ($GLOBALS['menu_contents']['public']['home'] as $work_key => $work_value) : if ($work_value['show']) : ?>
                         <li class="list-group-item border-0 p-0 ms-md-4 mb-1 mb-md-0">
                             <a class="<?php if (preg_match($work_value['active'], $_REQUEST['_work'])) : ?>fw-bold<?php endif ?>" href="<?php t(MAIN_FILE . $work_value['link']) ?>">
                                 <?php h($work_value['name']) ?>
                             </a>
                         </li>
-                        <?php endif; endforeach ?>
+                        <?php endif; endforeach; endif ?>
                     </ul>
-                    <?php e($_view['widget_sets']['public_menu']) ?>
+                    <?php isset($_view['widget_sets']['public_menu']) ? e($_view['widget_sets']['public_menu']) : '' ?>
                 </nav>
             </div>
         </header>
