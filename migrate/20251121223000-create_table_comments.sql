@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS comments(
     message    TEXT                NOT NULL                COMMENT 'コメント内容',
     memo       TEXT                                        COMMENT 'メモ',
     PRIMARY KEY(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'コメント';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT 'コメント';
 
 ALTER TABLE entries ADD comment VARCHAR(20) NOT NULL COMMENT 'コメントの受付' AFTER thumbnail;
 UPDATE entries SET comment = 'closed';
