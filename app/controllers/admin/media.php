@@ -1,6 +1,7 @@
 <?php
 
 import('app/services/storage.php');
+import('app/services/media.php');
 
 // ディレクトリを取得
 if (!isset($_GET['directory'])) {
@@ -36,6 +37,9 @@ if ($GLOBALS['authority']['power'] == 3 && $_GET['directory'] === '') {
 
 // メディアを取得
 $_view['medias'] = service_storage_list($GLOBALS['config']['file_target']['media'] . ($_GET['directory'] ? $_GET['directory'] . '/' : ''));
+
+// サムネイルを取得
+$_view['thumbnails'] = service_media_thumbnail_list($_GET['directory']);
 
 // タイトル
 $_view['title'] = 'メディア管理';

@@ -103,10 +103,11 @@ $GLOBALS['config']['storage_url'] = app_config('APP_STORAGE_URL', $GLOBALS['conf
 
 /* ファイルアップロード先 */
 $GLOBALS['config']['file_target'] = app_config('APP_FILE_TARGET', [
-    'entry' => 'files/entries/',
-    'field' => 'files/fields/',
-    'media' => 'files/medias/',
-    'temp'  => 'files/temps/',
+    'entry'     => 'files/entries/',
+    'field'     => 'files/fields/',
+    'media'     => 'files/medias/',
+    'temp'      => 'files/temps/',
+    'thumbnail' => 'files/thumbnails/',
 ]);
 
 /* ファイルアップロード許可 */
@@ -201,9 +202,9 @@ $GLOBALS['config']['file_dummy'] = app_config('APP_FILE_DUMMY', [
     'image' => 'img/admin/no_file.png',
 ]);
 
-/* 画像リサイズ時のサイズ */
-$GLOBALS['config']['resize_width'] = app_config('APP_RESIZE_WIDTH', 100);
-$GLOBALS['config']['resize_height'] = app_config('APP_RESIZE_HEIGHT', 80);
+/* 画像リサイズ時のサイズ（メディアのサムネイルに使用。縦横比を保ってこの範囲に収める） */
+$GLOBALS['config']['resize_width'] = app_config('APP_RESIZE_WIDTH', 400);
+$GLOBALS['config']['resize_height'] = app_config('APP_RESIZE_HEIGHT', 400);
 
 /* 画像リサイズ時のJpeg画質 */
 $GLOBALS['config']['resize_quality'] = app_config('APP_RESIZE_QUALITY', 85);

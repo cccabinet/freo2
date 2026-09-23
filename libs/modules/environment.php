@@ -409,5 +409,5 @@ function environment_useragent($useragent)
         $environment = 'Unknown';
     }
 
-    return array($environment, $browser, $os);
+    return [$environment, $browser, $os];
 }

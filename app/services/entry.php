@@ -13,14 +13,8 @@ import('app/services/log.php');
  */
 function service_entry_select_published($type, $queries, $options = [])
 {
-    static $authority_power = null;
-    static $attributes = null;
-    if ($authority_power === null && isset($GLOBALS['authority']['power'])) {
-        $authority_power = $GLOBALS['authority']['power'];
-    }
-    if ($attributes === null && isset($GLOBALS['attributes'])) {
-        $attributes = $GLOBALS['attributes'];
-    }
+    $authority_power = isset($GLOBALS['authority']['power']) ? $GLOBALS['authority']['power'] : null;
+    $attributes      = isset($GLOBALS['attributes'])         ? $GLOBALS['attributes']         : null;
 
     // エントリーの絞り込み
     if (empty($queries['where'])) {

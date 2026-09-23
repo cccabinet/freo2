@@ -80,7 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $to      = $users[0]['email'];
             $subject = $GLOBALS['setting']['mail_password_subject'];
             $message = view('mail/password/send.php', true);
-            $headers = $GLOBALS['config']['mail_headers'];
+            $headers = [
+                'From' => $GLOBALS['setting']['mail_from'],
+            ];
 
             // メールを送信
             if (service_mail_send($to, $subject, $message, $headers) === false) {

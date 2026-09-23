@@ -1,6 +1,7 @@
 <?php
 
 import('app/services/storage.php');
+import('app/services/media.php');
 
 // ワンタイムトークン
 if (!token('check')) {
@@ -19,8 +20,16 @@ if (!isset($_GET['directory']) || !preg_match('/^[\w\-\/]+$/', $_GET['directory'
 if (!isset($_POST['directory']) || !preg_match('/^[\w\-\/]+$/', $_POST['directory'])) {
     $_POST['directory'] = '';
 }
-if (!isset($_POST['name']) || !preg_match('/^[\w\-\/\.]+$/', $_POST['name'])) {
+if (!isset($_POST['name']) || !service_media_name_valid($_POST['name'], true)) {
     $_POST['name'] = '';
+}
+if (!isset($_POST['medias']) || !is_array($_POST['medias'])) {
+    $_POST['medias'] = [];
+}
+foreach ($_POST['medias'] as $media) {
+    if (!service_media_name_valid($media)) {
+        error('名前の指定が不正です。');
+    }
 }
 
 $directory = $_GET['directory'];
@@ -28,6 +37,9 @@ $directory = $_GET['directory'];
 if (!empty($_POST['name'])) {
     // メディアを削除
     service_storage_remove($GLOBALS['config']['file_target']['media'] . ($_POST['directory'] ? $_POST['directory'] . '/' : '') . $_POST['name']);
+
+    // サムネイルを削除
+    service_media_thumbnail_remove(($_POST['directory'] ? $_POST['directory'] . '/' : '') . $_POST['name']);
 
     // リダイレクト
     redirect('/admin/media?ok=delete' . ($_POST['directory'] === '' ? '' : '&directory=' . $_POST['directory']) . (empty($_REQUEST['_type']) ? '' : '&_type=' . $_REQUEST['_type']));
@@ -38,6 +50,9 @@ if (!empty($_POST['name'])) {
     // メディアを削除
     foreach ($_POST['medias'] as $media) {
         service_storage_remove($GLOBALS['config']['file_target']['media'] . ($directory ? $directory . '/' : '') . $media);
+
+        // サムネイルを削除
+        service_media_thumbnail_remove(($directory ? $directory . '/' : '') . $media);
     }
 
     // リダイレクト

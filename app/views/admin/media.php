@@ -92,16 +92,24 @@
                                 <td><a href="<?php t(MAIN_FILE) ?>/admin/media_form?type=directory&amp;directory=<?php t($_view['current_dir']) ?>&amp;name=<?php t($media['name']) ?><?php t(empty($_REQUEST['_type']) ? '' : '&_type=' . $_REQUEST['_type']) ?>" class="btn btn-primary<?php t($_REQUEST['_type'] === 'iframe' ? ' btn-sm' : '') ?> btn-sm text-nowrap">編集</a></td>
                             </tr>
                             <?php else : ?>
+                            <?php $thumbnail_url = in_array($media['name'], $_view['thumbnails'], true) ? $GLOBALS['config']['storage_url'] . '/' . $GLOBALS['config']['file_target']['thumbnail'] . 'medias/' . ($_GET['directory'] ? $_GET['directory'] . '/' : '') . $media['name'] : null ?>
                             <tr>
                                 <td><input type="checkbox" name="medias[]" value="<?php t($media['name']) ?>"></td>
-                                <td><svg class="bi flex-shrink-0 me-1" width="16" height="16"><use xlink:href="#symbol-file-text"/></svg> <code class="text-dark"><?php h($media['name']) ?></code></td>
+                                <td>
+                                    <?php if ($thumbnail_url) : ?>
+                                    <img src="<?php t($thumbnail_url) ?>" alt="" loading="lazy" class="img-thumbnail me-1 align-middle" style="max-width: 48px; max-height: 24px;">
+                                    <?php else : ?>
+                                    <svg class="bi flex-shrink-0 me-1" width="16" height="16"><use xlink:href="#symbol-file-text"/></svg>
+                                    <?php endif ?>
+                                    <code class="text-dark"><?php h($media['name']) ?></code>
+                                </td>
                                 <?php if ($_REQUEST['_type'] !== 'iframe') : ?>
                                 <td class="d-none d-md-table-cell"><?php h(localdate('Y/m/d H:i:s', $media['modified'])) ?></td>
                                 <td class="d-none d-md-table-cell text-end"><?php h(app_filesize($media['size'])) ?></td>
                                 <?php endif ?>
                                 <td>
                                     <?php if ($_REQUEST['_type'] === 'iframe') : ?>
-                                    <button type="button" class="btn btn-primary btn-sm text-nowrap insert-media" data-url="<?php t($GLOBALS['config']['storage_url'] . '/' . $GLOBALS['config']['file_target']['media'] . ($_GET['directory'] ? $_GET['directory'] . '/' : '') . $media['name']) ?>" data-name="<?php t($media['name']) ?>">挿入</button>
+                                    <button type="button" class="btn btn-primary btn-sm text-nowrap insert-media" data-url="<?php t($GLOBALS['config']['storage_url'] . '/' . $GLOBALS['config']['file_target']['media'] . ($_GET['directory'] ? $_GET['directory'] . '/' : '') . $media['name']) ?>" data-name="<?php t($media['name']) ?>"<?php if ($thumbnail_url) : ?> data-thumbnail="<?php t($thumbnail_url) ?>"<?php endif ?>>挿入</button>
                                     <?php endif ?>
                                     <a href="<?php t(MAIN_FILE) ?>/admin/media_form?type=file&amp;directory=<?php t($_view['current_dir']) ?>&amp;name=<?php t($media['name']) ?><?php t(empty($_REQUEST['_type']) ? '' : '&_type=' . $_REQUEST['_type']) ?>" class="btn btn-primary<?php t($_REQUEST['_type'] === 'iframe' ? ' btn-sm' : '') ?> btn-sm text-nowrap">編集</a>
                                 </td>

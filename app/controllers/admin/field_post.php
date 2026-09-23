@@ -20,7 +20,6 @@ if (empty($_SESSION['post']['field']['id'])) {
     // フィールドを登録
     $resource = service_field_insert([
         'values' => [
-            'name'        => $_SESSION['post']['field']['name'],
             'type_id'     => $_SESSION['post']['field']['type_id'],
             'code'        => $_SESSION['post']['field']['code'],
             'name'        => $_SESSION['post']['field']['name'],
@@ -40,7 +39,6 @@ if (empty($_SESSION['post']['field']['id'])) {
     // フィールドを編集
     $resource = service_field_update([
         'set'   => [
-            'name'        => $_SESSION['post']['field']['name'],
             'type_id'     => $_SESSION['post']['field']['type_id'],
             'code'        => $_SESSION['post']['field']['code'],
             'name'        => $_SESSION['post']['field']['name'],

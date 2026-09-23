@@ -12,12 +12,12 @@ if (DEBUG_LEVEL) {
             // テスト開始
             if (isset($_GET['test_target']) && preg_match('/^[\w\-]+$/', $_GET['test_target'])) {
                 // 個別テスト
-                $_SESSION['test'] = array(
+                $_SESSION['test'] = [
                     'target'  => $_GET['test_target'],
                     'session' => 0,
                     'start'   => localdate(),
                     'bulk'    => false,
-                );
+                ];
             } else {
                 // 一括テスト
                 if (empty($_SESSION['test'])) {
@@ -26,7 +26,7 @@ if (DEBUG_LEVEL) {
                     $flag = false;
                 }
 
-                $target = null;
+                $targets = [];
                 if ($dh = opendir('scenario/')) {
                     while (($entry = readdir($dh)) !== false) {
                         if (!is_file('scenario/' . $entry)) {
@@ -34,19 +34,27 @@ if (DEBUG_LEVEL) {
                         }
 
                         if (preg_match('/^([\w\-]+)\.js$/', $entry, $matches)) {
-                            if (isset($_SESSION['test']) && $_SESSION['test']['target'] === $matches[1] && $flag === false) {
-                                $flag = true;
-                            } elseif ($flag === true) {
-                                $target = $matches[1];
-
-                                break;
-                            }
+                            $targets[] = $matches[1];
                         }
                     }
                     closedir($dh);
                 } else {
                     echo '<div class="error">テストシナリオ格納ディレクトリを開けません。</div>';
                     exit;
+                }
+
+                // readdir() の順は環境やファイルの増減で変わるので、名前順に並べる（/tool/test の一覧と同じ順序）
+                sort($targets);
+
+                $target = null;
+                foreach ($targets as $name) {
+                    if (isset($_SESSION['test']) && $_SESSION['test']['target'] === $name && $flag === false) {
+                        $flag = true;
+                    } elseif ($flag === true) {
+                        $target = $name;
+
+                        break;
+                    }
                 }
 
                 if ($target === null) {
@@ -64,12 +72,12 @@ if (DEBUG_LEVEL) {
                 }
 
                 if ($target !== null) {
-                    $_SESSION['test'] = array(
+                    $_SESSION['test'] = [
                         'target'  => $target,
                         'session' => 0,
                         'start'   => localdate(),
                         'bulk'    => true,
-                    );
+                    ];
                 }
             }
         } elseif ($_GET['test'] === 'end') {
@@ -84,6 +92,11 @@ if (DEBUG_LEVEL) {
 
     // 通常のページ表示以外ではテストを実行しない（iframe内やJSON応答を除外）
     if (isset($_REQUEST['_type']) && $_REQUEST['_type'] !== 'html') {
+        return;
+    }
+
+    // 404のページではテストを実行しない（app/views/404.php もヘッダー・フッターを読み込むため、ブラウザが自動で取得する /favicon.ico などでもステップ番号が進んでしまう）
+    if (http_response_code() === 404) {
         return;
     }
 

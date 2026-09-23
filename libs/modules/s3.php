@@ -115,11 +115,11 @@ function s3_put($key, $body = null)
         // do nothing.
     } else {
         try {
-            $result = $client->putObject(array(
+            $result = $client->putObject([
                 'Bucket' => $setting['bucket'],
                 'Key'    => $key,
                 'Body'   => $body,
-            ));
+            ]);
         } catch (S3Exception $e) {
             error('S3Exception: ' . $e->getMessage());
         } catch (Exception $e) {
@@ -147,11 +147,11 @@ function s3_copy($key, $source)
         // do nothing.
     } else {
         try {
-            $result = $client->copyObject(array(
+            $result = $client->copyObject([
                 'Bucket'     => $setting['bucket'],
                 'Key'        => $key,
                 'CopySource' => $setting['bucket'] . '/' . $source,
-            ));
+            ]);
         } catch (S3Exception $e) {
             error('S3Exception: ' . $e->getMessage());
         } catch (Exception $e) {
@@ -196,10 +196,10 @@ function s3_remove($key)
         $result = true;
     } else {
         try {
-            $result = $client->deleteObject(array(
+            $result = $client->deleteObject([
                 'Bucket' => $setting['bucket'],
                 'Key'    => $key,
-            ));
+            ]);
         } catch (S3Exception $e) {
             error('S3Exception: ' . $e->getMessage());
         } catch (Exception $e) {

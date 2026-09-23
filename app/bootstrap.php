@@ -132,7 +132,7 @@ function app_badge($key, $value)
  */
 function app_filesize($size)
 {
-    $units = array('B', 'KB', 'MB', 'GB', 'TB');
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
 
     $index = 0;
     while ($size >= 1024 && $index < count($units) - 1) {

@@ -1,6 +1,7 @@
 <?php
 
 import('app/services/storage.php');
+import('app/services/media.php');
 
 // フォワードを確認
 if (forward() === null) {
@@ -18,6 +19,10 @@ $directory = $_SESSION['post']['media']['directory'];
 if (isset($_SESSION['post']['media']['name']) && isset($_SESSION['post']['media']['rename'])) {
     // ファイルの名前を変更
     service_storage_rename($GLOBALS['config']['file_target']['media'] . ($directory ? $directory . '/' : '') . $_SESSION['post']['media']['rename'], $GLOBALS['config']['file_target']['media'] . ($directory ? $directory . '/' : '') . $_SESSION['post']['media']['name']);
+
+    // サムネイルを作り直す
+    service_media_thumbnail_remove(($directory ? $directory . '/' : '') . $_SESSION['post']['media']['name']);
+    service_media_thumbnail_create(($directory ? $directory . '/' : '') . $_SESSION['post']['media']['rename']);
 } elseif (isset($_SESSION['medias'])) {
     // ディレクトリを作成
     service_storage_put($GLOBALS['config']['file_target']['media'] . ($directory ? $directory . '/' : ''));
@@ -25,6 +30,10 @@ if (isset($_SESSION['post']['media']['name']) && isset($_SESSION['post']['media'
     // アップロードファイルを一時領域から移動
     foreach ($_SESSION['medias'] as $media) {
         service_storage_rename($GLOBALS['config']['file_target']['media'] . ($directory ? $directory . '/' : '') . $media, $GLOBALS['config']['file_target']['temp'] . session_id() . '_' . $media);
+
+        // サムネイルを作成
+        service_media_thumbnail_remove(($directory ? $directory . '/' : '') . $media);
+        service_media_thumbnail_create(($directory ? $directory . '/' : '') . $media);
     }
 
     // 古いファイルを削除
