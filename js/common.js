@@ -161,4 +161,89 @@ $(document).ready(function() {
         }
     });
 
+    /*
+     * ラベルとコントロールの関連付け
+     */
+    const nameCounts = {};
+
+    $('input, select, textarea').each(function(index) {
+      const $el = $(this);
+      
+      // 1. name属性がなければ既存のid、または fallback用の識別子を使用
+      let rawName = $el.attr('name');
+      if (!rawName) {
+        rawName = $el.attr('id') || `unnamed-field-${index}`;
+      }
+
+      // 2. 括弧のパターンに応じて綺麗に変換する
+      let baseName = rawName
+        .replace(/\[\]/g, '')      // 「[]」は削除
+        .replace(/\[/g, '-')       // 「[」を「-」に
+        .replace(/\]/g, '')        // 「]」を削除
+        .replace(/-+/g, '-')       // 「--」を「-」に
+        .replace(/-$/, '');        // 末尾の「-」を削除
+
+      let idName = baseName;
+
+      // 3. 重複カウントとID生成
+      const selector = $el.attr('name') 
+        ? `[name="${$.escapeSelector(rawName)}"]` 
+        : `[id="${$.escapeSelector(rawName)}"]`;
+
+      if ($(selector).length > 1 || !nameCounts[rawName]) {
+        if (!nameCounts[rawName]) {
+          nameCounts[rawName] = 1;
+        } else {
+          idName = `${baseName}-${nameCounts[rawName]}`;
+        }
+        nameCounts[rawName]++;
+      }
+
+      // 4. 対象のlabelを探す
+      let $label = $el.prev('label').length ? $el.prev('label') : $el.next('label');
+      
+      if (!$label.length) {
+        $label = $el.closest('label');
+      }
+      
+      if (!$label.length) {
+        $label = $el.parent().prev('label').length ? $el.parent().prev('label') : $el.parent().next('label');
+      }
+
+      if (!$label.length) {
+        $label = $el.closest('.form-group, .row, tr, td, dd, fieldset').find('label').first();
+      }
+
+      // 5. labelが見つかった場合のみ、idとforを付与する
+      if ($label.length) {
+        if (!$el.attr('id')) {
+          $el.attr('id', idName);
+        }
+        $label.attr('for', $el.attr('id'));
+      }
+    });
+
+    /*
+     * クラス名に応じた role 属性の自動付与
+     */
+    const roleMappings = [
+      { selector: 'a', className: 'btn', role: 'button' },
+      { selector: 'div', className: 'alert', role: 'alert' },
+      // 必要に応じて追加可能
+      // { selector: 'nav', className: 'pagination', role: 'navigation' },
+    ];
+
+    roleMappings.forEach(mapping => {
+      $(mapping.selector).each(function() {
+        const $el = $(this);
+        // 対象クラスそのもの、または「クラス名-」で始まるクラスを持っているか判定
+        const hasMatchClass = $el.hasClass(mapping.className) || 
+          Array.from(this.classList || []).some(c => c.startsWith(`${mapping.className}-`));
+
+        if (hasMatchClass && !$el.attr('role')) {
+          $el.attr('role', mapping.role);
+        }
+      });
+    });
+
 });
