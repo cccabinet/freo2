@@ -11,9 +11,11 @@ if (!isset($_GET['_test'])) {
 
 // ライブラリを読み込み
 model('categories.php');
+model('category_sets.php');
 
 // 既存データ削除
 db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'categories;');
+db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'category_sets;');
 
 // 正常データ
 $data_category = [
@@ -543,11 +545,75 @@ $inserted_id = $categories[0]['id'];
     test_equals('delete categories (physical)', count($categories), 0);
 }
 
+// 関連データの削除（複数件）テスト
+{
+    // データ（2件を登録し、それぞれにエントリーをひも付ける）
+    $associate_ids = [];
+    foreach (['test4', 'test5'] as $index => $code) {
+        $test_category = $data_category;
+        $test_category['code'] = $code;
+        $test_category['name'] = 'テスト' . ($index + 4);
+        $test_category['sort'] = $index + 4;
+
+        // 登録
+        $test_category = model('normalize_categories', $test_category);
+        $warnings      = model('validate_categories', $test_category);
+        if (empty($warnings)) {
+            model('insert_categories', [
+                'values' => $test_category,
+            ]);
+        } else {
+            debug($warnings);
+        }
+
+        $categories = model('select_categories', [
+            'select'   => 'id',
+            'order_by' => 'id DESC',
+            'limit'    => 1,
+        ]);
+        $associate_ids[] = intval($categories[0]['id']);
+    }
+
+    // 無関係なひも付け（2件のIDを区切り文字なしで連結した値。区切り文字が無いと IN(45) のようになり、これを削除してしまう）
+    $unrelated_id = intval(implode('', $associate_ids));
+
+    foreach (array_merge($associate_ids, [$unrelated_id]) as $category_id) {
+        model('insert_category_sets', [
+            'values' => [
+                'category_id' => $category_id,
+                'entry_id'    => 1,
+            ],
+        ]);
+    }
+
+    // 削除
+    model('delete_categories', [
+        'where' => 'code IN(\'test4\', \'test5\')',
+    ], [
+        'associate' => true,
+    ]);
+
+    // 結果（削除したカテゴリーのひも付けは消えること）
+    $category_sets = model('select_category_sets', [
+        'where' => 'category_id IN(' . implode(',', $associate_ids) . ')',
+    ]);
+
+    test_equals('delete categories (associate)', count($category_sets), 0);
+
+    // 結果（無関係なひも付けは残ること）
+    $category_sets = model('select_category_sets', [
+        'where' => 'category_id = ' . $unrelated_id,
+    ]);
+
+    test_equals('delete categories (associate unrelated)', count($category_sets), 1);
+}
+
 // トランザクションを終了
 db_rollback();
 
 // 既存データ削除
 db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'categories;');
+db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'category_sets;');
 
 // コードカバレッジの記録を終了
 if (!isset($_GET['_test'])) {
