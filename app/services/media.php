@@ -58,6 +58,20 @@ function service_media_thumbnail_create($path)
     }
     $extension = strtolower($matches[1]);
 
+    // GDが使えない環境では作成しない（GDが有効でも、形式ごとの関数はビルドによって無いことがある）
+    $functions = [
+        'gif'  => ['imagecreatefromgif', 'imagegif'],
+        'jpeg' => ['imagecreatefromjpeg', 'imagejpeg'],
+        'jpg'  => ['imagecreatefromjpeg', 'imagejpeg'],
+        'jpe'  => ['imagecreatefromjpeg', 'imagejpeg'],
+        'png'  => ['imagecreatefrompng', 'imagepng'],
+    ];
+    foreach (array_merge(['imagecreatetruecolor', 'imagecopyresampled'], $functions[$extension]) as $function) {
+        if (!function_exists($function)) {
+            return false;
+        }
+    }
+
     $key = $GLOBALS['config']['file_target']['media'] . $path;
     if (!service_storage_exist($key)) {
         return false;

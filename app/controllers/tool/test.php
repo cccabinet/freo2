@@ -67,14 +67,28 @@ if (DEBUG_LEVEL) {
             return;
         }
 
+        // GDが使えない環境では保存しない（error() のエラー画面もシナリオランナーを読み込んでステップが進むため、画面を出さずに終える）
+        foreach (['imagecreatefromstring', 'imagepng'] as $function) {
+            if (!function_exists($function)) {
+                echo 'GDが有効ではないため、画像を保存できません。';
+
+                exit;
+            }
+        }
+
         // 受け取った文字列を画像に変換
         $canvas = $_POST['image'];
         $canvas = preg_replace('/data:[^,]+,/i', '', $canvas);
         $canvas = base64_decode($canvas);
         $image  = imagecreatefromstring($canvas);
+        if ($image === false) {
+            echo '画像に変換できません。';
+
+            exit;
+        }
 
         // 画像を保存
-        if (imagepng($image, MAIN_APPLICATION_PATH . 'files/test/' . $_POST['name'])) {
+        if (imagepng($image, $GLOBALS['config']['file_target']['test'] . $_POST['name'])) {
             ok();
         } else {
             error('画像を保存できません。');

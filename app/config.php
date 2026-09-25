@@ -107,6 +107,7 @@ $GLOBALS['config']['file_target'] = app_config('APP_FILE_TARGET', [
     'field'     => 'files/fields/',
     'media'     => 'files/medias/',
     'temp'      => 'files/temps/',
+    'test'      => 'files/tests/',
     'thumbnail' => 'files/thumbnails/',
 ]);
 
