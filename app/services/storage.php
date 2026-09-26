@@ -222,5 +222,12 @@ function service_storage_list($key)
         }
     }
 
+    // 名前で並べ替える（ファイルは readdir() の順、S3 はキーのバイト順で返るため、どちらでも同じ並びにする）
+    $compare = function ($a, $b) {
+        return strnatcasecmp($a['name'], $b['name']);
+    };
+    usort($directories, $compare);
+    usort($files, $compare);
+
     return array_merge($directories, $files);
 }
