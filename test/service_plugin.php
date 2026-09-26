@@ -18,8 +18,8 @@ service('plugin.php');
 $_SERVER['REMOTE_ADDR']     = '127.0.0.1';
 $_SERVER['HTTP_USER_AGENT'] = 'freo/2';
 
-// 既存データ削除
-db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'plugins;');
+// 既存データ削除（テスト用データベースにインストールしたプラグインを消さないよう、plugins はテスト用のものだけを消す）
+db_query('DELETE FROM ' . DATABASE_PREFIX . 'plugins WHERE code LIKE \'%test%\';');
 db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'logs;');
 
 // 正常データ（管理画面からプラグインをインストールしたときの登録内容を想定）
@@ -48,11 +48,10 @@ db_transaction();
         debug($warnings);
     }
 
-    // 結果
+    // 結果（インストール済みのプラグインが他にあってもよいように、コードで絞る）
     $plugins = model('select_plugins', [
-        'select'   => 'code, version, enabled',
-        'order_by' => 'id DESC',
-        'limit'    => 10,
+        'select' => 'code, version, enabled',
+        'where'  => 'code = ' . db_escape('test1'),
     ]);
 
     test_equals('insert plugin', count($plugins), 1);
@@ -194,7 +193,7 @@ $inserted_id = intval($plugins[0]['id']);
 db_rollback();
 
 // 既存データ削除
-db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'plugins;');
+db_query('DELETE FROM ' . DATABASE_PREFIX . 'plugins WHERE code LIKE \'%test%\';');
 db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'logs;');
 
 // コードカバレッジの記録を終了

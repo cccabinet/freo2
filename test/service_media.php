@@ -60,6 +60,17 @@ foreach ([
     test_equals('valid media name (upper)', $upper, true);
 }
 
+// 名前の確認（日本語・空白）テスト
+{
+    // 確認
+    $japanese = service_media_name_valid('写真.jpg');
+    $space    = service_media_name_valid('my photo.jpg');
+
+    // 結果（S3 でそのままキーにすると S3Exception になるため、許可されないこと）
+    test_equals('valid media name (japanese)', $japanese, false);
+    test_equals('valid media name (space)', $space, false);
+}
+
 // 名前の確認（ファイル名に含まれる連続したドット）テスト
 {
     // 確認

@@ -310,6 +310,19 @@ $inserted_id = intval($contacts[0]['id']);
     test_equals('validate list contact status (processing)', count($warnings), 0);
 }
 
+// 状況の値（対応不要）テスト
+{
+    // データ（設定にある値なら警告は出ない）
+    $test_contact = $data_contact;
+    $test_contact['status'] = 'unnecessary';
+
+    // 確認
+    $warnings = model('validate_contacts', $test_contact);
+
+    // 結果
+    test_equals('validate list contact status (unnecessary)', count($warnings), 0);
+}
+
 // メモの長さ（境界値）テスト
 {
     // データ（上限ちょうどのため警告は出ない）

@@ -12,8 +12,8 @@ if (!isset($_GET['_test'])) {
 // ライブラリを読み込み
 model('plugins.php');
 
-// 既存データ削除
-db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'plugins;');
+// 既存データ削除（テスト用データベースにインストールしたプラグインを消さないよう、テスト用のものだけを消す。論理削除でコードの先頭に DELETED が付いた行も含む）
+db_query('DELETE FROM ' . DATABASE_PREFIX . 'plugins WHERE code LIKE \'%test%\';');
 
 // 正常データ（管理画面からプラグインをインストールしたときの登録内容を想定）
 $data_plugin = [
@@ -383,7 +383,7 @@ db_transaction();
 db_rollback();
 
 // 既存データ削除
-db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'plugins;');
+db_query('DELETE FROM ' . DATABASE_PREFIX . 'plugins WHERE code LIKE \'%test%\';');
 
 // コードカバレッジの記録を終了
 if (!isset($_GET['_test'])) {
