@@ -97,6 +97,9 @@ function app_badge($key, $value)
         if ($value === 'closed') {
             $text_color = 'light';
             $bg_color   = 'success';
+        } elseif ($value === 'unnecessary') {
+            $text_color = 'light';
+            $bg_color   = 'secondary';
         } else {
             $text_color = 'dark';
             $bg_color   = 'warning';

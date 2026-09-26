@@ -83,9 +83,10 @@ $GLOBALS['config']['option'] = app_config('APP_OPTION', [
     'contact' => [
         // 状況
         'status' => [
-            'opened'     => '未対応',
-            'processing' => '対応中',
-            'closed'     => '完了',
+            'opened'      => '未対応',
+            'processing'  => '対応中',
+            'closed'      => '完了',
+            'unnecessary' => '対応不要',
         ],
     ],
     'comment' => [
