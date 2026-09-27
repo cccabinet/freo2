@@ -266,7 +266,7 @@ function validator_boolean($data)
 function validator_list($data, $list)
 {
     if (!is_array($data)) {
-        $data = array($data);
+        $data = [$data];
     }
 
     foreach ($data as $datum) {
@@ -328,13 +328,11 @@ function validator_date($data)
  */
 function validator_time($data)
 {
-    if (!preg_match('/^[0-2][0-9]\:[0-5][0-9]\:[0-5][0-9]$/', $data)) {
+    if (!preg_match('/^([01][0-9]|2[0-3])\:[0-5][0-9]\:[0-5][0-9]$/', $data)) {
         return false;
     } else {
         return true;
     }
-
-    return true;
 }
 
 /**
@@ -346,7 +344,13 @@ function validator_time($data)
  */
 function validator_datetime($data)
 {
-    list($date, $time) = explode(' ', $data);
+    $datetime = explode(' ', $data);
+
+    if (count($datetime) !== 2) {
+        return false;
+    }
+
+    list($date, $time) = $datetime;
 
     if (!validator_date($date) || !validator_time($time)) {
         return false;

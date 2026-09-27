@@ -478,13 +478,17 @@ $(document).ready(function() {
      * メディアを本文に挿入
      */
     $('.insert-media').on('click', function () {
-        var mediaUrl  = $(this).data('url');
-        var mediaName = $(this).data('name');
+        var mediaUrl     = $(this).data('url');
+        var mediaName    = $(this).data('name');
+        var thumbnailUrl = $(this).data('thumbnail');
 
         var extension = mediaName.split('.').pop().toLowerCase();
 
         var mediaTag;
-        if (['png', 'jpeg', 'jpg', 'jpe', 'gif'].includes(extension)) {
+        if (thumbnailUrl) {
+            // サムネイルを表示し、クリックでオリジナルを表示する
+            mediaTag = '<a href="' + mediaUrl + '" target="_blank"><img src="' + thumbnailUrl + '" alt="' + mediaName + '"></a>';
+        } else if (['png', 'jpeg', 'jpg', 'jpe', 'gif'].includes(extension)) {
             mediaTag = '<img src="' + mediaUrl + '" alt="' + mediaName + '">';
         } else {
             mediaTag = '<a href="' + mediaUrl + '" target="_blank">' + mediaName + '</a>';

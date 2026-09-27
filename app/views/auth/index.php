@@ -19,7 +19,7 @@
                 <label for="loginUsername">ユーザー名</label>
             </div>
             <div class="form-floating">
-                <input type="password" name="password" size="30" value="<?php t($_view['user']['password']) ?>" class="form-control" id="password" placeholder="パスワード">
+                <input type="password" name="password" size="30" value="" class="form-control" id="password" placeholder="パスワード">
                 <label for="loginPassword">パスワード</label>
             </div>
             <div class="form-group mt-2">

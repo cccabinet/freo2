@@ -26,10 +26,17 @@ if (DEBUG_LEVEL) {
 
                 if (file_exists($filename)) {
                     $target = $filename;
+
+                    // 同じ宛先に短い間隔で複数送られている場合は、指定の時刻に近いものを使う
+                    break;
                 }
             }
         }
-        $content = file_get_contents($target);
+        if ($target === null) {
+            $content = '該当するメールが見つかりません。';
+        } else {
+            $content = file_get_contents($target);
+        }
 
         // メール表示
         echo "<!DOCTYPE html>\n";
@@ -47,7 +54,7 @@ if (DEBUG_LEVEL) {
         echo "</body>\n";
         echo "</html>\n";
 
-        echo "<script src=\"" . t($GLOBALS['config']['http_path'], true) . "js/jquery.js\"></script>\n";
+        echo "<script src=\"" . t($GLOBALS['config']['http_path'], true) . t(loader_js('jquery.min.js'), true) . "\"></script>\n";
         import('app/views/test.php');
 
         exit;
@@ -60,14 +67,28 @@ if (DEBUG_LEVEL) {
             return;
         }
 
+        // GDが使えない環境では保存しない（error() のエラー画面もシナリオランナーを読み込んでステップが進むため、画面を出さずに終える）
+        foreach (['imagecreatefromstring', 'imagepng'] as $function) {
+            if (!function_exists($function)) {
+                echo 'GDが有効ではないため、画像を保存できません。';
+
+                exit;
+            }
+        }
+
         // 受け取った文字列を画像に変換
         $canvas = $_POST['image'];
         $canvas = preg_replace('/data:[^,]+,/i', '', $canvas);
         $canvas = base64_decode($canvas);
         $image  = imagecreatefromstring($canvas);
+        if ($image === false) {
+            echo '画像に変換できません。';
+
+            exit;
+        }
 
         // 画像を保存
-        if (imagepng($image, MAIN_APPLICATION_PATH . 'files/test/' . $_POST['name'])) {
+        if (imagepng($image, $GLOBALS['config']['file_target']['test'] . $_POST['name'])) {
             ok();
         } else {
             error('画像を保存できません。');
@@ -78,7 +99,7 @@ if (DEBUG_LEVEL) {
         unset($_SESSION['test']);
 
         // テスト一覧を取得
-        $_view['targets'] = array();
+        $_view['targets'] = [];
         if ($dh = opendir('scenario/')) {
             while (($entry = readdir($dh)) !== false) {
                 if (!is_file('scenario/' . $entry)) {
@@ -90,6 +111,9 @@ if (DEBUG_LEVEL) {
                 }
             }
             closedir($dh);
+
+            // readdir() の順は環境やファイルの増減で変わるので、名前順に並べる
+            sort($_view['targets']);
         } else {
             error('テストシナリオ格納ディレクトリを開けません。');
         }

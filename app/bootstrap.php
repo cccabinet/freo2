@@ -97,6 +97,9 @@ function app_badge($key, $value)
         if ($value === 'closed') {
             $text_color = 'light';
             $bg_color   = 'success';
+        } elseif ($value === 'unnecessary') {
+            $text_color = 'light';
+            $bg_color   = 'secondary';
         } else {
             $text_color = 'dark';
             $bg_color   = 'warning';
@@ -132,7 +135,7 @@ function app_badge($key, $value)
  */
 function app_filesize($size)
 {
-    $units = array('B', 'KB', 'MB', 'GB', 'TB');
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
 
     $index = 0;
     while ($size >= 1024 && $index < count($units) - 1) {
