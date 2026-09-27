@@ -23,9 +23,9 @@ import(MAIN_PATH . $GLOBALS['config']['plugin_path'] . $_POST['code'] . '/' . 'c
 // セットアップ用ディレクトリ
 $setup_dir = MAIN_PATH . $GLOBALS['config']['plugin_path'] . $_POST['code'] . '/setup/';
 
-// アップグレード用ファイルを取得
+// アップグレード用ファイルがあれば取得
 $upgrades = [];
-if ($dh = opendir($setup_dir)) {
+if (is_dir($setup_dir) && ($dh = opendir($setup_dir))) {
     while (($entry = readdir($dh)) !== false) {
         if (preg_match('/^upgrade_(.*)_(.*)_(.*)\.php$/', $entry, $matches)) {
             $upgrades[$matches[1] . '.' . $matches[2] . '.' . $matches[3]] = $entry;

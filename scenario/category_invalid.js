@@ -18,11 +18,16 @@ var submitAndWait = function(values, callback) {
     }, callback, '入力エラーが表示されませんでした。');
 };
 
-/* カテゴリー一覧に、指定したコードの行があるか */
-var categoryRowExists = function(code) {
+/* カテゴリー一覧から、コードで対象の行を取得する */
+var categoryRow = function(code) {
     return $('table tbody tr').filter(function() {
         return $(this).find('td code').text().trim() === code;
-    }).length > 0;
+    });
+};
+
+/* カテゴリー一覧に、指定したコードの行があるか */
+var categoryRowExists = function(code) {
+    return categoryRow(code).length > 0;
 };
 
 test.scenario = [
@@ -104,10 +109,60 @@ test.scenario = [
         test.assertText('div.alert-danger', '不正な操作が検出されました。', '不正なトークンの送信が拒否されていません。');
         test.visit('/admin/category');
     },
-    // 拒否された送信でカテゴリーが登録されていないことを確認してホームに移動
+    // 拒否された送信でカテゴリーが登録されていないことを確認してカテゴリー登録ページに移動
     function() {
         test.assert($('table').length === 1, 'カテゴリー管理ページが表示されていません。');
         test.assert(!categoryRowExists('scenario-invalid'), '不正なトークンの送信でカテゴリーが登録されています。');
+        test.click('a:contains("カテゴリー登録")');
+    },
+    // コードの重複を確認するため、正しい内容で1件登録する
+    function() {
+        var form = $('form.register');
+
+        test.assert(form.find('input[name="code"]').length === 1, 'カテゴリー登録フォームが表示されていません。');
+
+        form.find('input[name="code"]').val('scenario-invalid');
+        form.find('input[name="name"]').val('シナリオ');
+        form.find('select[name="type_id"]').val('1');
+        test.click('form.register button[type="submit"]');
+    },
+    // 登録できたことを確認して、もう一度カテゴリー登録ページに移動
+    function() {
+        test.assertText('div.alert-success', 'カテゴリーを登録しました。', 'カテゴリーを登録できていません。');
+        test.assert(categoryRowExists('scenario-invalid'), '登録したカテゴリーが一覧にありません。');
+
+        test.click('a:contains("カテゴリー登録")');
+    },
+    // 同じコードで送信すると、コードにだけ入力エラーが表示されることを確認
+    function() {
+        submitAndWait({ code: 'scenario-invalid', name: 'シナリオ2', type_id: '1' }, function() {
+            test.assertText(fieldWarning('code'), '入力されたコードはすでに使用されています。', 'コード重複のエラーが表示されていません。');
+            test.assert($('form.register div.warning').length === 1, 'コード以外にも入力エラーが表示されています。（' + $('form.register div.warning').text() + '）');
+
+            test.visit('/admin/category');
+        });
+    },
+    // 重複した送信で増えていないことを確認して、カテゴリー編集ページに移動
+    function() {
+        test.assert(categoryRow('scenario-invalid').length === 1, 'コードが重複したカテゴリーが登録されています。');
+
+        test.click(categoryRow('scenario-invalid').find('a'), '一覧の scenario-invalid の編集リンクが見つかりません。');
+    },
+    // 登録したカテゴリーを削除
+    function() {
+        var form = $('form.delete');
+
+        test.assertValue('form.register input[name="code"]', 'scenario-invalid', '削除対象が scenario-invalid ではありません。');
+        test.assert(form.length === 1, '削除フォームが表示されていません。');
+
+        form.off('submit');
+        test.click('form.delete button[type="submit"]');
+    },
+    // 削除できたことを確認してホームに移動
+    function() {
+        test.assertText('div.alert-success', 'カテゴリーを削除しました。', 'カテゴリーを削除できていません。');
+        test.assert(!categoryRowExists('scenario-invalid'), '削除したカテゴリーが一覧に残っています。');
+
         test.click('a:contains("ホーム")');
     },
     // 管理者用ページからログアウト

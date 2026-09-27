@@ -157,18 +157,9 @@ function delete_authorities($queries, $options = [])
  */
 function normalize_authorities($queries, $options = [])
 {
-    // 並び順
+    // 権力
     if (isset($queries['power'])) {
         $queries['power'] = mb_convert_kana($queries['power'], 'n', MAIN_INTERNAL_ENCODING);
-    } else {
-        if (!$queries['id']) {
-            $authorities = db_select([
-                'select'   => 'id',
-                'from'     => DATABASE_PREFIX . 'authorities',
-                'order_by' => 'power, id',
-            ]);
-            $queries['power'] = $authorities[0]['id'];
-        }
     }
 
     return $queries;

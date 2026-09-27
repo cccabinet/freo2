@@ -47,7 +47,7 @@
         <div class="container-fluid">
             <div class="row">
                 <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse top-0 bottom-0 start-0">
-                    <div class="sidebar-sticky py-3">
+                    <div class="sidebar-sticky pt-3 pb-5">
                         <h2 class="d-none">メニュー</h2>
                         <?php foreach ($GLOBALS['menu_group']['admin'] as $menu_key => $menu_value) : if ($menu_key != 'auth' && $menu_value['show']) : ?>
                         <?php if ($menu_key != 'home') : ?>

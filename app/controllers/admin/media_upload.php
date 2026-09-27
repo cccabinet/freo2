@@ -1,6 +1,7 @@
 <?php
 
 import('app/services/storage.php');
+import('app/services/media.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ワンタイムトークン
@@ -15,6 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $files = [];
     for ($i = 0; $i < $file_count; $i++) {
         if (is_uploaded_file($_FILES['medias']['tmp_name'][$i])) {
+            if (!service_media_name_valid($_FILES['medias']['name'][$i])) {
+                error('ファイル名は半角英数字で指定してください。', ['token' => token('create')]);
+            }
             if (!preg_match('/\.(' . implode('|', $GLOBALS['config']['media_ext']) . ')$/i', $_FILES['medias']['name'][$i])) {
                 error('指定された拡張子は使用できません。', ['token' => token('create')]);
             }

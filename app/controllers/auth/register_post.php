@@ -49,18 +49,18 @@ db_transaction();
 // ユーザーを登録
 $resource = service_user_insert([
     'values' => [
-        'username'      => $_SESSION['post']['user']['username'],
-        'password'      => hash_crypt($_SESSION['post']['user']['password'], $password_salt . ':' . $GLOBALS['config']['hash_salt']),
-        'password_salt' => $password_salt,
-        'authority_id'  => $authority_id,
-        'enabled'       => $enabled,
-        'name'          => $_SESSION['post']['user']['name'],
-        'email'         => $_SESSION['post']['user']['email'],
-        'url'           => $_SESSION['post']['user']['url'],
-        'text'          => $_SESSION['post']['user']['text'],
-        'token'         => rand_string(),
-        'token_expire'  => localdate('Y-m-d H:i:s', time() + 60 * 60 * 24),
-
+        'username'       => $_SESSION['post']['user']['username'],
+        'password'       => hash_crypt($_SESSION['post']['user']['password'], $password_salt . ':' . $GLOBALS['config']['hash_salt']),
+        'password_salt'  => $password_salt,
+        'authority_id'   => $authority_id,
+        'enabled'        => $enabled,
+        'name'           => $_SESSION['post']['user']['name'],
+        'email'          => $_SESSION['post']['user']['email'],
+        'email_verified' => 0,
+        'url'            => $_SESSION['post']['user']['url'],
+        'text'           => $_SESSION['post']['user']['text'],
+        'token'          => rand_string(),
+        'token_expire'   => localdate('Y-m-d H:i:s', time() + 60 * 60 * 24),
     ],
 ]);
 if (!$resource) {
@@ -85,7 +85,9 @@ $users = model('select_users', [
 $to      = $users[0]['email'];
 $subject = $GLOBALS['setting']['mail_register_subject'];
 $message = view('mail/register/send.php', true);
-$headers = $GLOBALS['config']['mail_headers'];
+$headers = [
+    'From' => $GLOBALS['setting']['mail_from'],
+];
 
 // メールを送信
 if (service_mail_send($to, $subject, $message, $headers) === false) {

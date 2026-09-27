@@ -44,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($users)) {
         // パスワード認証失敗
         $_view['user'] = $_POST;
+        $_view['user']['password'] = '';
 
         $_view['warnings'] = ['ユーザー名もしくはパスワードが違います。'];
 
@@ -78,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$enabled) {
             // アカウント有効化前
             $_view['user'] = $_POST;
+            $_view['user']['password'] = '';
 
             $_view['warnings'] = ['アカウントが有効化されていません。'];
         } elseif ($success) {
