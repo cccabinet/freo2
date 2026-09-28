@@ -7,6 +7,7 @@ freo2 のコードをはじめて読む・改修する・プラグインやテ�
   - [設置方法](https://freo.jp/freo2/setup/) / [開発環境構築方法](https://freo.jp/freo2/develop/) / [テーマ](https://freo.jp/freo2/theme/) / [プラグイン](https://freo.jp/freo2/plugin/)
   - このガイドと公式サイトの内容が食い違う場合、設置・テーマ・プラグインの手順は公式サイトを正とします
 - freo2 で何ができるか(機能の紹介): [OVERVIEW.md](OVERVIEW.md)
+- すぐに使えるプラグイン: https://github.com/refirio/freo2-plugins
 - フレームワーク(levis): https://refirio.org/levis/
 - ライセンス: MIT
 
@@ -156,7 +157,7 @@ home/
 └── levis/    config.default.php, app/, libs/, migrate/, plugins/, test/, themes/
 ```
 
-1. 公開ディレクトリと同じ階層に `levis` ディレクトリを作り、`config.default.php`・`app`・`libs`・`migrate`・`plugins`・`test`・`themes` をその中に移します(`.gitignore` と `README.md` は無くても動作に支障はありません)。
+1. 公開ディレクトリと同じ階層に `levis` ディレクトリを作り、`config.default.php`・`app`・`libs`・`migrate`・`plugins`・`test`・`themes` をその中に移します(`.gitignore` と `README.md`・`OVERVIEW.md`・`DEVELOPMENT.md` は無くても動作に支障はありません)。
 2. `html/index.php` の `require_once 'config.php';` を `require_once '../levis/config.php';` に変えます。
 3. `levis/config.default.php` を複製して `levis/config.php` を作り、パスを設定します。以降は通常の手順と同様に、データベースなどを設定します。
 
@@ -201,6 +202,9 @@ freo2/
 ├── index.php               エントリーポイント(全リクエストがここを通る)
 ├── .htaccess               URLから index.php を省略するためのリライト
 ├── config.default.php      設定ファイルのひな形 → config.php にコピーして使う
+├── README.md               リポジトリの説明
+├── OVERVIEW.md             freo2 で何ができるか(機能の紹介)
+├── DEVELOPMENT.md          このガイド
 ├── css/ js/ img/           本体用の静的ファイル(jQuery など)
 ├── files/                  アップロードファイルの保存先(要書き込み権限)
 ├── scenario/               ブラウザで動かすシナリオテスト
@@ -723,6 +727,7 @@ plugins/sample/
 ```
 
 テーブルの作成やメニューの追加など、`sample` に含まれない機能は、下記「書くときのポイント」のコード例を参考にしてください。
+独自のテーブルや型を持つ実際のプラグインは、別のリポジトリ [freo2-plugins](https://github.com/refirio/freo2-plugins) で公開しています。
 
 ### ファイル構成
 
@@ -887,12 +892,10 @@ CLI で実行するときは、設定ファイルやマイグレーションの�
 単体テストとブラウザテスト(シナリオテスト)があり、どちらもデータベースを読み書きします。
 テスト中の接続先データベースは、自動で **`<DATABASE_NAME>-test`**(例: `freo2-test`)に切り替わります([app/database.php](app/database.php))。
 
-> **リリース前の機能です:** この自動切り替えは、次回のバージョンで正式に入る予定の機能です。開発中のコードには実装済みですが、現在リリースされている freo2 には含まれていません。
-
 テストはテーブルを空にするので、あらかじめテスト用のデータベースを作っておきます(例: データベース名 `freo2-test`、照合順序 `utf8mb4_general_ci`)。
 テーブルを作るには、`config.php` の `DATABASE_NAME` を一時的にテスト用データベースに変えてマイグレーションを実行し、終わったら元に戻します。
 
-> **公式の開発環境構築方法との違い:** 公式サイトでは「テスト実行時に `DATABASE_NAME` を `freo2-test` に書き換える」と案内されています。これは自動切り替えが入っていない、現在のリリース版の手順です。自動切り替えのあるバージョンでは、**テストを実行するときは書き換えないでください。** 書き換えたまま実行すると、`freo2-test-test` に接続しようとします。
+> **テストを実行するときは、`DATABASE_NAME` を書き換えないでください。** 接続先は自動で切り替わるので、書き換えたまま実行すると `freo2-test-test` に接続しようとします。以前のバージョンでは「テスト実行時に `DATABASE_NAME` を `freo2-test` に書き換える」手順でしたが、今は不要です。
 
 **どちらも `DEBUG_LEVEL` が 1 以上のときだけ動きます。** 本番(`DEBUG_LEVEL` が 0)では入口も表示されません。
 
