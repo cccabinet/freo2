@@ -94,7 +94,10 @@ function app_badge($key, $value)
         }
     }
     if ($key === 'status') {
-        if ($value === 'closed') {
+        if ($value === 'opened') {
+            $text_color = 'dark';
+            $bg_color   = 'info';
+        } elseif ($value === 'closed') {
             $text_color = 'light';
             $bg_color   = 'success';
         } elseif ($value === 'unnecessary') {
