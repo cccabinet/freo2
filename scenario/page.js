@@ -102,7 +102,7 @@ test.scenario = [
     },
     // ページ編集ページに移動
     function() {
-        test.click(pageRow(scenarioPage.code).find('a'), '一覧の ' + scenarioPage.code + ' の編集リンクが見つかりません。');
+        test.click(pageRow(scenarioPage.code).find('a:contains("編集")'), '一覧の ' + scenarioPage.code + ' の編集リンクが見つかりません。');
     },
     // ページを編集して、コードを階層にする
     function() {
@@ -140,7 +140,7 @@ test.scenario = [
     },
     // ページ編集ページに移動
     function() {
-        test.click(pageRow(scenarioPageEdited.code).find('a'), '一覧の ' + scenarioPageEdited.code + ' の編集リンクが見つかりません。');
+        test.click(pageRow(scenarioPageEdited.code).find('a:contains("編集")'), '一覧の ' + scenarioPageEdited.code + ' の編集リンクが見つかりません。');
     },
     // ページを削除
     function() {

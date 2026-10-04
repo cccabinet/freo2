@@ -117,7 +117,7 @@ test.scenario = [
     },
     // エントリー編集ページに移動
     function() {
-        test.click(entryRow(scenarioEntry.code).find('a'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
+        test.click(entryRow(scenarioEntry.code).find('a:contains("編集")'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
     },
     // エントリーを編集して非公開にする
     function() {
@@ -155,7 +155,7 @@ test.scenario = [
     },
     // エントリー編集ページに移動
     function() {
-        test.click(entryRow(scenarioEntry.code).find('a'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
+        test.click(entryRow(scenarioEntry.code).find('a:contains("編集")'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
     },
     // エントリーを削除
     function() {
