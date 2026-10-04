@@ -98,11 +98,12 @@ function service_log_record($message = null, $model = null, $exec = null)
         $agent = $_SERVER['HTTP_USER_AGENT'];
     }
 
-    // ページ
+    // ページ（長いクエリ文字列は切り詰める）
     $page = '/' . implode('/', $_params);
     if (!empty($_SERVER['QUERY_STRING'])) {
         $page .= '?' . $_SERVER['QUERY_STRING'];
     }
+    $page = truncate($page, 255, '');
 
     // 操作ログを登録
     $resource = service_log_insert([
