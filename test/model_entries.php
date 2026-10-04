@@ -136,8 +136,9 @@ $category_id = intval($categories[0]['id']);
 
 model('insert_attributes', [
     'values' => [
-        'name' => 'テスト属性',
-        'sort' => 1,
+        'name'       => 'テスト属性',
+        'filterable' => 0,
+        'sort'       => 1,
     ],
 ]);
 $attributes = model('select_attributes', [

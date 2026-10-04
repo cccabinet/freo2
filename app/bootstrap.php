@@ -120,6 +120,15 @@ function app_badge($key, $value)
             $bg_color   = 'warning';
         }
     }
+    if ($key === 'filterable') {
+        if ($value == 1) {
+            $text_color = 'dark';
+            $bg_color   = 'warning';
+        } else {
+            $text_color = 'light';
+            $bg_color   = 'secondary';
+        }
+    }
 
     if ($key === 'kind' || $key === 'authority_id') {
         $text_color = 'dark';

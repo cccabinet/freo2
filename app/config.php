@@ -73,6 +73,13 @@ $GLOBALS['config']['option'] = app_config('APP_OPTION', [
             'required' => '必須',
         ],
     ],
+    'attribute' => [
+        // フィルター対象
+        'filterable' => [
+            1 => '対象',
+            0 => '対象外',
+        ],
+    ],
     'menu' => [
         // 有効
         'enabled' => [

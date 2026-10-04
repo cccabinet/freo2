@@ -52,8 +52,9 @@ $attribute_ids = [];
 foreach (['テスト属性1', 'テスト属性2'] as $index => $name) {
     model('insert_attributes', [
         'values' => [
-            'name' => $name,
-            'sort' => $index + 1,
+            'name'       => $name,
+            'filterable' => 0,
+            'sort'       => $index + 1,
         ],
     ]);
 

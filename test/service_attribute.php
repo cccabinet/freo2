@@ -26,22 +26,26 @@ db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'logs;');
 
 // 正常データ（管理画面の属性登録フォームからの送信を想定）
 $data_attribute = [
-    'name' => 'テスト属性1',
-    'memo' => '',
-    'sort' => 1,
+    'name'       => 'テスト属性1',
+    'filterable' => 0,
+    'memo'       => '',
+    'sort'       => 1,
 ];
 $data_attributes = [
     [
-        'name' => '属性1',
-        'sort' => 1,
+        'name'       => '属性1',
+        'filterable' => 0,
+        'sort'       => 1,
     ],
     [
-        'name' => '属性2',
-        'sort' => 2,
+        'name'       => '属性2',
+        'filterable' => 0,
+        'sort'       => 2,
     ],
     [
-        'name' => '属性3',
-        'sort' => 3,
+        'name'       => '属性3',
+        'filterable' => 0,
+        'sort'       => 3,
     ],
 ];
 
@@ -299,6 +303,100 @@ db_rollback();
 db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'attributes;');
 db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'attribute_sets;');
 db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'logs;');
+
+// トランザクションを開始
+db_transaction();
+
+// フィルター用の属性を登録（一般はフィルター対象外、ほかはフィルター対象。並び順は登録順と逆にしておく）
+$filter_ids = [];
+foreach ([
+    'general' => ['name' => '一般', 'filterable' => 0, 'sort' => 5],
+    'r15'     => ['name' => 'R-15', 'filterable' => 1, 'sort' => 4],
+    'r18'     => ['name' => 'R-18', 'filterable' => 1, 'sort' => 3],
+    'other'   => ['name' => '他の会員用', 'filterable' => 1, 'sort' => 2],
+    'deleted' => ['name' => '削除済み', 'filterable' => 1, 'sort' => 1],
+] as $key => $attribute) {
+    model('insert_attributes', [
+        'values' => $attribute,
+    ]);
+
+    $attributes = model('select_attributes', [
+        'select'   => 'id',
+        'order_by' => 'id DESC',
+        'limit'    => 1,
+    ]);
+    $filter_ids[$key] = intval($attributes[0]['id']);
+}
+model('delete_attributes', [
+    'where' => 'id = ' . $filter_ids['deleted'],
+]);
+
+// フィルターで選べる属性の取得テスト
+{
+    // 確認（与えられた属性が無ければ、何も返さないこと）
+    test_equals('filterable attributes (empty)', service_attribute_filterable([]), []);
+
+    // 確認（与えられた属性のうち、フィルター対象のものだけを並び順で返すこと。与えられていない属性・削除済みの属性は返さないこと）
+    $attributes = service_attribute_filterable([$filter_ids['general'], $filter_ids['r15'], $filter_ids['r18'], $filter_ids['deleted']]);
+
+    test_equals('filterable attributes', array_map('intval', array_column($attributes, 'id')), [$filter_ids['r18'], $filter_ids['r15']]);
+    test_equals('filterable attributes (name)', array_column($attributes, 'name'), ['R-18', 'R-15']);
+}
+
+// フィルターの適用テスト
+{
+    // データ（会員に与えられた属性）
+    $attribute_ids  = [$filter_ids['general'], $filter_ids['r15'], $filter_ids['r18']];
+    $filterable_ids = [$filter_ids['r15'], $filter_ids['r18']];
+
+    // 結果（表示を選んでいなければ、フィルター対象の属性はすべて除かれること。初期状態は表示しない）
+    test_equals('filter attributes (none shown)', service_attribute_filter($attribute_ids, $filterable_ids, []), [$filter_ids['general']]);
+
+    // 結果（表示を選んだ属性だけが残ること）
+    test_equals('filter attributes (r15 shown)', service_attribute_filter($attribute_ids, $filterable_ids, [$filter_ids['r15']]), [$filter_ids['general'], $filter_ids['r15']]);
+
+    // 結果（すべて選べば、与えられた属性がそのまま残ること）
+    test_equals('filter attributes (all shown)', service_attribute_filter($attribute_ids, $filterable_ids, [$filter_ids['r15'], $filter_ids['r18']]), $attribute_ids);
+
+    // 結果（与えられていない属性を選んでも、見える範囲は広がらないこと）
+    test_equals('filter attributes (not granted)', service_attribute_filter($attribute_ids, $filterable_ids, [$filter_ids['other']]), [$filter_ids['general']]);
+
+    // 結果（フィルター対象外の属性は、選ばなくても残ること）
+    test_equals('filter attributes (not filterable)', service_attribute_filter([$filter_ids['general']], [], []), [$filter_ids['general']]);
+}
+
+// トランザクションを終了
+db_rollback();
+
+// 既存データ削除
+db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'attributes;');
+db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'attribute_sets;');
+db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'logs;');
+
+// フィルターで表示を選んだ属性の取得テスト（クッキーを差し替えて確認し、最後に元へ戻す）
+{
+    $cookie = $_COOKIE;
+
+    // 結果（クッキーが無ければ、何も選んでいないこと）
+    unset($_COOKIE['attribute_filter']);
+    test_equals('get attribute filter (no cookie)', service_attribute_filter_get(5), []);
+
+    // 結果（数字だけを取り出すこと）
+    $_COOKIE['attribute_filter'] = [5 => '3,abc,4,,1 OR 1=1'];
+    test_equals('get attribute filter', service_attribute_filter_get(5), [3, 4]);
+
+    // 結果（ほかのユーザーの選択は使わないこと）
+    test_equals('get attribute filter (other user)', service_attribute_filter_get(6), []);
+
+    // 結果（形が不正なら、何も選んでいないこと）
+    $_COOKIE['attribute_filter'] = '3,4';
+    test_equals('get attribute filter (not array)', service_attribute_filter_get(5), []);
+
+    $_COOKIE['attribute_filter'] = [5 => ['3', '4']];
+    test_equals('get attribute filter (nested)', service_attribute_filter_get(5), []);
+
+    $_COOKIE = $cookie;
+}
 
 // コードカバレッジの記録を終了
 if (!isset($_GET['_test'])) {

@@ -20,9 +20,10 @@ if (empty($_SESSION['post']['attribute']['id'])) {
     // 属性を登録
     $resource = service_attribute_insert([
         'values' => [
-            'name' => $_SESSION['post']['attribute']['name'],
-            'memo' => $_SESSION['post']['attribute']['memo'],
-            'sort' => $_SESSION['post']['attribute']['sort'],
+            'name'       => $_SESSION['post']['attribute']['name'],
+            'filterable' => $_SESSION['post']['attribute']['filterable'],
+            'memo'       => $_SESSION['post']['attribute']['memo'],
+            'sort'       => $_SESSION['post']['attribute']['sort'],
         ],
     ]);
     if (!$resource) {
@@ -32,8 +33,9 @@ if (empty($_SESSION['post']['attribute']['id'])) {
     // 属性を編集
     $resource = service_attribute_update([
         'set'   => [
-            'name' => $_SESSION['post']['attribute']['name'],
-            'memo' => $_SESSION['post']['attribute']['memo'],
+            'name'       => $_SESSION['post']['attribute']['name'],
+            'filterable' => $_SESSION['post']['attribute']['filterable'],
+            'memo'       => $_SESSION['post']['attribute']['memo'],
         ],
         'where' => [
             'id = :id',

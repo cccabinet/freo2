@@ -19,7 +19,7 @@ $_SERVER['REMOTE_ADDR']     = '127.0.0.1';
 $_SERVER['HTTP_USER_AGENT'] = 'freo/2';
 
 // 既存データ削除
-// settings はマイグレーションで登録される前提データ（84件）で、項目を増やすのもマイグレーションの役目なので削除しない。
+// settings はマイグレーションで登録される前提データ（85件）で、項目を増やすのもマイグレーションの役目なので削除しない。
 // テストでの変更は、末尾の db_rollback() で元に戻る
 db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'logs;');
 

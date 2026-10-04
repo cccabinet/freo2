@@ -6,6 +6,7 @@ import('app/config.php');
 import('app/services/user.php');
 import('app/services/storage.php');
 import('app/services/entry.php');
+import('app/services/attribute.php');
 
 import('libs/modules/loader.php');
 
@@ -112,6 +113,13 @@ if (!empty($_SESSION['auth']['user']['id'])) {
                 ],
             ]);
             $GLOBALS['attributes'] = array_column($attribute_sets, 'attribute_id');
+        }
+
+        // フィルターを適用（ゲストが表示を選択していないフィルター対象の属性を除く）
+        $GLOBALS['attribute_filterables'] = [];
+        if ($GLOBALS['authority']['power'] === 0 && !empty($GLOBALS['attributes'])) {
+            $GLOBALS['attribute_filterables'] = service_attribute_filterable($GLOBALS['attributes']);
+            $GLOBALS['attributes']            = service_attribute_filter($GLOBALS['attributes'], array_column($GLOBALS['attribute_filterables'], 'id'), service_attribute_filter_get($users[0]['id']));
         }
     }
 }

@@ -24,6 +24,7 @@ $GLOBALS['string'] = [
     'menu_auth_home'      => 'ホーム',
     'menu_auth_contact'   => 'お問い合わせ履歴',
     'menu_auth_comment'   => 'コメント履歴',
+    'menu_auth_filter'    => 'フィルター',
     'menu_auth_modify'    => 'ユーザー情報編集',
     'menu_auth_leave'     => 'ユーザー情報削除',
     'menu_auth_logout'    => 'ログアウト',
@@ -55,6 +56,7 @@ $GLOBALS['string'] = [
     'button_auth_modify'           => '登録',
     'button_auth_modify_confirm'   => '確認',
     'button_auth_modify_back'      => '修正',
+    'button_auth_filter'           => '登録',
     'button_auth_leave'            => '削除',
     'button_auth_leave_confirm'    => '進む',
 ];
