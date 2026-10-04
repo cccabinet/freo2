@@ -984,6 +984,16 @@ db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'categories;');
 | `test_array_subset()` | 配列の中にその行が含まれる(比較は**非厳密**) |
 
 - `test_equals()` は型も見ます。数値の列は `intval()` でそろえてから比較します(データベースから返る型は PHP のバージョンによって変わります)。
+- **環境が整っていなくて確認できないテストは、`test_skip($title, $reason)` で飛ばします。** 実行した時点で `SKIP: <タイトル> (<理由>)` と出力され、集計は OK / NG / SKIP の3行になります。たとえば [test/service_media.php](test/service_media.php) は、GD が使えない環境ではサムネイルのテストをまとめて飛ばします。**確認できなかったものを、成功として数えないため**です。
+
+  ```php
+  if (!function_exists('imagecreatetruecolor')) {
+      test_skip('thumbnail tests', 'GDが有効ではありません。');
+  } else {
+      // サムネイルのテスト
+  }
+  ```
+
 - コードカバレッジを出すなら、冒頭で `service('coverage.php'); service_coverage_start();`、末尾で `service_coverage_output(service_coverage_end(), ['app/models/categories.php']);` を呼びます(Xdebug の `coverage` モードが必要)。一括テストのときは邪魔になるので、参考実装のように `if (!isset($_GET['_test']))` で囲みます。
 
 ### シナリオテスト(`scenario/`)
