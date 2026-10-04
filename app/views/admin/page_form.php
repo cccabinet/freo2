@@ -46,7 +46,7 @@
                 </div>
                 <?php endif ?>
 
-                <form action="<?php t(MAIN_FILE) ?>/admin/page_form<?php $_view['entry']['id'] ? t('?id=' . $_view['entry']['id']) : '' ?>" method="post" class="register validate">
+                <form action="<?php t(MAIN_FILE) ?>/admin/page_form<?php $_view['entry']['id'] ? t('?id=' . $_view['entry']['id']) : '' ?>" method="post" class="register validate" data-draft="<?php t(app_draft_key($_view['type']['id'], $_view['entry']['id'])) ?>" data-draft-modified="<?php t($_view['entry']['modified'] ?? '') ?>">
                     <input type="hidden" name="_token" value="<?php t($_view['token']) ?>" class="token">
                     <input type="hidden" name="id" value="<?php t($_view['entry']['id']) ?>">
                     <input type="hidden" name="type_id" value="<?php t($_view['type']['id']) ?>">

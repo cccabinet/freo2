@@ -139,6 +139,27 @@ function app_badge($key, $value)
 }
 
 /**
+ * Return the key for draft.
+ *
+ * @param int|null $type_id
+ * @param int|null $entry_id
+ *
+ * @return string
+ */
+function app_draft_key($type_id = null, $entry_id = null)
+{
+    // 同じドメインに設置した別の freo2 と混ざらないよう、設置パスを含める
+    $key = 'freo2_draft:' . $GLOBALS['config']['http_path'] . ':' . $_SESSION['auth']['user']['id'] . ':';
+
+    // 型を指定しなければ、ユーザーの下書きすべてに共通する接頭辞を返す
+    if ($type_id !== null) {
+        $key .= $type_id . ':' . ($entry_id ? $entry_id : 'new');
+    }
+
+    return $key;
+}
+
+/**
  * Return the formatted file size.
  *
  * @param int $size

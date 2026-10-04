@@ -3,6 +3,23 @@
 // ワンタイムトークン
 $_view['token'] = token('create');
 
+// 入力中の内容の一時保存を削除(ログアウトの直後)
+if (isset($_SESSION['draft_clear']) && (!isset($_REQUEST['_type']) || $_REQUEST['_type'] === 'html')) {
+    $_view['script'] = ($_view['script'] ?? '') . '<script>
+            try {
+                var draftPrefix = ' . json_encode($_SESSION['draft_clear'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';
+                for (var i = window.localStorage.length - 1; i >= 0; i--) {
+                    if (window.localStorage.key(i).indexOf(draftPrefix) === 0) {
+                        window.localStorage.removeItem(window.localStorage.key(i));
+                    }
+                }
+            } catch (e) {
+            }
+        </script>' . "\n";
+
+    unset($_SESSION['draft_clear']);
+}
+
 // プラグインを取得
 $plugins = model('select_plugins', [
     'where'    => 'enabled = 1',

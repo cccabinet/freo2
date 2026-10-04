@@ -845,6 +845,16 @@ $GLOBALS['plugin']['myplugin']['updated']     = '2026-01-01';
       $_view['entry']['text'] = myplugin_convert($_view['entry']['text']);
   }
   ```
+- **エントリー(`entries`)の入力画面を作るなら、入力中の内容の一時保存を有効にできます。** 本体の `entry_form` と同じく、`form.register` に次の2つの属性を付けると、`js/admin.js` がタイトル(`input[name=title]`)と本文(`textarea[name=text]`)をブラウザ(`localStorage`)に一時保存し、次に開いたときに復元するかを聞きます。属性が無ければ何もしません。
+
+  ```php
+  <form action="..." method="post" class="register validate" data-draft="<?php t(app_draft_key($_view['type']['id'], $_view['entry']['id'])) ?>" data-draft-modified="<?php t($_view['entry']['modified'] ?? '') ?>">
+  ```
+
+  - 一時保存は記事ごとに1件(新規登録は型ごとに1件)で、ユーザーごとに分かれます。キーは `app_draft_key()`([app/bootstrap.php](app/bootstrap.php))が作ります。
+  - **登録が完了したと判断するのは、送信した後に `?ok=post` の付いた画面を開いたときです。** 登録処理の最後は、本体と同じく `redirect('/admin/<一覧>?ok=post')` にします。
+  - `data-draft-modified` は、保存されている内容が一時保存より新しいか(ほかの人が更新したか)を判断するのに使います。
+  - 明示的にログアウトすると、そのユーザーの一時保存は削除されます(ログイン画面で `$_view['script']` を通してスクリプトを出すので、テーマで `auth/footer.php` を差し替えるときはこの出力を残します)。
 - **静的ファイル(JS/CSS)はプラグインのディレクトリに置き(例: `plugins/<コード>/js/admin.js`)、そのファイルを使う画面のプラグインのビューから読み込みます。** 本体の `js/admin.js` などには書き足さないでください(プラグインを入れ外しするたびに本体を直す必要が出るため)。
   - 読み込みには `loader_file()` を使います(キャッシュ回避のため、ファイルの更新日時をクエリに付ける)。`loader_js()` は本体の `js/` 配下専用なので、プラグインのファイルには使えません。
   - 公開側・会員向け(`auth`)・管理画面のフッターはどれも、`$_view['script']` の内容を `</body>` の直前(jQuery などの読み込みより後)に出力します。ビューで `footer.php` を import する前に代入します。
