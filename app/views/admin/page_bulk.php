@@ -9,7 +9,7 @@
             <nav style="--bs-breadcrumb-divider: '>';">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="<?php t(MAIN_FILE) ?>/admin/">ホーム</a></li>
-                    <li class="breadcrumb-item"><a href="<?php t(MAIN_FILE) ?>/admin/page">ページ管理</a></li>
+                    <li class="breadcrumb-item"><a href="<?php t(MAIN_FILE) ?><?php t($_view['back']) ?>">ページ管理</a></li>
                     <li class="breadcrumb-item active"><?php h($_view['title']) ?></li>
                 </ol>
             </nav>
@@ -23,7 +23,7 @@
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
                     一括削除対象が選択されていません。
                 </div>
-                <p><a href="<?php t(MAIN_FILE) ?>/admin/page" class="btn btn-secondary px-4">戻る</a></p>
+                <p><a href="<?php t(MAIN_FILE) ?><?php t($_view['back']) ?>" class="btn btn-secondary px-4">戻る</a></p>
             <?php else : ?>
                 <p>以下のページが削除されます。よろしければ削除ボタンを押してください。</p>
 
@@ -32,8 +32,9 @@
                     <?php foreach ($_view['entry_bulks'] as $entry_bulk) : ?>
                     <input type="hidden" name="list[]" value="<?php t($entry_bulk) ?>">
                     <?php endforeach ?>
+                    <input type="hidden" name="parent" value="<?php t($_view['parent']) ?>">
                     <div class="form-group my-4">
-                        <a href="<?php t(MAIN_FILE) ?>/admin/page" class="btn btn-secondary px-4">戻る</a>
+                        <a href="<?php t(MAIN_FILE) ?><?php t($_view['back']) ?>" class="btn btn-secondary px-4">戻る</a>
                         <button type="submit" class="btn btn-danger px-4">削除</button>
                     </div>
                 </form>

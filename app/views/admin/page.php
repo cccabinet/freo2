@@ -9,7 +9,18 @@
             <nav style="--bs-breadcrumb-divider: '>';">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="<?php t(MAIN_FILE) ?>/admin/">ホーム</a></li>
+                    <?php if ($_view['parent'] === null) : ?>
                     <li class="breadcrumb-item active"><?php h($_view['title']) ?></li>
+                    <?php else : ?>
+                    <li class="breadcrumb-item"><a href="<?php t(MAIN_FILE) ?>/admin/page"><?php h($_view['title']) ?></a></li>
+                    <?php foreach ($_view['parents'] as $parent) : ?>
+                    <?php if ($parent['code'] === $_view['parent']) : ?>
+                    <li class="breadcrumb-item active"><?php h(truncate($parent['title'], 20)) ?></li>
+                    <?php else : ?>
+                    <li class="breadcrumb-item"><a href="<?php t(MAIN_FILE) ?>/admin/page?parent=<?php t(rawurlencode($parent['code'])) ?>"><?php h(truncate($parent['title'], 20)) ?></a></li>
+                    <?php endif ?>
+                    <?php endforeach ?>
+                    <?php endif ?>
                 </ol>
             </nav>
         </div>
@@ -18,7 +29,7 @@
             <div class="card-header heading"><?php h($_view['title']) ?></div>
             <div class="card-body">
                 <p>時系列ではない記事を管理します。</p>
-                <p><a href="<?php t(MAIN_FILE) ?>/admin/page_form" class="btn btn-primary">ページ登録</a></p>
+                <p><a href="<?php t(MAIN_FILE) ?>/admin/page_form<?php if ($_view['parent'] !== null) : ?>?parent=<?php t(rawurlencode($_view['parent'])) ?><?php endif ?>" class="btn btn-primary">ページ登録</a></p>
                 <?php if (isset($_GET['ok'])) : ?>
                 <div class="alert alert-success">
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
@@ -41,7 +52,7 @@
                 </div>
                 <?php endif ?>
 
-                <form action="<?php t(MAIN_FILE) ?>/admin/page_bulk" method="post" class="bulk">
+                <form action="<?php t(MAIN_FILE) ?>/admin/page_bulk<?php if ($_view['parent'] !== null) : ?>?parent=<?php t(rawurlencode($_view['parent'])) ?><?php endif ?>" method="post" class="bulk">
                     <input type="hidden" name="_token" value="<?php t($_view['token']) ?>" class="token">
                     <table class="table table-bordered">
                         <thead>
@@ -81,7 +92,16 @@
                             <tr>
                                 <td><input type="checkbox" name="bulks[]" value="<?php h($entry['id']) ?>"<?php isset($_SESSION['bulk']['entry'][$entry['id']]) ? e('checked="checked"') : '' ?> class="bulk"></td>
                                 <td class="d-none d-md-table-cell"><code class="text-dark"><?php h(truncate($entry['code'], 50)) ?></code></td>
-                                <td><?php h(truncate($entry['title'], 50)) ?></td>
+                                <td>
+                                    <?php if (isset($_view['children'][$entry['code']])) : ?>
+                                    <a href="<?php t(MAIN_FILE) ?>/admin/page?parent=<?php t(rawurlencode($entry['code'])) ?>" class="text-dark"><?php h(truncate($entry['title'], 50)) ?></a>
+                                    <?php /* 子ページの数
+                                    <span class="badge bg-secondary text-nowrap">子ページ <?php h($_view['children'][$entry['code']]) ?></span>
+                                    */ ?>
+                                    <?php else : ?>
+                                    <?php h(truncate($entry['title'], 50)) ?>
+                                    <?php endif ?>
+                                </td>
                                 <td class="d-none d-md-table-cell"><?php h(localdate('Ymd', $entry['datetime']) == localdate('Ymd') ? localdate('H:i:s', $entry['datetime']) : localdate('Y/m/d', $entry['datetime'])) ?></td>
                                 <?php if ($GLOBALS['setting']['page_use_approve']) : ?>
                                 <td class="text-nowrap"><span class="badge <?php t(app_badge('approved', $entry['approved'])) ?>"><?php h($GLOBALS['config']['option']['entry']['approved'][$entry['approved']]) ?></span></td>

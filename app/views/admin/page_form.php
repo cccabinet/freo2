@@ -10,6 +10,9 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="<?php t(MAIN_FILE) ?>/admin/">ホーム</a></li>
                     <li class="breadcrumb-item"><a href="<?php t(MAIN_FILE) ?>/admin/page">ページ管理</a></li>
+                    <?php foreach ($_view['parents'] as $parent) : ?>
+                    <li class="breadcrumb-item"><a href="<?php t(MAIN_FILE) ?>/admin/page?parent=<?php t(rawurlencode($parent['code'])) ?>"><?php h(truncate($parent['title'], 20)) ?></a></li>
+                    <?php endforeach ?>
                     <li class="breadcrumb-item active"><?php h($_view['title']) ?></li>
                 </ol>
             </nav>

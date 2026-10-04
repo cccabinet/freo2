@@ -492,6 +492,8 @@ types(型) ─< entries(エントリー) ─────────────
 - **`types`(型):** 初期データは `entry` と `page`。プラグインが独自の型を追加することもあります(`setup/install.php` で `types` に行を登録する)。
 - **`entries`(エントリー):** 型を問わず、すべてのコンテンツがここに入ります。主な列は次のとおりです。
   - `code`: URL に使う識別子(`/entry/detail/<code>`、`/page/<code>`)。**一意かどうかは型ごとに見ます**。型が違えば同じコードを使えます
+    - 使える文字は半角英数字・`_`・`-`・`/` です。`/` は階層の区切りなので、**先頭・末尾に置くことと、続けて書くことはできません**(`about/company` は可、`/about`・`about/`・`about//company` は不可)
+    - 管理画面のページ一覧(`/admin/page`)は、この階層で親子を判定してまとめます。コードを末尾から `/` ごとに遡り、**存在する最も近い祖先**を親とします(`about/staff` が無ければ、`about/staff/yamada` の親は `about`)。祖先が1つも無ければ一覧のトップに出ます。子のある行はタイトルが `?parent=<親のコード>` へのリンクになり、存在しないコードを `parent` に渡すとエラーになります。子の一覧から開いた登録画面(`/admin/page_form?parent=<親のコード>`)では、コードの初期値が `<親のコード>/` になります。判定は [app/services/entry.php](app/services/entry.php) の `service_entry_parent()`
   - `title`, `text`, `text_type`(本文形式: 複数行入力 / HTML / WYSIWYG など)
   - `public`(公開範囲): `all`(公開)/ `user`(登録ユーザー)/ `attribute`(指定の属性を持つユーザー)/ `password`(パスワード認証)/ `none`(非公開)
   - `public_begin`/`public_end`(公開期間)、`approved`(承認)

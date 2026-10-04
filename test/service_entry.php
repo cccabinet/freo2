@@ -18,6 +18,7 @@ model('category_sets.php');
 model('attributes.php');
 model('attribute_sets.php');
 model('logs.php');
+model('types.php');
 service('entry.php');
 
 // リクエスト情報を用意
@@ -489,6 +490,90 @@ $inserted_id = intval($entries[0]['id']);
 
     test_equals('delete entry log', count($logs), 1);
     test_equals('delete entry log model', $logs[0]['model'], 'entries');
+}
+
+// 親のコードの取得テスト
+{
+    // データ
+    $codes = ['about', 'about/staff', 'about/staff/yamada', 'about/history/2026', 'news/2026', 'About'];
+
+    // 結果（直接の親）
+    test_equals('parent code', service_entry_parent('about/staff', $codes), 'about');
+    test_equals('parent code (deep)', service_entry_parent('about/staff/yamada', $codes), 'about/staff');
+
+    // 結果（途中の階層が無ければ、最も近い祖先）
+    test_equals('parent code (nearest ancestor)', service_entry_parent('about/history/2026', $codes), 'about');
+
+    // 結果（祖先が無ければ親は無い）
+    test_equals('parent code (no ancestor)', service_entry_parent('news/2026', $codes), null);
+    test_equals('parent code (no slash)', service_entry_parent('about', $codes), null);
+
+    // 結果（大文字と小文字は区別する）
+    test_equals('parent code (case sensitive)', service_entry_parent('ABOUT/company', $codes), null);
+    test_equals('parent code (case sensitive match)', service_entry_parent('About/company', $codes), 'About');
+
+    // 結果（前方が一致するだけのコードは親ではない）
+    test_equals('parent code (prefix only)', service_entry_parent('aboutus/company', $codes), null);
+}
+
+// ページのコードの一括取得テスト
+{
+    // データ（ページを2件登録して、1件を削除する）
+    foreach (['test_page', 'test_page/deleted'] as $code) {
+        model('insert_entries', [
+            'values' => test_entry_values([
+                'type_id' => 2,
+                'code'    => $code,
+            ]),
+        ]);
+    }
+    model('delete_entries', [
+        'where' => 'code = ' . db_escape('test_page/deleted'),
+    ], [
+        'file' => false,
+    ]);
+
+    // 確認
+    $codes = service_entry_page_codes();
+
+    // 結果（ページだけを取得し、削除済みは含まない）
+    test_equals('page codes', in_array('test_page', $codes, true), true);
+    test_equals('page codes (other type)', in_array('pub_all', $codes, true), false);
+    test_equals('page codes (deleted)', in_array('test_page/deleted', $codes, true), false);
+}
+
+// 親ページの階層順の取得テスト
+{
+    // データ（test_page/none は登録しない）
+    foreach (['test_page/child' => '子', 'test_page/none/grand' => '離れた孫', 'test_page/child/grand' => '孫'] as $code => $title) {
+        model('insert_entries', [
+            'values' => test_entry_values([
+                'type_id' => 2,
+                'code'    => $code,
+                'title'   => $title,
+            ]),
+        ]);
+    }
+
+    // 結果（一覧のトップに近い順）
+    $parents = service_entry_page_parents('test_page/child/grand');
+
+    test_equals('page parents', array_column($parents, 'code'), ['test_page', 'test_page/child', 'test_page/child/grand']);
+    test_equals('page parents title', $parents[1]['title'], '子');
+
+    // 結果（途中の階層が無ければ飛ばす）
+    $parents = service_entry_page_parents('test_page/none/grand');
+
+    test_equals('page parents (nearest ancestor)', array_column($parents, 'code'), ['test_page', 'test_page/none/grand']);
+
+    // 結果（親が無い）
+    test_equals('page parents (null)', service_entry_page_parents(null), []);
+}
+
+// ページ一覧のURLの作成テスト
+{
+    test_equals('page list url', service_entry_page_list('ok=post', null), '/admin/page?ok=post');
+    test_equals('page list url (parent)', service_entry_page_list('ok=post', 'about/staff'), '/admin/page?ok=post&parent=about%2Fstaff');
 }
 
 // トランザクションを終了
