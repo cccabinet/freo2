@@ -31,11 +31,11 @@ function select_logs($queries, $options = [])
         $queries['from'] = DATABASE_PREFIX . 'logs AS logs '
                          . 'LEFT JOIN ' . DATABASE_PREFIX . 'users AS users ON logs.user_id = users.id';
 
-        // 削除済みデータは取得しない
+        // 削除済みデータは取得しない（削除済みユーザーの操作ログは取得する）
         if (!isset($queries['where'])) {
             $queries['where'] = 'TRUE';
         }
-        $queries['where'] = 'logs.deleted IS NULL AND users.deleted IS NULL AND (' . $queries['where'] . ')';
+        $queries['where'] = 'logs.deleted IS NULL AND (' . $queries['where'] . ')';
     } else {
         // ユーザーを取得
         $queries['from'] = DATABASE_PREFIX . 'logs';

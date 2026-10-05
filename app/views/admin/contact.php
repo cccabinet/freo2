@@ -40,14 +40,25 @@
                     <div class="input-group">
                         <input type="text" name="keyword" size="30" value="<?php t($_GET['keyword']) ?>" placeholder="名前、メールアドレス、件名、内容" class="form-control" style="flex: 2 1 0;">
                         <select name="status" class="form-select" style="flex: 1 1 0;">
-                            <option></option>
+                            <option value="">未完了</option>
                             <?php foreach ($GLOBALS['config']['option']['contact']['status'] as $key => $value) : ?>
                             <option value="<?php t($key) ?>"<?php strval($key) == $_GET['status'] ? e(' selected="selected"') : '' ?>><?php t($value) ?></option>
                             <?php endforeach ?>
+                            <option value="all"<?php $_GET['status'] === 'all' ? e(' selected="selected"') : '' ?>>すべて</option>
                         </select>
                         <button type="submit" class="btn btn-primary">絞り込み</button>
                     </div>
                 </form>
+                <?php /* 表示していない状況の案内（いったん非表示。戻すときは admin/contact.php の $_view['contact_status_hidden'] も戻す）
+
+                <?php if (!empty($_view['contact_status_hidden'])) : ?>
+                <p class="text-muted">
+                    <?php h(implode('・', $_view['contact_status_hidden'])) ?>のお問い合わせは表示していません。
+                    <a href="<?php t(MAIN_FILE) ?>/admin/contact?status=all<?php t(empty($_GET['keyword']) ? '' : '&keyword=' . rawurlencode($_GET['keyword'])) ?>">すべて表示</a>
+                </p>
+                <?php endif ?>
+
+                */ ?>
                 <form action="<?php t(MAIN_FILE) ?>/admin/contact_bulk" method="post" class="bulk">
                     <input type="hidden" name="_token" value="<?php t($_view['token']) ?>" class="token">
                     <input type="hidden" name="page" value="<?php t($_GET['page']) ?>">

@@ -24,17 +24,19 @@ $GLOBALS['string'] = [
     'menu_auth_home'      => 'ホーム',
     'menu_auth_contact'   => 'お問い合わせ履歴',
     'menu_auth_comment'   => 'コメント履歴',
+    'menu_auth_filter'    => 'フィルター',
     'menu_auth_modify'    => 'ユーザー情報編集',
     'menu_auth_leave'     => 'ユーザー情報削除',
     'menu_auth_logout'    => 'ログアウト',
 
+    'text_required'        => '必須',
     'text_entry_continue'  => 'エントリーを読む',
     'text_category_all'    => '全て',
     'text_goto_home'       => 'ホームページへ戻る',
+    'text_goto_entry'      => '戻る',
     'text_goto_auth'       => 'ログインページへ戻る',
     'text_goto_auth_home'  => 'マイページホームへ戻る',
     'text_goto_admin_home' => '戻る',
-    'text_goto_entry'      => '戻る',
 
     'button_back'                  => '戻る',
     'button_contact'               => '送信',
@@ -54,6 +56,7 @@ $GLOBALS['string'] = [
     'button_auth_modify'           => '登録',
     'button_auth_modify_confirm'   => '確認',
     'button_auth_modify_back'      => '修正',
+    'button_auth_filter'           => '登録',
     'button_auth_leave'            => '削除',
     'button_auth_leave_confirm'    => '進む',
 ];

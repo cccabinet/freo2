@@ -284,7 +284,7 @@ test.scenario = [
     },
     // 「登録ユーザーに公開」のエントリーの編集ページに移動
     function() {
-        test.click(codeRow(userEntry.code).find('a'), '一覧の ' + userEntry.code + ' の編集リンクが見つかりません。');
+        test.click(codeRow(userEntry.code).find('a:contains("編集")'), '一覧の ' + userEntry.code + ' の編集リンクが見つかりません。');
     },
     // 削除
     function() {
@@ -295,7 +295,7 @@ test.scenario = [
         test.assertText('div.alert-success', 'エントリーを削除しました。', 'エントリーを削除できていません。');
         test.assert(codeRow(userEntry.code).length === 0, '削除したエントリーが一覧に残っています。');
 
-        test.click(codeRow(attributeEntry.code).find('a'), '一覧の ' + attributeEntry.code + ' の編集リンクが見つかりません。');
+        test.click(codeRow(attributeEntry.code).find('a:contains("編集")'), '一覧の ' + attributeEntry.code + ' の編集リンクが見つかりません。');
     },
     // 削除
     function() {

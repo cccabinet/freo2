@@ -33,5 +33,9 @@ if (isset($_POST['_type']) && $_POST['_type'] === 'json') {
     $_view['entry_bulks'] = array_keys($_SESSION['bulk']['entry']);
 }
 
+// 操作した一覧の親ページ
+$_view['parent'] = (isset($_GET['parent']) && is_string($_GET['parent'])) ? $_GET['parent'] : '';
+$_view['back']   = '/admin/page' . ($_view['parent'] === '' ? '' : '?parent=' . rawurlencode($_view['parent']));
+
 // タイトル
 $_view['title'] = 'ページ一括削除';

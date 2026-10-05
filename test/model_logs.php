@@ -180,6 +180,41 @@ $inserted_id = intval($logs[0]['id']);
     test_equals('select associate log (no user username)', $logs[0]['user_username'], null);
 }
 
+// 関連データの取得（削除済みユーザー）テスト
+{
+    // データ（操作したユーザーを削除する）
+    model('delete_users', [
+        'where' => [
+            'id = :id',
+            [
+                'id' => $user_id,
+            ],
+        ],
+    ]);
+
+    // 取得
+    $logs = model('select_logs', [
+        'where' => 'logs.id = ' . intval($inserted_id),
+    ], [
+        'associate' => true,
+    ]);
+
+    // 結果（削除済みユーザーの操作ログも取得でき、ユーザー名に削除済みの印が付くこと）
+    test_equals('select associate log (deleted user)', count($logs), 1);
+    test_regexp('select associate log (deleted user username)', $logs[0]['user_username'], '^DELETED \d+ testuser1$');
+    test_equals('select associate log (deleted user name)', $logs[0]['user_name'], 'テスト太郎');
+
+    // 取得（一覧の件数）
+    $logs = model('select_logs', [
+        'select' => 'COUNT(*) AS count',
+    ], [
+        'associate' => true,
+    ]);
+
+    // 結果（件数にも含まれること）
+    test_equals('select associate log count (deleted user)', intval($logs[0]['count']), 2);
+}
+
 // 更新テスト
 {
     // 更新（管理画面からログを編集する画面は無いが、モデルとしては更新できる）

@@ -38,18 +38,34 @@ $(document).ready(function() {
             form.find(':submit').removeAttr('disabled');
         }, 3000);
 
-        $(window).off('beforeunload');
-
         return true;
     });
 
     /*
      * 入力破棄確認
      */
-    $('form.register input[type=text], form.register textarea').on('change', function() {
-        $(window).on('beforeunload', function() {
+    var changed = false;
+    var leaving = false;
+
+    // 入力のたびに記録する(changeだけだと、入力欄からフォーカスを外すまで記録されない)
+    // CKEditorの変更は、admin.jsがtextareaのinputイベントとして通知する
+    $('form.register input[type=text], form.register textarea').on('input change', function() {
+        changed = true;
+    });
+
+    // 実際に送信されるときだけ、確認を出さない
+    // 送信前の入力内容検証などで送信が取り消されると、ここまで伝わらない
+    // 確認画面は別のウィンドウに開くので、このページは離れない
+    $(document).on('submit', 'form[method=post]', function() {
+        if ($(this).attr('target') !== '_blank') {
+            leaving = true;
+        }
+    });
+
+    $(window).on('beforeunload', function() {
+        if (changed && !leaving) {
             return '編集中の内容は破棄されます。';
-        });
+        }
     });
 
     /*

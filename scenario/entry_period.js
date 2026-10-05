@@ -78,7 +78,7 @@ test.scenario = [
     },
     // エントリー編集ページに移動
     function() {
-        test.click(codeRow(scenarioEntry.code).find('a'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
+        test.click(codeRow(scenarioEntry.code).find('a:contains("編集")'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
     },
     // 公開開始日時を未来にする
     function() {
@@ -103,7 +103,7 @@ test.scenario = [
     },
     // エントリー編集ページに移動
     function() {
-        test.click(codeRow(scenarioEntry.code).find('a'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
+        test.click(codeRow(scenarioEntry.code).find('a:contains("編集")'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
     },
     // 公開開始日時を空にして、公開終了日時を過去にする
     function() {
@@ -126,7 +126,7 @@ test.scenario = [
     },
     // エントリー編集ページに移動
     function() {
-        test.click(codeRow(scenarioEntry.code).find('a'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
+        test.click(codeRow(scenarioEntry.code).find('a:contains("編集")'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
     },
     // エントリーを削除
     function() {

@@ -396,8 +396,60 @@ $inserted_id = intval($contacts[0]['id']);
     ]);
 
     // 結果（未入力の項目は条件に含めないこと）
-    test_equals('filter contacts (empty)', $filter['where'], '');
+    test_not_contains('filter contacts (empty)', $filter['where'], 'contacts.name');
     test_equals('filter contacts pager (empty)', $filter['pager'], '');
+
+    // 結果（状況を指定していないときは、対応の済んだものを条件で除くこと）
+    test_equals('filter contacts status (default)', $filter['where'], 'contacts.status NOT IN(' . db_escape('closed') . ',' . db_escape('unnecessary') . ')');
+}
+
+// 絞り込み（状況の指定なし）テスト
+{
+    // 確認（管理画面を開いた直後は status のキー自体が無い）
+    $filter = model('filter_contacts', [
+        'keyword' => 'お問い合わせ',
+    ], [
+        'associate' => true,
+    ]);
+
+    // 結果（キーが無くても、対応の済んだものを条件で除くこと）
+    test_contains('filter contacts status (not set)', $filter['where'], 'contacts.status NOT IN(');
+    test_contains('filter contacts status (not set keyword)', $filter['where'], 'contacts.subject LIKE ' . db_escape('%お問い合わせ%'));
+}
+
+// 絞り込み（すべての状況）テスト
+{
+    // 確認
+    $filter = model('filter_contacts', [
+        'status' => 'all',
+    ], [
+        'associate' => true,
+    ]);
+
+    // 結果（状況では絞り込まないこと）
+    test_equals('filter contacts status (all)', $filter['where'], '');
+
+    // 結果（ページャーには引き継ぐこと）
+    test_equals('filter contacts pager (all)', $filter['pager'], 'status=all');
+}
+
+// 絞り込み（表示しない状況が無い場合）テスト
+{
+    // データ（設定を空にすると、状況を指定しなくても条件を付けない）
+    $contact_status_hidden = $GLOBALS['config']['contact_status_hidden'];
+    $GLOBALS['config']['contact_status_hidden'] = [];
+
+    // 確認
+    $filter = model('filter_contacts', [
+        'status' => '',
+    ], [
+        'associate' => true,
+    ]);
+
+    $GLOBALS['config']['contact_status_hidden'] = $contact_status_hidden;
+
+    // 結果
+    test_equals('filter contacts status (hidden none)', $filter['where'], '');
 }
 
 // 絞り込み（関連データなし）テスト

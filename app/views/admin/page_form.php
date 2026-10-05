@@ -10,6 +10,9 @@
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="<?php t(MAIN_FILE) ?>/admin/">ホーム</a></li>
                     <li class="breadcrumb-item"><a href="<?php t(MAIN_FILE) ?>/admin/page">ページ管理</a></li>
+                    <?php foreach ($_view['parents'] as $parent) : ?>
+                    <li class="breadcrumb-item"><a href="<?php t(MAIN_FILE) ?>/admin/page?parent=<?php t(rawurlencode($parent['code'])) ?>"><?php h(truncate($parent['title'], 20)) ?></a></li>
+                    <?php endforeach ?>
                     <li class="breadcrumb-item active"><?php h($_view['title']) ?></li>
                 </ol>
             </nav>
@@ -43,7 +46,7 @@
                 </div>
                 <?php endif ?>
 
-                <form action="<?php t(MAIN_FILE) ?>/admin/page_form<?php $_view['entry']['id'] ? t('?id=' . $_view['entry']['id']) : '' ?>" method="post" class="register validate">
+                <form action="<?php t(MAIN_FILE) ?>/admin/page_form<?php $_view['entry']['id'] ? t('?id=' . $_view['entry']['id']) : '' ?>" method="post" class="register validate" data-draft="<?php t(app_draft_key($_view['type']['id'], $_view['entry']['id'])) ?>" data-draft-modified="<?php t($_view['entry']['modified'] ?? '') ?>">
                     <input type="hidden" name="_token" value="<?php t($_view['token']) ?>" class="token">
                     <input type="hidden" name="id" value="<?php t($_view['entry']['id']) ?>">
                     <input type="hidden" name="type_id" value="<?php t($_view['type']['id']) ?>">

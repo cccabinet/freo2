@@ -286,11 +286,16 @@ function filter_contacts($queries, $options = [])
         }
 
         // 状況を取得
-        if (isset($queries['status'])) {
-            if ($queries['status'] !== '') {
-                $wheres[] = 'contacts.status = ' . db_escape($queries['status']);
-                $pagers[] = 'status=' . rawurlencode($queries['status']);
-            }
+        $status = isset($queries['status']) ? $queries['status'] : '';
+        if ($status === 'all') {
+            // すべての状況を対象にする（条件を付けない）
+            $pagers[] = 'status=all';
+        } elseif ($status !== '') {
+            $wheres[] = 'contacts.status = ' . db_escape($status);
+            $pagers[] = 'status=' . rawurlencode($status);
+        } elseif (!empty($GLOBALS['config']['contact_status_hidden'])) {
+            // 状況を指定していないときは、対応の済んだものを対象にしない
+            $wheres[] = 'contacts.status NOT IN(' . implode(',', array_map('db_escape', $GLOBALS['config']['contact_status_hidden'])) . ')';
         }
 
         // メモを取得

@@ -14,9 +14,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 入力データを整理
     $post = [
         'attribute' => model('normalize_attributes', [
-            'id'   => isset($_POST['id'])   ? $_POST['id']   : '',
-            'name' => isset($_POST['name']) ? $_POST['name'] : '',
-            'memo' => isset($_POST['memo']) ? $_POST['memo'] : '',
+            'id'         => isset($_POST['id'])         ? $_POST['id']         : '',
+            'name'       => isset($_POST['name'])       ? $_POST['name']       : '',
+            'filterable' => isset($_POST['filterable']) ? $_POST['filterable'] : '',
+            'memo'       => isset($_POST['memo'])       ? $_POST['memo']       : '',
         ]),
     ];
 

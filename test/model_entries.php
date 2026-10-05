@@ -136,8 +136,9 @@ $category_id = intval($categories[0]['id']);
 
 model('insert_attributes', [
     'values' => [
-        'name' => 'テスト属性',
-        'sort' => 1,
+        'name'       => 'テスト属性',
+        'filterable' => 0,
+        'sort'       => 1,
     ],
 ]);
 $attributes = model('select_attributes', [
@@ -603,6 +604,41 @@ $associate_id = intval($entries[0]['id']);
 
     // 結果
     test_equals('validate regexp entry code (slash)', count($warnings), 0);
+}
+
+// コードの書式（スラッシュの位置）テスト
+{
+    // データ（先頭・末尾のスラッシュと、連続するスラッシュは警告になる）
+    $test_codes = [
+        'leading'  => '/test3',
+        'trailing' => 'test3/',
+        'double'   => 'test3//child',
+        'only'     => '/',
+    ];
+
+    foreach ($test_codes as $test_key => $test_code) {
+        $test_entry = $data_entry;
+        $test_entry['code'] = $test_code;
+
+        // 確認
+        $test_entry = model('normalize_entries', $test_entry);
+        $warnings   = model('validate_entries', $test_entry);
+
+        // 結果
+        test_equals('validate regexp entry code (slash ' . $test_key . ')', count($warnings), 1);
+        test_contains('validate regexp entry code (slash ' . $test_key . ' message)', $warnings['code'], '「/」');
+    }
+
+    // データ（深い階層は警告にならない）
+    $test_entry = $data_entry;
+    $test_entry['code'] = 'test3/child/grandchild';
+
+    // 確認
+    $test_entry = model('normalize_entries', $test_entry);
+    $warnings   = model('validate_entries', $test_entry);
+
+    // 結果
+    test_equals('validate regexp entry code (slash deep)', count($warnings), 0);
 }
 
 // コードの長さ（境界値）テスト

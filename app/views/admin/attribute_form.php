@@ -40,6 +40,14 @@
                                 <input type="text" name="name" size="30" value="<?php t($_view['attribute']['name']) ?>" class="form-control">
                             </div>
                             <div class="form-group mb-2">
+                                <label class="fw-bold">フィルター対象 <span class="badge bg-danger">必須</span> <span class="badge text-light bg-secondary" data-toggle="tooltip" title="対象にすると、この属性を持つ会員（ゲスト）が、マイページの「フィルター」でこの属性に対して公開したエントリーを表示するかどうかを選択できるようになります。">？</span></label>
+                                <select name="filterable" class="form-select" style="width: 200px;">
+                                    <?php foreach ($GLOBALS['config']['option']['attribute']['filterable'] as $key => $value) : ?>
+                                    <option value="<?php t($key) ?>"<?php $key == $_view['attribute']['filterable'] ? e(' selected="selected"') : '' ?>><?php t($value) ?></option>
+                                    <?php endforeach ?>
+                                </select>
+                            </div>
+                            <div class="form-group mb-2">
                                 <label class="fw-bold">メモ <span class="badge text-light bg-secondary" data-toggle="tooltip" title="公開されないテキストです。">？</span></label>
                                 <textarea name="memo" rows="10" cols="50" class="form-control"><?php t($_view['attribute']['memo']) ?></textarea>
                             </div>

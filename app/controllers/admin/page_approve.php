@@ -40,8 +40,20 @@ if (!empty($_POST['id'])) {
     // トランザクションを終了
     db_commit();
 
+    // 親ページを取得
+    $entries = model('select_entries', [
+        'select' => 'code',
+        'where'  => [
+            'id = :id',
+            [
+                'id' => $_POST['id'],
+            ],
+        ],
+    ]);
+    $parent = empty($entries) ? null : service_entry_parent($entries[0]['code'], service_entry_page_codes());
+
     // リダイレクト
-    redirect('/admin/page?ok=approve');
+    redirect(service_entry_page_list('ok=approve', $parent));
 } else {
     // リダイレクト
     redirect('/admin/page?warning=approve');

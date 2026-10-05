@@ -195,7 +195,7 @@ test.scenario = [
     },
     // エントリー編集ページに移動
     function() {
-        test.click(codeRow(scenarioEntry.code).find('a'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
+        test.click(codeRow(scenarioEntry.code).find('a:contains("編集")'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
     },
     // 編集画面にフィールドの値が復元されていることを確認して、エントリーを削除
     function() {

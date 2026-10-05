@@ -61,6 +61,8 @@
                             <dd class="col-sm-10"><?php h($_view['version_info']['server_version']) ?></dd>
                             <dt class="col-sm-2">PHP</dt>
                             <dd class="col-sm-10"><?php h($_view['version_info']['php_version']) ?></dd>
+                            <dt class="col-sm-2">画像処理</dt>
+                            <dd class="col-sm-10"><?php h($_view['version_info']['gd_version']) ?></dd>
                             <dt class="col-sm-2">データベース</dt>
                             <dd class="col-sm-10"><?php h($_view['version_info']['database_version']) ?></dd>
                         </dl>

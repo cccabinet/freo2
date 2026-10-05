@@ -45,6 +45,7 @@
                         <thead>
                             <tr>
                                 <th class="text-nowrap">名前</th>
+                                <th class="text-nowrap d-none d-md-table-cell">フィルター対象</th>
                                 <th class="text-nowrap d-none d-md-table-cell">並び順</th>
                                 <th class="text-nowrap">作業</th>
                             </tr>
@@ -52,6 +53,7 @@
                         <tfoot>
                             <tr>
                                 <th class="text-nowrap">名前</th>
+                                <th class="text-nowrap d-none d-md-table-cell">フィルター対象</th>
                                 <th class="text-nowrap d-none d-md-table-cell">並び順</th>
                                 <th class="text-nowrap">作業</th>
                             </tr>
@@ -60,6 +62,7 @@
                             <?php foreach ($_view['attributes'] as $attribute) : ?>
                             <tr id="sort_<?php h($attribute['id']) ?>">
                                 <td><?php h(truncate($attribute['name'], 50)) ?></td>
+                                <td class="d-none d-md-table-cell"><span class="badge <?php t(app_badge('filterable', $attribute['filterable'])) ?>"><?php h($GLOBALS['config']['option']['attribute']['filterable'][$attribute['filterable']]) ?></span></td>
                                 <td class="d-none d-md-table-cell"><span class="handle text-nowrap"><span class="handle text-nowrap"><svg class="bi flex-shrink-0 me-1 mb-1" width="16" height="16"><use xlink:href="#symbol-arrow-down-up"/></svg></span></span></td>
                                 <td><a href="<?php t(MAIN_FILE) ?>/admin/attribute_form?id=<?php t($attribute['id']) ?>" class="btn btn-primary btn-sm text-nowrap">編集</a></td>
                             </tr>

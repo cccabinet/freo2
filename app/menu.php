@@ -79,6 +79,13 @@ $GLOBALS['menu_contents'] = [
                 'icon'   => null,
                 'show'   => $GLOBALS['setting']['menu_auth_comment'],
             ],
+            'filter' => [
+                'name'   => $GLOBALS['string']['menu_auth_filter'],
+                'link'   => '/auth/filter',
+                'active' => '/^filter$/',
+                'icon'   => null,
+                'show'   => !empty($GLOBALS['attribute_filterables']),
+            ],
             'modify' => [
                 'name'   => $GLOBALS['string']['menu_auth_modify'],
                 'link'   => '/auth/modify',
