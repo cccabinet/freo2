@@ -483,6 +483,9 @@ function validate_entries($queries, $options = [])
             $messages['code'] = 'コードが入力されていません。';
         } elseif (!validator_regexp($queries['code'], '^[\w\-\/]+$')) {
             $messages['code'] = 'コードは半角英数字で入力してください。';
+        } elseif (!validator_regexp($queries['code'], '^[\w\-]+(\/[\w\-]+)*$')) {
+            // スラッシュはページの階層に使うため、先頭・末尾と連続を許可しない
+            $messages['code'] = 'コードの先頭と末尾に「/」は使えません。また、「/」を続けて使うことはできません。';
         } elseif (!validator_between($queries['code'], 1, 80)) {
             $messages['code'] = 'コードは1文字以上80文字以内で入力してください。';
         } elseif ($options['duplicate'] === true) {

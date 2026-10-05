@@ -7,6 +7,7 @@ freo2 のコードをはじめて読む・改修する・プラグインやテ�
   - [設置方法](https://freo.jp/freo2/setup/) / [開発環境構築方法](https://freo.jp/freo2/develop/) / [テーマ](https://freo.jp/freo2/theme/) / [プラグイン](https://freo.jp/freo2/plugin/)
   - このガイドと公式サイトの内容が食い違う場合、設置・テーマ・プラグインの手順は公式サイトを正とします
 - freo2 で何ができるか(機能の紹介): [OVERVIEW.md](OVERVIEW.md)
+- すぐに使えるプラグイン: https://github.com/refirio/freo2-plugins
 - フレームワーク(levis): https://refirio.org/levis/
 - ライセンス: MIT
 
@@ -64,7 +65,7 @@ Laravel などに慣れていると最初は戸惑いますが、処理はファ
 - PHP 8 以上
 - MariaDB 10 以上、もしくは MySQL 8 以上
 - (任意)Apache の `mod_rewrite`: 有効なら URL から `index.php` を省略できる(`.htaccess`)
-- (任意)PHP の GD: **メディアに画像を登録したときのサムネイルの作成にだけ使います。** 無効でもエラーにはならず、サムネイルが作られないだけです(一覧ではアイコンで表示されます)。GD が有効でも、ビルドによっては JPEG を扱えないことがあるため、**形式ごとに `imagecreatefromjpeg()` などの有無を確認しています**
+- (任意)PHP の GD: **メディアに画像を登録したときのサムネイルの作成にだけ使います。** 無効でもエラーにはならず、サムネイルが作られないだけです(一覧ではアイコンで表示されます)。GD が有効でも、ビルドによっては JPEG を扱えないことがあるため、**形式ごとに `imagecreatefromjpeg()` などの有無を確認しています**。扱える形式は、管理画面の「バージョン情報」(`/admin/version`)で確認できます
 
 ### 手順
 
@@ -156,7 +157,7 @@ home/
 └── levis/    config.default.php, app/, libs/, migrate/, plugins/, test/, themes/
 ```
 
-1. 公開ディレクトリと同じ階層に `levis` ディレクトリを作り、`config.default.php`・`app`・`libs`・`migrate`・`plugins`・`test`・`themes` をその中に移します(`.gitignore` と `README.md` は無くても動作に支障はありません)。
+1. 公開ディレクトリと同じ階層に `levis` ディレクトリを作り、`config.default.php`・`app`・`libs`・`migrate`・`plugins`・`test`・`themes` をその中に移します(`.gitignore` と `README.md`・`OVERVIEW.md`・`DEVELOPMENT.md` は無くても動作に支障はありません)。
 2. `html/index.php` の `require_once 'config.php';` を `require_once '../levis/config.php';` に変えます。
 3. `levis/config.default.php` を複製して `levis/config.php` を作り、パスを設定します。以降は通常の手順と同様に、データベースなどを設定します。
 
@@ -201,6 +202,9 @@ freo2/
 ├── index.php               エントリーポイント(全リクエストがここを通る)
 ├── .htaccess               URLから index.php を省略するためのリライト
 ├── config.default.php      設定ファイルのひな形 → config.php にコピーして使う
+├── README.md               リポジトリの説明
+├── OVERVIEW.md             freo2 で何ができるか(機能の紹介)
+├── DEVELOPMENT.md          このガイド
 ├── css/ js/ img/           本体用の静的ファイル(jQuery など)
 ├── files/                  アップロードファイルの保存先(要書き込み権限)
 ├── scenario/               ブラウザで動かすシナリオテスト
@@ -488,6 +492,8 @@ types(型) ─< entries(エントリー) ─────────────
 - **`types`(型):** 初期データは `entry` と `page`。プラグインが独自の型を追加することもあります(`setup/install.php` で `types` に行を登録する)。
 - **`entries`(エントリー):** 型を問わず、すべてのコンテンツがここに入ります。主な列は次のとおりです。
   - `code`: URL に使う識別子(`/entry/detail/<code>`、`/page/<code>`)。**一意かどうかは型ごとに見ます**。型が違えば同じコードを使えます
+    - 使える文字は半角英数字・`_`・`-`・`/` です。`/` は階層の区切りなので、**先頭・末尾に置くことと、続けて書くことはできません**(`about/company` は可、`/about`・`about/`・`about//company` は不可)
+    - 管理画面のページ一覧(`/admin/page`)は、この階層で親子を判定してまとめます。コードを末尾から `/` ごとに遡り、**存在する最も近い祖先**を親とします(`about/staff` が無ければ、`about/staff/yamada` の親は `about`)。祖先が1つも無ければ一覧のトップに出ます。子のある行はタイトルが `?parent=<親のコード>` へのリンクになり、存在しないコードを `parent` に渡すとエラーになります。子の一覧から開いた登録画面(`/admin/page_form?parent=<親のコード>`)では、コードの初期値が `<親のコード>/` になります。判定は [app/services/entry.php](app/services/entry.php) の `service_entry_parent()`
   - `title`, `text`, `text_type`(本文形式: 複数行入力 / HTML / WYSIWYG など)
   - `public`(公開範囲): `all`(公開)/ `user`(登録ユーザー)/ `attribute`(指定の属性を持つユーザー)/ `password`(パスワード認証)/ `none`(非公開)
   - `public_begin`/`public_end`(公開期間)、`approved`(承認)
@@ -523,6 +529,7 @@ types(型) ─< entries(エントリー) ─────────────
 - **「伏せて見える」は、エントリーは取得できるが中身が差し替わる**という意味です。タイトルの先頭に設定の文字列(初期値は `要認証: `)が付き、本文は案内文に置き換わり、画像も外されます。認証に成功すると `$_SESSION['entry_passwords'][<エントリーID>]` に記録され、以降は本来の内容が表示されます。
 - **公開期間(`public_begin`/`public_end`)と承認(`approved`)は、権限に関係なく効きます。** 管理者でログインしていても、公開開始前・公開終了後のエントリーは公開側に出ません。
 - 属性には有効期間(`users.attribute_begin`/`attribute_end`)があり、**期限外のユーザーは属性を持っていない扱い**になります([app/controllers/before.php](app/controllers/before.php))。
+- **ゲストは、フィルター対象の属性のうち、自分で表示を選んでいないものを持っていない扱い**になります(→ [ユーザーと公開制御](#ユーザーと公開制御))。
 - **本文は `text_type` によって出力が変わります。** 「なし」は本文を返さず、「複数行入力」はエスケープして `<p>` で囲み改行を `<br>` にし、「HTML直接入力」「WYSIWYGエディタ」はそのまま出します。`pictures`(改行区切り)も、このとき配列になります。**ビュー側で整形するのではなく、取得した時点で整形済みです。**
 
 ### ユーザーと公開制御
@@ -535,6 +542,13 @@ types(型) ─< entries(エントリー) ─────────────
   - `enabled` が 0 のユーザーは、パスワードが合っていてもログインできません。
   - **ログインに10回続けて失敗すると、そのアカウントは5分間凍結されます**(`users.failed`/`failed_last` で判定)。正しいパスワードでも入れなくなり、ログインに成功すると回数はリセットされます。
 - **`attributes` / `attribute_sets`:** 「有料会員」のような属性です。ユーザーとエントリーの両方にひも付け、`public = 'attribute'` のエントリーを見られる人を絞り込みます。ユーザー側には有効期間(`attribute_begin`/`attribute_end`)も持てます。
+  - **フィルター:** `attributes.filterable` が 1 の属性は、ゲストが会員ページの「フィルター」(`/auth/filter`)で、表示するかどうかを自分で選べます。「R-18 は見たくない」のように、**見える範囲を自分で狭める**ための機能です。
+    - ログインした時点で [app/controllers/before.php](app/controllers/before.php) が、与えられた属性からフィルター対象で表示を選んでいないものを除いて `$GLOBALS['attributes']` を作ります。判定は `service_entry_select_published()` のままなので、エントリーを取得するすべての画面に効きます。
+    - **初期状態は「表示しない」です。** 選んだ属性はクッキー `attribute_filter[<ユーザーID>]` に保存します(ユーザーごとに分けているので、1つのブラウザを複数人で使っても、ほかの人の選択は効きません)。
+    - **クッキーの値は、与えられた属性と照らし合わせてから使います。** 与えられた属性から除くだけなので、クッキーを書き換えても見える範囲は広がりません。
+    - 対象はゲスト(power 0)だけです。閲覧者以上は、もともと属性を見ずに判定しています。
+    - 判定は「エントリーの属性のどれか1つでも一致すれば見える」のままです。フィルター対象の属性とほかの属性を同じエントリーに付けると、フィルター対象を外してもほかの属性で見えるので、**エントリーに付けるフィルター対象の属性は1つまで**にします。
+    - フィルターで隠れたエントリーの詳細は、ほかの理由で見えないときと同じく「見つかりません」になります。
 - **`sessions`:** 「ログイン状態を保持する」ためのセッションです。ログアウトしても行は消えず、`keep` が 0 になるだけで、期限切れの行は次のログイン時にまとめて削除されます。
 
 ### サイト運営
@@ -544,10 +558,10 @@ types(型) ─< entries(エントリー) ─────────────
 | `settings` | 管理画面「設定」の値(キーと値の組) |
 | `menus` | 公開側のメニュー |
 | `widgets` | 画面の決まった位置に差し込むHTML(`public_home`, `admin_page` など) |
-| `contacts` | お問い合わせ。`status`(未対応 / 対応中 / 完了 / 対応不要)で進捗を管理します |
+| `contacts` | お問い合わせ。`status`(未対応 / 対応中 / 完了 / 対応不要)で進捗を管理します。管理画面の一覧は、状況を指定しないと `app/config.php` の `contact_status_hidden`(既定は完了・対応不要)を除いて表示します |
 | `comments` | コメント。`entry_id` が入ればエントリーへのコメント、`contact_id` が入れば**お問い合わせのやりとり**(管理者と会員の双方が書き込めます) |
 | `plugins` / `themes` | インストール済みのプラグイン・テーマと、その有効状態・設定値 |
-| `logs` | 管理画面での操作ログ。**同じ操作(対象と種類の組み合わせ)は、1リクエストにつき1件だけ**記録されます(並び順を10件まとめて変えても1件) |
+| `logs` | 管理画面での操作ログ。**同じ操作(対象と種類の組み合わせ)は、1リクエストにつき1件だけ**記録されます(並び順を10件まとめて変えても1件)。**保存日数(`app/config.php` の `log_retention`、初期値180日)を過ぎたログは、ログを記録するときに物理削除されます**(Cron は不要。`0` にすると削除しません) |
 
 ---
 
@@ -581,6 +595,7 @@ types(型) ─< entries(エントリー) ─────────────
 | `/auth/leave` | 退会(`leave_confirm` で確認 → 完了) |
 | `/auth/contact` | 自分が送ったお問い合わせの一覧。詳細から**管理者とコメントでやりとりできる** |
 | `/auth/comment` | 自分が投稿したコメントの一覧 |
+| `/auth/filter` | フィルター。フィルター対象の属性を持つゲストだけ、メニューに出る(→ [ユーザーと公開制御](#ユーザーと公開制御)) |
 | `/auth/logout` | ログアウト |
 
 - **会員登録と退会は、設定「訪問者によるユーザー新規登録」(`user_use_register`)を有効にしないと使えません。** 無効のままだとログイン画面にリンクが出ず、URL を直接開いてもエラーになります。初期値は無効です。
@@ -692,6 +707,15 @@ types(型) ─< entries(エントリー) ─────────────
 
 3. 管理画面の「テーマ」からインストールし、有効にします。**有効にできるテーマは1つだけです。**
 
+**見出し・メニュー・ボタンなどの文言は、ビューを差し替えなくても変えられます。** 公開側・会員向け(`auth`)の画面は、多くの画面に出る短い文言を [app/string.php](app/string.php) の `$GLOBALS['string']` から出力しています。テーマの `app/bootstrap.php` で値を書き換えます(参考: [themes/sample/app/bootstrap.php](themes/sample/app/bootstrap.php))。
+
+```php
+$GLOBALS['string']['heading_menu']   = 'Menu';
+$GLOBALS['string']['text_required']  = 'Required';   // 入力欄の「必須」のバッジ
+```
+
+`string.php` に入れているのは、**多くの画面に共通して出る短い文言だけ**です。その画面だけの項目名(「お名前」など)や案内文はビューに直接書いてあるので、変えたいときはビューを差し替えます。検証のメッセージ(モデル)と管理画面の文言は対象外です。
+
 **`footer.php` を差し替えるときは、`<?php isset($_view['script']) ? e($_view['script']) : '' ?>` の出力を残してください。** プラグインは、ここを通して画面にJSを読み込みます。消すとプラグインのJSが読み込まれなくなります(`sample` テーマのフッターは残しています)。
 
 `config.php` に `setting_define`(設定項目の定義)と `setting_default`(初期値)を書くと、管理画面のテーマ詳細から設定を変更できます。値は `$GLOBALS['theme'][<コード>]['setting']` で参照します。
@@ -723,6 +747,7 @@ plugins/sample/
 ```
 
 テーブルの作成やメニューの追加など、`sample` に含まれない機能は、下記「書くときのポイント」のコード例を参考にしてください。
+独自のテーブルや型を持つ実際のプラグインは、別のリポジトリ [freo2-plugins](https://github.com/refirio/freo2-plugins) で公開しています。
 
 ### ファイル構成
 
@@ -820,6 +845,16 @@ $GLOBALS['plugin']['myplugin']['updated']     = '2026-01-01';
       $_view['entry']['text'] = myplugin_convert($_view['entry']['text']);
   }
   ```
+- **エントリー(`entries`)の入力画面を作るなら、入力中の内容の一時保存を有効にできます。** 本体の `entry_form` と同じく、`form.register` に次の2つの属性を付けると、`js/admin.js` がタイトル(`input[name=title]`)と本文(`textarea[name=text]`)をブラウザ(`localStorage`)に一時保存し、次に開いたときに復元するかを聞きます。属性が無ければ何もしません。
+
+  ```php
+  <form action="..." method="post" class="register validate" data-draft="<?php t(app_draft_key($_view['type']['id'], $_view['entry']['id'])) ?>" data-draft-modified="<?php t($_view['entry']['modified'] ?? '') ?>">
+  ```
+
+  - 一時保存は記事ごとに1件(新規登録は型ごとに1件)で、ユーザーごとに分かれます。キーは `app_draft_key()`([app/bootstrap.php](app/bootstrap.php))が作ります。
+  - **登録が完了したと判断するのは、送信した後に `?ok=post` の付いた画面を開いたときです。** 登録処理の最後は、本体と同じく `redirect('/admin/<一覧>?ok=post')` にします。
+  - `data-draft-modified` は、保存されている内容が一時保存より新しいか(ほかの人が更新したか)を判断するのに使います。
+  - 明示的にログアウトすると、そのユーザーの一時保存は削除されます(ログイン画面で `$_view['script']` を通してスクリプトを出すので、テーマで `auth/footer.php` を差し替えるときはこの出力を残します)。
 - **静的ファイル(JS/CSS)はプラグインのディレクトリに置き(例: `plugins/<コード>/js/admin.js`)、そのファイルを使う画面のプラグインのビューから読み込みます。** 本体の `js/admin.js` などには書き足さないでください(プラグインを入れ外しするたびに本体を直す必要が出るため)。
   - 読み込みには `loader_file()` を使います(キャッシュ回避のため、ファイルの更新日時をクエリに付ける)。`loader_js()` は本体の `js/` 配下専用なので、プラグインのファイルには使えません。
   - 公開側・会員向け(`auth`)・管理画面のフッターはどれも、`$_view['script']` の内容を `</body>` の直前(jQuery などの読み込みより後)に出力します。ビューで `footer.php` を import する前に代入します。
@@ -887,12 +922,10 @@ CLI で実行するときは、設定ファイルやマイグレーションの�
 単体テストとブラウザテスト(シナリオテスト)があり、どちらもデータベースを読み書きします。
 テスト中の接続先データベースは、自動で **`<DATABASE_NAME>-test`**(例: `freo2-test`)に切り替わります([app/database.php](app/database.php))。
 
-> **リリース前の機能です:** この自動切り替えは、次回のバージョンで正式に入る予定の機能です。開発中のコードには実装済みですが、現在リリースされている freo2 には含まれていません。
-
 テストはテーブルを空にするので、あらかじめテスト用のデータベースを作っておきます(例: データベース名 `freo2-test`、照合順序 `utf8mb4_general_ci`)。
 テーブルを作るには、`config.php` の `DATABASE_NAME` を一時的にテスト用データベースに変えてマイグレーションを実行し、終わったら元に戻します。
 
-> **公式の開発環境構築方法との違い:** 公式サイトでは「テスト実行時に `DATABASE_NAME` を `freo2-test` に書き換える」と案内されています。これは自動切り替えが入っていない、現在のリリース版の手順です。自動切り替えのあるバージョンでは、**テストを実行するときは書き換えないでください。** 書き換えたまま実行すると、`freo2-test-test` に接続しようとします。
+> **テストを実行するときは、`DATABASE_NAME` を書き換えないでください。** 接続先は自動で切り替わるので、書き換えたまま実行すると `freo2-test-test` に接続しようとします。以前のバージョンでは「テスト実行時に `DATABASE_NAME` を `freo2-test` に書き換える」手順でしたが、今は不要です。
 
 **どちらも `DEBUG_LEVEL` が 1 以上のときだけ動きます。** 本番(`DEBUG_LEVEL` が 0)では入口も表示されません。
 
@@ -981,6 +1014,16 @@ db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'categories;');
 | `test_array_subset()` | 配列の中にその行が含まれる(比較は**非厳密**) |
 
 - `test_equals()` は型も見ます。数値の列は `intval()` でそろえてから比較します(データベースから返る型は PHP のバージョンによって変わります)。
+- **環境が整っていなくて確認できないテストは、`test_skip($title, $reason)` で飛ばします。** 実行した時点で `SKIP: <タイトル> (<理由>)` と出力され、集計は OK / NG / SKIP の3行になります。たとえば [test/service_media.php](test/service_media.php) は、GD が使えない環境ではサムネイルのテストをまとめて飛ばします。**確認できなかったものを、成功として数えないため**です。
+
+  ```php
+  if (!function_exists('imagecreatetruecolor')) {
+      test_skip('thumbnail tests', 'GDが有効ではありません。');
+  } else {
+      // サムネイルのテスト
+  }
+  ```
+
 - コードカバレッジを出すなら、冒頭で `service('coverage.php'); service_coverage_start();`、末尾で `service_coverage_output(service_coverage_end(), ['app/models/categories.php']);` を呼びます(Xdebug の `coverage` モードが必要)。一括テストのときは邪魔になるので、参考実装のように `if (!isset($_GET['_test']))` で囲みます。
 
 ### シナリオテスト(`scenario/`)

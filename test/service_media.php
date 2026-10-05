@@ -129,8 +129,8 @@ foreach ([
 }
 
 if (!$gd) {
-    // サムネイルの確認を飛ばしたことが分かるように、1件だけ記録する
-    test_equals('skip thumbnail tests (gd is not available)', $gd, false);
+    // サムネイルの確認は飛ばす（テスト用の画像の作成も GD に依存するため）
+    test_skip('thumbnail tests', 'GDが有効ではありません。');
 } else {
     // 一時ファイルが残らないことを確認するため、テスト開始時の数を控えておく
     $temp_count = count(glob(sys_get_temp_dir() . '/media_*'));

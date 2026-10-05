@@ -445,6 +445,12 @@ $GLOBALS['setting_contents'] = [
             'type'        => 'textarea',
             'required'    => false,
         ],
+        'text_auth_filter' => [
+            'name'        => 'フィルター',
+            'explanation' => null,
+            'type'        => 'textarea',
+            'required'    => false,
+        ],
         'text_auth_modify' => [
             'name'        => 'ユーザー情報編集',
             'explanation' => null,

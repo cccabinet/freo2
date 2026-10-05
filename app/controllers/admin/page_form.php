@@ -1,5 +1,6 @@
 <?php
 
+import('app/services/entry.php');
 import('libs/modules/file.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -67,6 +68,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $_view['entry']['code']      = $GLOBALS['setting']['page_default_code'] ? localdate($GLOBALS['setting']['page_default_code']) : '';
         $_view['entry']['text_type'] = $GLOBALS['setting']['page_text_type'];
+
+        // 子ページの一覧から登録する場合、コードの先頭に親ページのコードを入れる
+        if (isset($_GET['parent']) && $_GET['parent'] !== '') {
+            if (!in_array($_GET['parent'], service_entry_page_codes(), true)) {
+                error('親ページが見つかりません。');
+            }
+
+            $_view['entry']['code'] = $_GET['parent'] . '/' . $_view['entry']['code'];
+        }
     } else {
         $entries = model('select_entries', [
             'where' => [
@@ -138,6 +148,9 @@ if ((empty($_POST['view']) || $_POST['view'] !== 'preview')) {
     // エントリーの表示用データ作成
     $_view['entry'] = model('view_entries', $_view['entry'] ?? []);
 }
+
+// パンくずに表示する親ページを取得（入力中のコードから判定する）
+$_view['parents'] = service_entry_page_parents(service_entry_parent($_view['entry']['code'], service_entry_page_codes()));
 
 // 型を取得
 $types = model('select_types', [

@@ -124,7 +124,7 @@ test.scenario = [
     },
     // ページ編集ページに移動
     function() {
-        test.click(codeRow(scenarioPage.code).find('a'), '一覧の ' + scenarioPage.code + ' の編集リンクが見つかりません。');
+        test.click(codeRow(scenarioPage.code).find('a:contains("編集")'), '一覧の ' + scenarioPage.code + ' の編集リンクが見つかりません。');
     },
     // 非公開にする
     function() {
@@ -148,7 +148,7 @@ test.scenario = [
     },
     // ページ編集ページに移動
     function() {
-        test.click(codeRow(scenarioPage.code).find('a'), '一覧の ' + scenarioPage.code + ' の編集リンクが見つかりません。');
+        test.click(codeRow(scenarioPage.code).find('a:contains("編集")'), '一覧の ' + scenarioPage.code + ' の編集リンクが見つかりません。');
     },
     // パスワード認証で公開する
     function() {
@@ -201,7 +201,7 @@ test.scenario = [
     },
     // ページ編集ページに移動
     function() {
-        test.click(codeRow(scenarioPage.code).find('a'), '一覧の ' + scenarioPage.code + ' の編集リンクが見つかりません。');
+        test.click(codeRow(scenarioPage.code).find('a:contains("編集")'), '一覧の ' + scenarioPage.code + ' の編集リンクが見つかりません。');
     },
     // 公開に戻したうえで、公開終了日時を過去にする
     function() {
@@ -230,7 +230,7 @@ test.scenario = [
     },
     // ページ編集ページに移動
     function() {
-        test.click(codeRow(scenarioPage.code).find('a'), '一覧の ' + scenarioPage.code + ' の編集リンクが見つかりません。');
+        test.click(codeRow(scenarioPage.code).find('a:contains("編集")'), '一覧の ' + scenarioPage.code + ' の編集リンクが見つかりません。');
     },
     // ページを削除
     function() {

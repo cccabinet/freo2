@@ -19,9 +19,10 @@ db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'attribute_sets;');
 
 // 正常データ（管理画面の属性登録フォームからの送信を想定）
 $data_attribute = [
-    'id'   => '',
-    'name' => 'テスト属性1',
-    'memo' => '',
+    'id'         => '',
+    'name'       => 'テスト属性1',
+    'filterable' => '0',
+    'memo'       => '',
 ];
 
 // トランザクションを開始
@@ -35,6 +36,7 @@ db_transaction();
     // 結果
     test_equals('default attribute id', $default_attribute['id'], null);
     test_equals('default attribute name', $default_attribute['name'], '');
+    test_equals('default attribute filterable', $default_attribute['filterable'], 0);
     test_equals('default attribute memo', $default_attribute['memo'], null);
     test_equals('default attribute sort', $default_attribute['sort'], 0);
     test_equals('default attribute deleted', $default_attribute['deleted'], null);
@@ -74,12 +76,13 @@ db_transaction();
 
     // 結果
     $attributes = model('select_attributes', [
-        'select' => 'name, memo, sort',
+        'select' => 'name, filterable, memo, sort',
         'where'  => 'id = ' . intval($inserted_id),
     ]);
 
     test_equals('insert attribute', count($attributes), 1);
     test_equals('insert attribute name', $attributes[0]['name'], 'テスト属性1');
+    test_equals('insert attribute filterable', intval($attributes[0]['filterable']), 0);
 
     // 結果（未入力の項目は NULL として保存されること）
     test_equals('insert attribute memo', $attributes[0]['memo'], null);
@@ -153,6 +156,50 @@ db_transaction();
 
     // 結果
     test_equals('validate duplicate attribute name', count($warnings), 0);
+}
+
+// フィルター対象の必須テスト
+{
+    // データ
+    $test_attribute = $data_attribute;
+    $test_attribute['filterable'] = '';
+
+    // 確認
+    $test_attribute = model('normalize_attributes', $test_attribute);
+    $warnings       = model('validate_attributes', $test_attribute);
+
+    // 結果
+    test_equals('validate required attribute filterable', count($warnings), 1);
+    test_array_haskey('validate required attribute filterable (key)', $warnings, 'filterable');
+}
+
+// フィルター対象の値テスト
+{
+    // データ（選択肢は 1 と 0 だけ）
+    $test_attribute = $data_attribute;
+    $test_attribute['filterable'] = '2';
+
+    // 確認
+    $test_attribute = model('normalize_attributes', $test_attribute);
+    $warnings       = model('validate_attributes', $test_attribute);
+
+    // 結果
+    test_equals('validate list attribute filterable', count($warnings), 1);
+    test_array_haskey('validate list attribute filterable (key)', $warnings, 'filterable');
+}
+
+// フィルター対象の選択肢テスト
+{
+    // データ（対象にする）
+    $test_attribute = $data_attribute;
+    $test_attribute['filterable'] = '1';
+
+    // 確認
+    $test_attribute = model('normalize_attributes', $test_attribute);
+    $warnings       = model('validate_attributes', $test_attribute);
+
+    // 結果
+    test_equals('validate attribute filterable', count($warnings), 0);
 }
 
 // メモの未入力テスト
@@ -258,8 +305,9 @@ db_transaction();
     // データ（編集フォームからの入力を想定し、検証には id を含める）
     $test_attribute = $data_attribute;
     $test_attribute['id']   = $inserted_id;
-    $test_attribute['name'] = 'テスト属性1改';
-    $test_attribute['memo'] = '有料会員向け。';
+    $test_attribute['name']       = 'テスト属性1改';
+    $test_attribute['filterable'] = '1';
+    $test_attribute['memo']       = '有料会員向け。';
 
     // 更新
     $test_attribute = model('normalize_attributes', $test_attribute);
@@ -267,8 +315,9 @@ db_transaction();
     if (empty($warnings)) {
         model('update_attributes', [
             'set'   => [
-                'name' => $test_attribute['name'],
-                'memo' => $test_attribute['memo'],
+                'name'       => $test_attribute['name'],
+                'filterable' => $test_attribute['filterable'],
+                'memo'       => $test_attribute['memo'],
             ],
             'where' => [
                 'id = :id',
@@ -283,11 +332,12 @@ db_transaction();
 
     // 結果
     $attributes = model('select_attributes', [
-        'select' => 'name, memo',
+        'select' => 'name, filterable, memo',
         'where'  => 'id = ' . intval($inserted_id),
     ]);
 
     test_equals('update attributes name', $attributes[0]['name'], 'テスト属性1改');
+    test_equals('update attributes filterable', intval($attributes[0]['filterable']), 1);
     test_equals('update attributes memo', $attributes[0]['memo'], '有料会員向け。');
 }
 
@@ -441,9 +491,10 @@ function test_attribute_insert($attribute)
 {
     $resource = model('insert_attributes', [
         'values' => [
-            'name' => $attribute['name'],
-            'memo' => $attribute['memo'],
-            'sort' => $attribute['sort'],
+            'name'       => $attribute['name'],
+            'filterable' => $attribute['filterable'],
+            'memo'       => $attribute['memo'],
+            'sort'       => $attribute['sort'],
         ],
     ]);
     if (!$resource) {

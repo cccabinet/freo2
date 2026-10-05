@@ -223,6 +223,15 @@ function validate_attributes($queries, $options = [])
         }
     }
 
+    // フィルター対象
+    if (isset($queries['filterable'])) {
+        if (!validator_required($queries['filterable'])) {
+            $messages['filterable'] = 'フィルター対象が入力されていません。';
+        } elseif (!validator_list($queries['filterable'], $GLOBALS['config']['option']['attribute']['filterable'])) {
+            $messages['filterable'] = 'フィルター対象の値が不正です。';
+        }
+    }
+
     // メモ
     if (isset($queries['memo'])) {
         if (!validator_required($queries['memo'])) {
@@ -253,12 +262,13 @@ function validate_attributes($queries, $options = [])
 function default_attributes()
 {
     return [
-        'id'       => null,
-        'created'  => localdate('Y-m-d H:i:s'),
-        'modified' => localdate('Y-m-d H:i:s'),
-        'deleted'  => null,
-        'name'     => '',
-        'memo'     => null,
-        'sort'     => 0,
+        'id'         => null,
+        'created'    => localdate('Y-m-d H:i:s'),
+        'modified'   => localdate('Y-m-d H:i:s'),
+        'deleted'    => null,
+        'name'       => '',
+        'filterable' => 0,
+        'memo'       => null,
+        'sort'       => 0,
     ];
 }

@@ -73,6 +73,13 @@ $GLOBALS['config']['option'] = app_config('APP_OPTION', [
             'required' => '必須',
         ],
     ],
+    'attribute' => [
+        // フィルター対象
+        'filterable' => [
+            1 => '対象',
+            0 => '対象外',
+        ],
+    ],
     'menu' => [
         // 有効
         'enabled' => [
@@ -97,6 +104,12 @@ $GLOBALS['config']['option'] = app_config('APP_OPTION', [
         ],
     ],
 ]);
+
+/* お問い合わせ管理で、状況を指定していないときに表示しない状況（対応の済んだもの） */
+$GLOBALS['config']['contact_status_hidden'] = app_config('APP_CONTACT_STATUS_HIDDEN', ['closed', 'unnecessary']);
+
+/* 操作ログの保存日数（これより古いログは、ログを記録するときに削除する。0 なら削除しない） */
+$GLOBALS['config']['log_retention'] = app_config('APP_LOG_RETENTION', 180);
 
 /* ストレージ */
 $GLOBALS['config']['storage_type'] = app_config('APP_STORAGE_TYPE', 'file');

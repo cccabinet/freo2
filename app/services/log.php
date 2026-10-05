@@ -73,6 +73,7 @@ function service_log_record($message = null, $model = null, $exec = null)
         'model' => [],
         'exec'  => [],
     ];
+    static $purged = false;
 
     if (isset($recorded['model'][$model]) && isset($recorded['exec'][$exec])) {
         return;
@@ -98,11 +99,12 @@ function service_log_record($message = null, $model = null, $exec = null)
         $agent = $_SERVER['HTTP_USER_AGENT'];
     }
 
-    // ページ
+    // ページ（長いクエリ文字列は切り詰める）
     $page = '/' . implode('/', $_params);
     if (!empty($_SERVER['QUERY_STRING'])) {
         $page .= '?' . $_SERVER['QUERY_STRING'];
     }
+    $page = truncate($page, 255, '');
 
     // 操作ログを登録
     $resource = service_log_insert([
@@ -120,5 +122,46 @@ function service_log_record($message = null, $model = null, $exec = null)
         error('データを登録できません。');
     }
 
+    // 保存日数を過ぎた操作ログを削除（1リクエストにつき1回）
+    if (!$purged) {
+        $purged = true;
+
+        service_log_purge();
+    }
+
     return;
+}
+
+/**
+ * 保存日数を過ぎた操作ログの削除
+ *
+ * @param int|null $retention
+ *
+ * @return resource|null
+ */
+function service_log_purge($retention = null)
+{
+    if ($retention === null) {
+        $retention = isset($GLOBALS['config']['log_retention']) ? $GLOBALS['config']['log_retention'] : 0;
+    }
+    $retention = intval($retention);
+
+    // 保存日数が指定されていなければ削除しない
+    if ($retention <= 0) {
+        return null;
+    }
+
+    // 操作ログを削除
+    $resource = service_log_delete([
+        'where' => [
+            'created < :created',
+            [
+                'created' => localdate('Y-m-d H:i:s', localdate() - $retention * 60 * 60 * 24),
+            ],
+        ],
+    ], [
+        'softdelete' => false,
+    ]);
+
+    return $resource;
 }

@@ -110,10 +110,13 @@ if (empty($_SESSION['post']['entry']['id'])) {
 // トランザクションを終了
 db_commit();
 
+// 親ページを取得
+$parent = service_entry_parent($_SESSION['post']['entry']['code'], service_entry_page_codes());
+
 // 投稿セッションを初期化
 unset($_SESSION['post']);
 unset($_SESSION['file']);
 unset($_SESSION['update']);
 
 // リダイレクト
-redirect('/admin/page?ok=post');
+redirect(service_entry_page_list('ok=post', $parent));

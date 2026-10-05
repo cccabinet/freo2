@@ -177,11 +177,21 @@ test.scenario = [
         form.find('select[name="status"]').val('closed');
         test.click('form.register button[type="submit"]');
     },
-    // 状況が変わったことを確認して、もう一度編集ページに移動
+    // 完了にすると既定の一覧から消えることを確認して、すべての状況で絞り込む
+    function() {
+        test.assertText('div.alert-success', 'お問い合わせを登録しました。', 'お問い合わせを編集できていません。');
+        test.assert(contactRow(scenarioContact.subject).length === 0, '完了にしたお問い合わせが、既定の一覧に残っています。');
+
+        test.assertExists('form select[name="status"] option[value="all"]', '絞り込みに「すべて」の選択肢がありません。');
+
+        $('form select[name="status"]').val('all');
+        test.click('form button:contains("絞り込み")', '「絞り込み」のボタンが見つかりません。');
+    },
+    // すべての状況では残っていることを確認して、もう一度編集ページに移動
     function() {
         var row = contactRow(scenarioContact.subject);
 
-        test.assertText('div.alert-success', 'お問い合わせを登録しました。', 'お問い合わせを編集できていません。');
+        test.assert(row.length === 1, '完了にしたお問い合わせが、すべての状況の一覧にありません。');
         test.assert(row.find('span.badge').text().trim() === '完了', 'お問い合わせの状況が「完了」になっていません。');
 
         test.click(row.find('a:contains("編集")'), '一覧に「編集」のリンクが見つかりません。');

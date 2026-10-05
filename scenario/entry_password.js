@@ -135,7 +135,7 @@ test.scenario = [
     },
     // エントリー編集ページに移動
     function() {
-        test.click(codeRow(scenarioEntry.code).find('a'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
+        test.click(codeRow(scenarioEntry.code).find('a:contains("編集")'), '一覧の ' + scenarioEntry.code + ' の編集リンクが見つかりません。');
     },
     // エントリーを削除
     function() {

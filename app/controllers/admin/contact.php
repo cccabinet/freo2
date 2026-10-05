@@ -19,6 +19,19 @@ if (!isset($_GET['status'])) {
     $_GET['status'] = null;
 }
 
+/*
+// 表示していない状況を取得（状況を指定していないときは、対応の済んだものを表示しない）
+// 一覧での案内をいったん非表示にしたので、あわせてコメントアウトしている（戻すときは views/admin/contact.php も戻す）
+$_view['contact_status_hidden'] = [];
+if (empty($_GET['status'])) {
+    foreach ($GLOBALS['config']['contact_status_hidden'] as $status) {
+        if (isset($GLOBALS['config']['option']['contact']['status'][$status])) {
+            $_view['contact_status_hidden'][] = $GLOBALS['config']['option']['contact']['status'][$status];
+        }
+    }
+}
+*/
+
 // ページを取得
 if (isset($_GET['page'])) {
     $_GET['page'] = intval($_GET['page']);

@@ -211,3 +211,117 @@ function service_entry_sort($data)
 
     return;
 }
+
+/**
+ * 親のコードを取得
+ *
+ * コードをスラッシュで区切った階層を末尾から遡り、$codes に含まれる最も近い祖先を親とする
+ * （about/staff が無ければ、about/staff/yamada の親は about）
+ *
+ * @param string $code
+ * @param array  $codes
+ *
+ * @return string|null
+ */
+function service_entry_parent($code, $codes)
+{
+    $position = strrpos($code, '/');
+    while ($position !== false) {
+        $code = substr($code, 0, $position);
+        if (in_array($code, $codes, true)) {
+            return $code;
+        }
+        $position = strrpos($code, '/');
+    }
+
+    return null;
+}
+
+/**
+ * ページを一括取得
+ *
+ * @param string $select
+ *
+ * @return array
+ */
+function service_entry_select_pages($select)
+{
+    $types = model('select_types', [
+        'select' => 'id',
+        'where'  => 'code = ' . db_escape('page'),
+    ]);
+    if (empty($types)) {
+        return [];
+    }
+
+    return model('select_entries', [
+        'select' => $select,
+        'where'  => [
+            'type_id = :type_id',
+            [
+                'type_id' => $types[0]['id'],
+            ],
+        ],
+    ]);
+}
+
+/**
+ * ページのコードを一括取得
+ *
+ * @return array
+ */
+function service_entry_page_codes()
+{
+    return array_column(service_entry_select_pages('code'), 'code');
+}
+
+/**
+ * 親ページを階層順に取得
+ *
+ * $parent と、その祖先のページを一覧のトップに近い順に返す（パンくずに使う）
+ *
+ * @param string|null $parent
+ *
+ * @return array
+ */
+function service_entry_page_parents($parent)
+{
+    $parents = [];
+    if ($parent === null) {
+        return $parents;
+    }
+
+    $entries = service_entry_select_pages('code, title');
+    $codes   = array_column($entries, 'code');
+    $titles  = array_column($entries, 'title', 'code');
+
+    for ($code = $parent; $code !== null; $code = service_entry_parent($code, $codes)) {
+        if (!isset($titles[$code])) {
+            break;
+        }
+        array_unshift($parents, [
+            'code'  => $code,
+            'title' => $titles[$code],
+        ]);
+    }
+
+    return $parents;
+}
+
+/**
+ * ページ一覧のURLを取得
+ *
+ * @param string      $query
+ * @param string|null $parent
+ *
+ * @return string
+ */
+function service_entry_page_list($query, $parent)
+{
+    $url = '/admin/page?' . $query;
+    if ($parent !== null) {
+        $url .= '&parent=' . rawurlencode($parent);
+    }
+
+    return $url;
+}
