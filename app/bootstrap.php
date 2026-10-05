@@ -88,10 +88,11 @@ function app_badge($key, $value)
         }
     }
     if ($key === 'status') {
-        if ($value === 'closed') {
+        if ($value === 'opened') {
+            $bg_color   = 'info';
+        } elseif ($value === 'closed') {
             $bg_color   = 'success';
         } elseif ($value === 'unnecessary') {
-            $text_color = 'light';
             $bg_color   = 'secondary';
         } else {
             $bg_color   = 'warning';
@@ -107,12 +108,40 @@ function app_badge($key, $value)
             $bg_color   = 'warning';
         }
     }
+    if ($key === 'filterable') {
+        if ($value == 1) {
+            $bg_color   = 'warning';
+        } else {
+            $bg_color   = 'secondary';
+        }
+    }
 
     if ($key === 'kind' || $key === 'authority_id') {
         $bg_color   = 'info';
     }
 
     return 'rounded-pill text-bg-' . $bg_color;
+}
+
+/**
+ * Return the key for draft.
+ *
+ * @param int|null $type_id
+ * @param int|null $entry_id
+ *
+ * @return string
+ */
+function app_draft_key($type_id = null, $entry_id = null)
+{
+    // 同じドメインに設置した別の freo2 と混ざらないよう、設置パスを含める
+    $key = 'freo2_draft:' . $GLOBALS['config']['http_path'] . ':' . $_SESSION['auth']['user']['id'] . ':';
+
+    // 型を指定しなければ、ユーザーの下書きすべてに共通する接頭辞を返す
+    if ($type_id !== null) {
+        $key .= $type_id . ':' . ($entry_id ? $entry_id : 'new');
+    }
+
+    return $key;
 }
 
 /**
