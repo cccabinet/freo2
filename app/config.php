@@ -263,7 +263,7 @@ $GLOBALS['config']['mail_send'] = app_config('APP_MAIL_SEND', true);
 $GLOBALS['config']['mail_log'] = app_config('APP_MAIL_LOG', false);
 
 /* プロキシの考慮 */
-$GLOBALS['config']['proxy'] = app_config('APP_PROXY', false);
+$GLOBALS['config']['proxy'] = app_config('APP_PROXY', 0);
 
 /* AWS */
 $GLOBALS['config']['aws_credential_key'] = app_config('APP_AWS_CREDENTIAL_KEY', null);
