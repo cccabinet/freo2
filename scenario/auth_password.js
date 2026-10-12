@@ -13,7 +13,7 @@ var newPassword = 'scenario9012';
 /* パスワード再設定メールの件名（設定 mail_password_subject の初期値） */
 var passwordSubject = 'パスワード再設定';
 
-/* 暗証コードは rand_number(10000000, 99999999) なので、00000000 は絶対に一致しない */
+/* 暗証コードは service_user_code() の rand_number(10000000, 99999999) なので、00000000 は絶対に一致しない */
 var wrongTokenCode = '00000000';
 
 /*

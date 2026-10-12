@@ -402,6 +402,16 @@ function service_user_twostep_trusted($user_id, $session_id)
 }
 
 /**
+ * メールで送るコードを作る（パスワード再設定の暗証コードと2段階認証用コードで共通。数字8桁）
+ *
+ * @return string
+ */
+function service_user_code()
+{
+    return (string)rand_number(10000000, 99999999);
+}
+
+/**
  * ユーザーの2段階認証用コードを発行する（有効期限は10分。失敗した回数は数え直す）
  *
  * @param string $user_id
@@ -410,7 +420,7 @@ function service_user_twostep_trusted($user_id, $session_id)
  */
 function service_user_twostep_issue($user_id)
 {
-    $twostep_code = rand_string(8);
+    $twostep_code = service_user_code();
 
     $resource = service_user_update([
         'set'   => [
@@ -707,7 +717,7 @@ function service_user_password_issue($email)
     $resource = service_user_update([
         'set'   => [
             'token'        => rand_string(),
-            'token_code'   => rand_number(10000000, 99999999),
+            'token_code'   => service_user_code(),
             'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 10),
             'token_failed' => null,
         ],

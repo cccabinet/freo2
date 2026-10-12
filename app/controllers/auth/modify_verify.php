@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // 2段階認証用コードを送信
 if ($send) {
-    $_SESSION['twostep_verify']['code']   = rand_string(8);
+    $_SESSION['twostep_verify']['code']   = service_user_code();
     $_SESSION['twostep_verify']['expire'] = localdate() + 60 * 10;
     $_SESSION['twostep_verify']['failed'] = 0;
 

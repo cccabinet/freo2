@@ -543,7 +543,7 @@ types(型) ─< entries(エントリー) ─────────────
   - どの権限がどの画面に入れるかは [app/controllers/before.php](app/controllers/before.php) に `work` 名の正規表現でまとまっています。
   - `enabled` が 0 のユーザーは、パスワードが合っていてもログインできません。
   - **ログインに10回続けて失敗すると、そのアカウントは5分間凍結されます**(`users.failed`/`failed_last` で判定)。正しいパスワードでも入れなくなり、ログインに成功すると回数はリセットされます。
-  - **2段階認証:** `users.twostep` が 1 のユーザーは、パスワードが通った後に `users.twostep_email` へ送られるコード(`twostep_code`。有効期限 `twostep_expire` は10分)を入力して、はじめてログインできます。設定するのは管理画面のユーザー編集(`/admin/user_form`)と、本人のユーザー情報編集(`/auth/modify`)です。
+  - **2段階認証:** `users.twostep` が 1 のユーザーは、パスワードが通った後に `users.twostep_email` へ送られるコード(`twostep_code`。パスワード再設定の暗証コードと同じく8桁の数字で、どちらも `service_user_code()` が作ります。有効期限 `twostep_expire` は10分)を入力して、はじめてログインできます。設定するのは管理画面のユーザー編集(`/admin/user_form`)と、本人のユーザー情報編集(`/auth/modify`)です。
     - **コードを続けて10回間違えると、そのコードは無効になります**(上限は `app/config.php` の `code_failed_limit`。回数は `users.twostep_failed`)。再送信すると新しいコードで数え直します。アカウントは凍結しません。パスワード再設定の暗証コード(`users.token_failed`)も同じです。
     - パスワードが通った時点では `$_SESSION['auth']['twostep']` に「認証待ち」を記録するだけで、コードの画面にユーザー名・パスワードは受け渡しません。使ったコードは、ログインに成功した時点で消します。
     - 本人が有効にするとき、または有効のまま `twostep_email` を変えるときは、確認画面の後のコード入力画面(`/auth/modify_verify`)で、そのアドレスに送ったコードを入力しないと登録できません(判定は `service_user_twostep_verify_required()`)。送ったコードと確認中のアドレスはセッションに持ちます。管理画面からの設定では確認しません。

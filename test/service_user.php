@@ -701,6 +701,16 @@ restore_error_handler();
     test_equals('twostep trusted (no session)', service_user_twostep_trusted($inserted_id, null), false);
 }
 
+// メールで送るコードの作成テスト
+{
+    // 確認
+    $code = service_user_code();
+
+    // 結果（数字8桁の文字列。hash_equals() で照合するので文字列で返す）
+    test_regexp('user code', $code, '^[0-9]{8}$');
+    test_equals('user code type', is_string($code), true);
+}
+
 // 2段階認証用コードの発行テスト
 {
     // データ（前のコードで3回間違えている）
@@ -714,8 +724,8 @@ restore_error_handler();
         'where'  => 'id = ' . db_escape($inserted_id),
     ]);
 
-    // 結果（16進8桁で、期限は10分後、失敗した回数は数え直す）
-    test_regexp('twostep issue code', $twostep_code, '^[0-9a-f]{8}$');
+    // 結果（数字8桁で、期限は10分後、失敗した回数は数え直す）
+    test_regexp('twostep issue code', $twostep_code, '^[0-9]{8}$');
     test_equals('twostep issue code saved', $users[0]['twostep_code'], $twostep_code);
     test_equals('twostep issue expire', $users[0]['twostep_expire'], localdate('Y-m-d H:i:s', time() + 60 * 10));
     test_equals('twostep issue failed cleared', $users[0]['twostep_failed'], null);

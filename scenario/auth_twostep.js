@@ -133,7 +133,7 @@ test.scenario = [
     },
     // メールからコードを読み取り、ログインページに戻る
     function() {
-        var matches = $('body').text().match(/コードは\s*([0-9a-f]{8})/);
+        var matches = $('body').text().match(/コードは\s*(\d{8})/);
 
         if (!test.assert(matches !== null, '2段階認証用メールアドレスにコードが届いていません。')) {
             return;
@@ -249,7 +249,7 @@ test.scenario = [
     },
     // メールからコードを読み取り、コードの入力画面に戻る（開き直してもコードは送り直さない）
     function() {
-        var matches = $('body').text().match(/コードは\s*([0-9a-f]{8})/);
+        var matches = $('body').text().match(/コードは\s*(\d{8})/);
 
         if (!test.assert(matches !== null, '2段階認証用メールアドレスにコードが届いていません。')) {
             return;
