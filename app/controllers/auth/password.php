@@ -1,7 +1,6 @@
 <?php
 
 import('app/services/user.php');
-import('app/services/mail.php');
 
 // 権限を確認
 if (isset($GLOBALS['authority'])) {
@@ -47,55 +46,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // トランザクションを開始
             db_transaction();
 
-            // パスワード再発行用URLを通知
-            $resource = service_user_update([
-                'set'   => [
-                    'token'        => rand_string(),
-                    'token_code'   => rand_number(10000000, 99999999),
-                    'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 10),
-                    'token_failed' => null,
-                ],
-                'where' => [
-                    'email = :email',
-                    [
-                        'email' => $_POST['email'],
-                    ],
-                ],
-            ]);
-            if (!$resource) {
+            // パスワード再発行用のトークンと暗証コードを発行
+            $user = service_user_password_issue($_POST['email']);
+            if ($user === null) {
                 error('指定されたメールアドレスが見つかりません。');
             }
 
-            $users = model('select_users', [
-                'where' => [
-                    'email = :email',
-                    [
-                        'email' => $_POST['email'],
-                    ],
-                ],
-            ]);
-
-            // メール送信内容を作成
-            $_view['token_code']   = $users[0]['token_code'];
-            $_view['token_expire'] = $users[0]['token_expire'];
-
-            $to      = $users[0]['email'];
-            $subject = $GLOBALS['setting']['mail_password_subject'];
-            $message = view('mail/password/send.php', true);
-            $headers = [
-                'From' => $GLOBALS['setting']['mail_from'],
-            ];
-
-            // メールを送信
-            if (service_mail_send($to, $subject, $message, $headers) === false) {
-                error('メールを送信できません。');
-            }
+            // 暗証コードを通知
+            service_user_password_mail($user['email'], $user['token_code'], $user['token_expire']);
 
             // トランザクションを終了
             db_commit();
 
             // リダイレクト
-            redirect('/auth/password_form?key=' . rawurlencode($users[0]['email']) . '&token=' . $users[0]['token']);
+            redirect('/auth/password_form?key=' . rawurlencode($user['email']) . '&token=' . $user['token']);
         } else {
             $_view['user'] = $_POST;
 

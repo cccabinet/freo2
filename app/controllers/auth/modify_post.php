@@ -84,7 +84,7 @@ if (!$resource) {
 }
 
 // 2段階認証を無効にしたか、2段階認証用メールアドレスを変えたら、コードの入力を省略しているブラウザを解除
-if ((string)$_SESSION['post']['user']['twostep'] !== '1' || (string)$users[0]['twostep_email'] !== (string)$_SESSION['post']['user']['twostep_email']) {
+if (service_user_twostep_reset_required($_SESSION['post']['user']['twostep'], $_SESSION['post']['user']['twostep_email'], $users[0]['twostep_email'])) {
     service_user_twostep_reset($_SESSION['auth']['user']['id']);
 }
 

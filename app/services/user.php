@@ -644,6 +644,21 @@ function service_user_twostep_verify_required($user_id, $twostep, $twostep_email
 }
 
 /**
+ * ユーザーの2段階認証で、コードの入力を省略しているブラウザの解除が必要か
+ * （2段階認証を無効にするときと、2段階認証用メールアドレスを変えるとき）
+ *
+ * @param string $twostep               変更後の2段階認証
+ * @param string|null $twostep_email    変更後の2段階認証用メールアドレス
+ * @param string|null $current_email    変更前の2段階認証用メールアドレス
+ *
+ * @return bool
+ */
+function service_user_twostep_reset_required($twostep, $twostep_email, $current_email)
+{
+    return (string)$twostep !== '1' || (string)$current_email !== (string)$twostep_email;
+}
+
+/**
  * ユーザーの2段階認証で、コードの入力を省略しているブラウザをすべて解除
  *
  * @param string $user_id
@@ -664,4 +679,235 @@ function service_user_twostep_reset($user_id)
     if (!$resource) {
         error('データを編集できません。');
     }
+}
+
+/**
+ * パスワード再設定用のURLのトークンと暗証コードを発行する（有効期限は10分。失敗した回数は数え直す）
+ * （token はメールアドレスの存在確認と共用しているので、進行中の存在確認のURLは使えなくなる）
+ *
+ * @param string $email
+ *
+ * @return array|null 発行したらユーザー（id, email, token, token_code, token_expire）、メールアドレスが見つからなければ null
+ */
+function service_user_password_issue($email)
+{
+    $users = model('select_users', [
+        'select' => 'id',
+        'where'  => [
+            'email = :email',
+            [
+                'email' => $email,
+            ],
+        ],
+    ]);
+    if (empty($users)) {
+        return null;
+    }
+
+    $resource = service_user_update([
+        'set'   => [
+            'token'        => rand_string(),
+            'token_code'   => rand_number(10000000, 99999999),
+            'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 10),
+            'token_failed' => null,
+        ],
+        'where' => [
+            'id = :id',
+            [
+                'id' => $users[0]['id'],
+            ],
+        ],
+    ]);
+    if (!$resource) {
+        error('データを編集できません。');
+    }
+
+    $users = model('select_users', [
+        'select' => 'id, email, token, token_code, token_expire',
+        'where'  => [
+            'id = :id',
+            [
+                'id' => $users[0]['id'],
+            ],
+        ],
+    ]);
+
+    return $users[0];
+}
+
+/**
+ * パスワード再設定用の暗証コードをメールで送る
+ *
+ * @param string $email
+ * @param string $token_code
+ * @param string $token_expire
+ */
+function service_user_password_mail($email, $token_code, $token_expire)
+{
+    // メール送信内容を作成（本文のテンプレートは $_view['token_code'] と $_view['token_expire'] を読む）
+    $GLOBALS['_view']['token_code']   = $token_code;
+    $GLOBALS['_view']['token_expire'] = $token_expire;
+
+    $subject = $GLOBALS['setting']['mail_password_subject'];
+    $message = view('mail/password/send.php', true);
+    $headers = [
+        'From' => $GLOBALS['setting']['mail_from'],
+    ];
+
+    unset($GLOBALS['_view']['token_code'], $GLOBALS['_view']['token_expire']);
+
+    // メールを送信
+    if (service_mail_send($email, $subject, $message, $headers) === false) {
+        error('メールを送信できません。');
+    }
+}
+
+/**
+ * パスワード再設定用の暗証コードの照合に失敗したときに、失敗した回数を記録する
+ * （照合そのものは validate_users() が行う。誤っていたときだけ呼ぶ）
+ *
+ * @param string $email
+ * @param string $token_code
+ *
+ * @return string|null 検証のメッセージを差し替えるならメッセージ、そのままなら null
+ */
+function service_user_password_failed($email, $token_code)
+{
+    $users = model('select_users', [
+        'select' => 'id, token_code',
+        'where'  => [
+            'email = :email',
+            [
+                'email' => $email,
+            ],
+        ],
+    ]);
+    if (empty($users)) {
+        return null;
+    }
+
+    if ($users[0]['token_code'] === null) {
+        return '暗証コードが無効になっています。パスワードの再発行をやり直してください。';
+    }
+
+    // 暗証コードは合っている（有効期限が終了しているなど）
+    if (hash_equals((string)$users[0]['token_code'], (string)$token_code)) {
+        return null;
+    }
+
+    if (service_user_code_failed($users[0]['id'], 'token')) {
+        return '暗証コードを続けて間違えたため、この暗証コードを無効にしました。パスワードの再発行をやり直してください。';
+    }
+
+    return null;
+}
+
+/**
+ * メールアドレスの存在確認用のトークンを発行する（有効期限は24時間）
+ * （token はパスワード再設定と共用しているので、進行中のパスワード再設定のURLは使えなくなる）
+ *
+ * @param string $user_id
+ *
+ * @return array ユーザー（email, token）
+ */
+function service_user_email_issue($user_id)
+{
+    $resource = service_user_update([
+        'set'   => [
+            'token'        => rand_string(),
+            'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 60 * 24),
+        ],
+        'where' => [
+            'id = :id',
+            [
+                'id' => $user_id,
+            ],
+        ],
+    ]);
+    if (!$resource) {
+        error('データを編集できません。');
+    }
+
+    $users = model('select_users', [
+        'select' => 'email, token',
+        'where'  => [
+            'id = :id',
+            [
+                'id' => $user_id,
+            ],
+        ],
+    ]);
+
+    return $users[0];
+}
+
+/**
+ * メールアドレスの存在確認用のURLをメールで送る
+ *
+ * @param string $email
+ * @param string $token
+ */
+function service_user_email_mail($email, $token)
+{
+    // メール送信内容を作成（本文のテンプレートは $_view['url'] を読む）
+    $GLOBALS['_view']['url'] = $GLOBALS['config']['http_url'] . '/auth/email_verify?key=' . rawurlencode($email) . '&token=' . $token;
+
+    $subject = $GLOBALS['setting']['mail_verify_subject'];
+    $message = view('mail/email/verify.php', true);
+    $headers = [
+        'From' => $GLOBALS['setting']['mail_from'],
+    ];
+
+    unset($GLOBALS['_view']['url']);
+
+    // メールを送信
+    if (service_mail_send($email, $subject, $message, $headers) === false) {
+        error('メールを送信できません。');
+    }
+}
+
+/**
+ * メールアドレスの存在確認用のURLを照合し、合っていれば確認済みにする
+ *
+ * @param string $email
+ * @param string $token
+ *
+ * @return bool 確認済みにしたら true、URLの有効期限が終了しているか正しくなければ false
+ */
+function service_user_email_verify($email, $token)
+{
+    // 一致しなくても更新は0件で成功するので、先に確認する
+    $users = model('select_users', [
+        'select' => 'id',
+        'where'  => [
+            'email = :email AND token = :token AND token_expire > :token_expire',
+            [
+                'email'        => $email,
+                'token'        => $token,
+                'token_expire' => localdate('Y-m-d H:i:s'),
+            ],
+        ],
+    ]);
+    if (empty($users)) {
+        return false;
+    }
+
+    $resource = service_user_update([
+        'set'   => [
+            'email_verified' => 1,
+            'token'          => null,
+            'token_expire'   => null,
+        ],
+        'where' => [
+            'id = :id',
+            [
+                'id' => $users[0]['id'],
+            ],
+        ],
+    ]);
+    if (!$resource) {
+        error('データを編集できません。');
+    }
+
+    return true;
 }

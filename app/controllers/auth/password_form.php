@@ -36,28 +36,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 暗証コードの照合に失敗した回数を記録する（上限に達したらコードを無効にする）
     // 送信前の入力内容検証（_type=json）でも照合が走るので、そちらでも数える（誤っていれば本送信には進まないので、二重には数えない）
     if (isset($warnings['token_code']) && validator_required($post['user']['token_code'])) {
-        $users = model('select_users', [
-            'select' => 'id, token_code',
-            'where'  => [
-                'email = :email',
-                [
-                    'email' => $post['user']['key'],
-                ],
-            ],
-        ]);
-        if (!empty($users)) {
-            if ($users[0]['token_code'] === null) {
-                $warnings['token_code'] = '暗証コードが無効になっています。パスワードの再発行をやり直してください。';
-            } elseif (!hash_equals((string)$users[0]['token_code'], $post['user']['token_code'])) {
-                // warning() はロールバックするので、記録はここでコミットしておく
-                db_transaction();
+        // warning() はロールバックするので、記録はここでコミットしておく
+        db_transaction();
 
-                if (service_user_code_failed($users[0]['id'], 'token')) {
-                    $warnings['token_code'] = '暗証コードを続けて間違えたため、この暗証コードを無効にしました。パスワードの再発行をやり直してください。';
-                }
+        $message = service_user_password_failed($post['user']['key'], $post['user']['token_code']);
 
-                db_commit();
-            }
+        db_commit();
+
+        if ($message !== null) {
+            $warnings['token_code'] = $message;
         }
     }
 

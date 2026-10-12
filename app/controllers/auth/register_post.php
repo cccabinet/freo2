@@ -59,8 +59,6 @@ $resource = service_user_insert([
         'email_verified' => 0,
         'url'            => $_SESSION['post']['user']['url'],
         'text'           => $_SESSION['post']['user']['text'],
-        'token'          => rand_string(),
-        'token_expire'   => localdate('Y-m-d H:i:s', time() + 60 * 60 * 24),
         'twostep'        => 0,
     ],
 ]);
@@ -73,7 +71,7 @@ db_commit();
 
 // ユーザー情報を取得
 $users = model('select_users', [
-    'select' => 'email, token',
+    'select' => 'email',
     'where'  => [
         'email = :email',
         [

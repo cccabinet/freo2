@@ -535,6 +535,16 @@ restore_error_handler();
     test_equals('twostep verify required (unknown user)', $required_unknown, true);
 }
 
+// 信頼済みのブラウザの解除が必要かのテスト
+{
+    // 結果（無効にするときと、メールアドレスを変えるときだけ解除する。フォームの値は文字列）
+    test_equals('twostep reset required (same)', service_user_twostep_reset_required('1', 'testuser1-twostep@example.com', 'testuser1-twostep@example.com'), false);
+    test_equals('twostep reset required (change email)', service_user_twostep_reset_required('1', 'testuser1-twostep2@example.com', 'testuser1-twostep@example.com'), true);
+    test_equals('twostep reset required (disable)', service_user_twostep_reset_required('0', 'testuser1-twostep@example.com', 'testuser1-twostep@example.com'), true);
+    test_equals('twostep reset required (enable)', service_user_twostep_reset_required('1', 'testuser1-twostep@example.com', null), true);
+    test_equals('twostep reset required (null and empty)', service_user_twostep_reset_required(1, '', null), false);
+}
+
 // コードの照合の失敗回数のテスト
 {
     // データ（上限は設定で変わるので、3回に固定する）
@@ -846,6 +856,196 @@ restore_error_handler();
     test_equals('login complete session', count($sessions), 1);
     test_equals('login complete keep', intval($sessions[0]['keep']), 1);
     test_equals('login complete twostep', intval($sessions[0]['twostep']), 1);
+}
+
+// パスワード再設定の暗証コードの発行テスト
+{
+    // データ（前の暗証コードで3回間違えている）
+    test_user_set($inserted_id, ['token_failed' => 3]);
+
+    $users = model('select_users', [
+        'select' => 'email',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+    $password_email = $users[0]['email'];
+
+    // 発行
+    $password_user    = service_user_password_issue($password_email);
+    $password_unknown = service_user_password_issue('testuser-unknown@example.com');
+
+    $users = model('select_users', [
+        'select' => 'token, token_code, token_expire, token_failed',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+
+    // 結果（暗証コードは8桁の数字で、期限は10分後、失敗した回数は数え直す）
+    test_equals('password issue user', intval($password_user['id']), $inserted_id);
+    test_equals('password issue email', $password_user['email'], $password_email);
+    test_not_equals('password issue token', $password_user['token'], null);
+    test_equals('password issue token saved', $users[0]['token'], $password_user['token']);
+    test_regexp('password issue code', (string)$password_user['token_code'], '^[0-9]{8}$');
+    test_equals('password issue expire', $users[0]['token_expire'], localdate('Y-m-d H:i:s', time() + 60 * 10));
+    test_equals('password issue failed cleared', $users[0]['token_failed'], null);
+    test_equals('password issue (unknown email)', $password_unknown, null);
+}
+
+// パスワード再設定の暗証コードの失敗回数のテスト
+{
+    // データ（上限は設定で変わるので、3回に固定する）
+    $code_failed_limit = $GLOBALS['config']['code_failed_limit'];
+    $GLOBALS['config']['code_failed_limit'] = 3;
+
+    test_user_set($inserted_id, ['token_code' => '12345678', 'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 10), 'token_failed' => null]);
+
+    // 確認（暗証コードが合っているときは数えず、メッセージも差し替えない。有効期限が終了しているときなど）
+    $message_correct = service_user_password_failed($password_email, '12345678');
+
+    $users = model('select_users', [
+        'select' => 'token_failed',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+
+    // 結果
+    test_equals('password failed (correct code)', $message_correct, null);
+    test_equals('password failed (correct code) not counted', $users[0]['token_failed'], null);
+
+    // 確認（上限の手前までは数えるだけで、メッセージは差し替えない）
+    $message_wrong_1 = service_user_password_failed($password_email, '00000000');
+    $message_wrong_2 = service_user_password_failed($password_email, '00000000');
+
+    // 結果
+    test_equals('password failed (1)', $message_wrong_1, null);
+    test_equals('password failed (2)', $message_wrong_2, null);
+
+    // 確認（上限で暗証コードを無効にし、その後は無効と伝えること）
+    $message_limit   = service_user_password_failed($password_email, '00000000');
+    $message_invalid = service_user_password_failed($password_email, '00000000');
+
+    $users = model('select_users', [
+        'select' => 'token_code, token_failed',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+
+    // 結果
+    test_contains('password failed (limit)', $message_limit, '無効にしました');
+    test_contains('password failed (invalidated)', $message_invalid, '無効になっています');
+    test_equals('password failed code invalidated', $users[0]['token_code'], null);
+    test_equals('password failed count cleared', $users[0]['token_failed'], null);
+
+    // 確認（メールアドレスが見つからなければ、何もしないこと）
+    test_equals('password failed (unknown email)', service_user_password_failed('testuser-unknown@example.com', '00000000'), null);
+
+    // 設定を戻す
+    $GLOBALS['config']['code_failed_limit'] = $code_failed_limit;
+}
+
+// メールアドレスの存在確認のテスト
+{
+    // データ（未確認の状態にする）
+    test_user_set($inserted_id, ['email_verified' => 0, 'token' => null, 'token_expire' => null]);
+
+    // 発行
+    $email_user = service_user_email_issue($inserted_id);
+
+    $users = model('select_users', [
+        'select' => 'token, token_expire',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+
+    // 結果（期限は24時間後）
+    test_equals('email issue email', $email_user['email'], $password_email);
+    test_equals('email issue token saved', $users[0]['token'], $email_user['token']);
+    test_equals('email issue expire', $users[0]['token_expire'], localdate('Y-m-d H:i:s', time() + 60 * 60 * 24));
+
+    // 確認（誤ったトークン・誤ったメールアドレスでは確認済みにしないこと）
+    $verified_wrong_token = service_user_email_verify($password_email, 'wrongtoken');
+    $verified_wrong_email = service_user_email_verify('testuser-unknown@example.com', $email_user['token']);
+
+    // 確認（期限切れでは確認済みにしないこと）
+    test_user_set($inserted_id, ['token_expire' => localdate('Y-m-d H:i:s', time() - 60)]);
+    $verified_expired = service_user_email_verify($password_email, $email_user['token']);
+
+    $users = model('select_users', [
+        'select' => 'email_verified',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+
+    // 結果
+    test_equals('email verify (wrong token)', $verified_wrong_token, false);
+    test_equals('email verify (wrong email)', $verified_wrong_email, false);
+    test_equals('email verify (expired)', $verified_expired, false);
+    test_equals('email verify (not verified)', intval($users[0]['email_verified']), 0);
+
+    // 確認（正しいURLなら確認済みにして、トークンを消すこと）
+    test_user_set($inserted_id, ['token_expire' => localdate('Y-m-d H:i:s', time() + 60)]);
+    $verified = service_user_email_verify($password_email, $email_user['token']);
+
+    $users = model('select_users', [
+        'select' => 'email_verified, token, token_expire',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+
+    // 結果
+    test_equals('email verify', $verified, true);
+    test_equals('email verify verified', intval($users[0]['email_verified']), 1);
+    test_equals('email verify token cleared', $users[0]['token'], null);
+    test_equals('email verify token_expire cleared', $users[0]['token_expire'], null);
+
+    // 確認（使ったURLは2回目には使えないこと）
+    test_equals('email verify (used)', service_user_email_verify($password_email, $email_user['token']), false);
+}
+
+// パスワード再設定・メールアドレスの存在確認のメールテスト
+{
+    // データ（実際にメールを送信しないよう「送信なし・記録あり」に固定する。件名などの設定も固定する）
+    $mail_config  = [$GLOBALS['config']['mail_send'], $GLOBALS['config']['mail_log']];
+    $mail_setting = $GLOBALS['setting'] ?? null;
+
+    $GLOBALS['config']['mail_send'] = false;
+    $GLOBALS['config']['mail_log']  = true;
+    $GLOBALS['setting'] = [
+        'mail_password_subject' => 'パスワード再設定のテスト',
+        'mail_verify_subject'   => '存在確認のテスト',
+        'mail_from'             => 'testuser1-from@example.com',
+        'mail_body_begin'       => '',
+        'mail_body_end'         => '',
+    ];
+
+    $mail_password_to   = 'testuser1-password-mail@example.com';
+    $mail_verify_to     = 'testuser1-verify-mail@example.com';
+    $mail_password_glob = MAIN_APPLICATION_PATH . 'mail/' . localdate('Ymd') . '/*_' . $mail_password_to . '.txt';
+    $mail_verify_glob   = MAIN_APPLICATION_PATH . 'mail/' . localdate('Ymd') . '/*_' . $mail_verify_to . '.txt';
+
+    foreach (array_merge(glob($mail_password_glob), glob($mail_verify_glob)) as $file) {
+        unlink($file);
+    }
+
+    // 送信
+    service_user_password_mail($mail_password_to, '12345678', '2026-01-02 03:04:05');
+    service_user_email_mail($mail_verify_to, 'abcdtoken');
+
+    // 結果（パスワード再設定は暗証コードと有効期限、存在確認はURLが入ること）
+    $password_records = glob($mail_password_glob);
+    $verify_records   = glob($mail_verify_glob);
+
+    test_equals('password mail record', count($password_records), 1);
+    test_contains('password mail subject', file_get_contents($password_records[0]), 'subject: パスワード再設定のテスト');
+    test_contains('password mail code', file_get_contents($password_records[0]), '12345678');
+    test_contains('password mail expire', file_get_contents($password_records[0]), '2026/01/02 03:04');
+    test_array_not_haskey('password mail view cleared', $_view, 'token_code');
+
+    test_equals('verify mail record', count($verify_records), 1);
+    test_contains('verify mail subject', file_get_contents($verify_records[0]), 'subject: 存在確認のテスト');
+    test_contains('verify mail url', file_get_contents($verify_records[0]), '/auth/email_verify?key=' . rawurlencode($mail_verify_to) . '&token=abcdtoken');
+    test_array_not_haskey('verify mail view cleared', $_view, 'url');
+
+    // 後始末
+    foreach (array_merge($password_records, $verify_records) as $file) {
+        unlink($file);
+    }
+
+    list($GLOBALS['config']['mail_send'], $GLOBALS['config']['mail_log']) = $mail_config;
+    $GLOBALS['setting'] = $mail_setting;
 }
 
 // 操作ログの重複抑止テスト
