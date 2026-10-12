@@ -53,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'token'        => rand_string(),
                     'token_code'   => rand_number(10000000, 99999999),
                     'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 10),
+                    'token_failed' => null,
                 ],
                 'where' => [
                     'email = :email',

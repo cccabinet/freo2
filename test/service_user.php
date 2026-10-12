@@ -535,6 +535,82 @@ restore_error_handler();
     test_equals('twostep verify required (unknown user)', $required_unknown, true);
 }
 
+// コードの照合の失敗回数のテスト
+{
+    // データ（上限は設定で変わるので、3回に固定する）
+    $code_failed_limit = $GLOBALS['config']['code_failed_limit'];
+    $GLOBALS['config']['code_failed_limit'] = 3;
+
+    model('update_users', [
+        'set'   => [
+            'token_code'   => '12345678',
+            'twostep_code' => 'abcd1234',
+        ],
+        'where' => [
+            'id = :id',
+            [
+                'id' => $inserted_id,
+            ],
+        ],
+    ], [
+        'id' => $inserted_id,
+    ]);
+
+    // 確認（上限の手前までは、回数だけが増えること）
+    $invalidated_1 = service_user_code_failed($inserted_id, 'twostep');
+    $invalidated_2 = service_user_code_failed($inserted_id, 'twostep');
+
+    $users = model('select_users', [
+        'select' => 'twostep_code, twostep_failed, token_code, token_failed',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+
+    // 結果
+    test_equals('code failed twostep (1)', $invalidated_1, false);
+    test_equals('code failed twostep (2)', $invalidated_2, false);
+    test_equals('code failed twostep count', intval($users[0]['twostep_failed']), 2);
+    test_equals('code failed twostep code kept', $users[0]['twostep_code'], 'abcd1234');
+    test_equals('code failed twostep (other type untouched)', $users[0]['token_failed'], null);
+
+    // 確認（上限に達すると、コードを無効にして回数も消すこと）
+    $invalidated_3 = service_user_code_failed($inserted_id, 'twostep');
+
+    $users = model('select_users', [
+        'select' => 'twostep_code, twostep_failed, token_code',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+
+    // 結果
+    test_equals('code failed twostep (limit)', $invalidated_3, true);
+    test_equals('code failed twostep code invalidated', $users[0]['twostep_code'], null);
+    test_equals('code failed twostep count cleared', $users[0]['twostep_failed'], null);
+    test_equals('code failed twostep (token code untouched)', $users[0]['token_code'], '12345678');
+
+    // 確認（パスワード再設定の暗証コードも、同じように数えること）
+    service_user_code_failed($inserted_id, 'token');
+    service_user_code_failed($inserted_id, 'token');
+    $invalidated_token = service_user_code_failed($inserted_id, 'token');
+
+    $users = model('select_users', [
+        'select' => 'token_code, token_failed',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+
+    // 結果
+    test_equals('code failed token (limit)', $invalidated_token, true);
+    test_equals('code failed token code invalidated', $users[0]['token_code'], null);
+    test_equals('code failed token count cleared', $users[0]['token_failed'], null);
+
+    // 確認（ユーザーが見つからなければ、何もしないこと）
+    $invalidated_unknown = service_user_code_failed($inserted_id + 1000, 'twostep');
+
+    // 結果
+    test_equals('code failed unknown user', $invalidated_unknown, false);
+
+    // 設定を戻す
+    $GLOBALS['config']['code_failed_limit'] = $code_failed_limit;
+}
+
 // 操作ログの重複抑止テスト
 {
     // 結果（service_log_record() は同じ model と exec の組み合わせを1リクエストにつき1回しか記録しないため、更新を繰り返してもログは増えない）

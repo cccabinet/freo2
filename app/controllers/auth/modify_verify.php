@@ -34,8 +34,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($twostep_code === '') {
                 $warnings[] = '2段階認証用コードが入力されていません。';
-            } elseif ($_SESSION['twostep_verify']['code'] === null || !hash_equals($_SESSION['twostep_verify']['code'], $twostep_code)) {
-                $warnings[] = '2段階認証用コードが違います。';
+            } elseif (!is_string($_SESSION['twostep_verify']['code'])) {
+                // 続けて間違えて無効にした(false)。null はまだ送っていないことを表す
+                $warnings[] = '2段階認証用コードが無効になっています。コードを再送信してください。';
+            } elseif (!hash_equals($_SESSION['twostep_verify']['code'], $twostep_code)) {
+                // 失敗した回数を記録する(上限に達したらコードを無効にする。このコードはセッションにあるので、回数もセッションに持つ)
+                $_SESSION['twostep_verify']['failed'] = ($_SESSION['twostep_verify']['failed'] ?? 0) + 1;
+
+                if ($_SESSION['twostep_verify']['failed'] >= $GLOBALS['config']['code_failed_limit']) {
+                    $_SESSION['twostep_verify']['code']   = false;
+                    $_SESSION['twostep_verify']['failed'] = 0;
+
+                    $warnings[] = '2段階認証用コードを続けて間違えたため、このコードを無効にしました。コードを再送信してください。';
+                } else {
+                    $warnings[] = '2段階認証用コードが違います。';
+                }
             } elseif ($_SESSION['twostep_verify']['expire'] < localdate()) {
                 $warnings[] = '2段階認証用コードの有効期限が終了しています。コードを再送信してください。';
             } else {
@@ -56,6 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($send) {
     $_SESSION['twostep_verify']['code']   = rand_string(8);
     $_SESSION['twostep_verify']['expire'] = localdate() + 60 * 10;
+    $_SESSION['twostep_verify']['failed'] = 0;
 
     // メール送信内容を作成
     $_view['code'] = $_SESSION['twostep_verify']['code'];

@@ -82,6 +82,8 @@ foreach (['テスト属性1', 'テスト属性2'] as $index => $name) {
     test_equals('default user failed', $default_user['failed'], null);
     test_equals('default user twostep', $default_user['twostep'], 0);
     test_equals('default user twostep_email', $default_user['twostep_email'], null);
+    test_equals('default user token_failed', $default_user['token_failed'], null);
+    test_equals('default user twostep_failed', $default_user['twostep_failed'], null);
     test_equals('default user attribute_sets', $default_user['attribute_sets'], []);
     test_regexp('default user created', $default_user['created'], '^\d{4}\-\d{2}\-\d{2} \d{2}:\d{2}:\d{2}$');
 }

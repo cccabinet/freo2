@@ -34,6 +34,7 @@ $resource = service_user_update([
         'token'         => null,
         'token_code'    => null,
         'token_expire'  => null,
+        'token_failed'  => null,
     ],
     'where' => [
         'email = :email',

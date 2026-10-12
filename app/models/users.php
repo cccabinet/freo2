@@ -586,10 +586,12 @@ function default_users()
         'token'           => null,
         'token_code'      => null,
         'token_expire'    => null,
+        'token_failed'    => null,
         'twostep'         => 0,
         'twostep_email'   => null,
         'twostep_code'    => null,
         'twostep_expire'  => null,
+        'twostep_failed'  => null,
         'attribute_sets'  => [],
     ];
 }

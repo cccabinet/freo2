@@ -284,6 +284,65 @@ function service_user_logout($session_id, $user_id)
 }
 
 /**
+ * ユーザーのコードの照合に失敗した回数を記録し、上限に達したらそのコードを無効にする
+ * (パスワード再設定の暗証コードは token、2段階認証用コードは twostep)
+ *
+ * @param string $user_id
+ * @param string $type
+ *
+ * @return bool 上限に達してコードを無効にしたら true
+ */
+function service_user_code_failed($user_id, $type)
+{
+    // 列名に使うので、決まったもの以外は受け付けない
+    if ($type !== 'token' && $type !== 'twostep') {
+        error('不正な操作です。');
+    }
+
+    $users = model('select_users', [
+        'select' => $type . '_failed AS failed',
+        'where'  => [
+            'id = :id',
+            [
+                'id' => $user_id,
+            ],
+        ],
+    ]);
+    if (empty($users)) {
+        return false;
+    }
+
+    $failed = intval($users[0]['failed']) + 1;
+
+    if ($failed >= $GLOBALS['config']['code_failed_limit']) {
+        // 上限に達したら、コードを無効にする(回数は、次にコードを発行したときに数え直す)
+        $sets = [
+            $type . '_code'   => null,
+            $type . '_failed' => null,
+        ];
+    } else {
+        $sets = [
+            $type . '_failed' => $failed,
+        ];
+    }
+
+    $resource = service_user_update([
+        'set'   => $sets,
+        'where' => [
+            'id = :id',
+            [
+                'id' => $user_id,
+            ],
+        ],
+    ]);
+    if (!$resource) {
+        error('データを編集できません。');
+    }
+
+    return $failed >= $GLOBALS['config']['code_failed_limit'];
+}
+
+/**
  * ユーザーの2段階認証用メールアドレスに、コードが届くかの確認が必要か
  * (2段階認証を有効にするときと、有効のまま2段階認証用メールアドレスを変えるとき)
  *

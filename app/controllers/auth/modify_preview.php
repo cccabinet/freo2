@@ -31,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'email'    => (string)$_SESSION['post']['user']['twostep_email'],
                 'code'     => null,
                 'expire'   => null,
+                'failed'   => 0,
                 'verified' => false,
             ];
 

@@ -116,6 +116,9 @@ $GLOBALS['config']['contact_status_hidden'] = app_config('APP_CONTACT_STATUS_HID
 /* 操作ログの保存日数（これより古いログは、ログを記録するときに削除する。0 なら削除しない） */
 $GLOBALS['config']['log_retention'] = app_config('APP_LOG_RETENTION', 180);
 
+/* 暗証コード・2段階認証用コードを続けて間違えられる回数（達したらそのコードを無効にする） */
+$GLOBALS['config']['code_failed_limit'] = app_config('APP_CODE_FAILED_LIMIT', 10);
+
 /* ストレージ */
 $GLOBALS['config']['storage_type'] = app_config('APP_STORAGE_TYPE', 'file');
 $GLOBALS['config']['storage_url'] = app_config('APP_STORAGE_URL', $GLOBALS['config']['http_url']);

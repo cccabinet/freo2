@@ -55,8 +55,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exec']) && ($_POST['e
 
             if ($twostep_code === '') {
                 $_view['warnings'] = ['2段階認証用コードが入力されていません。'];
-            } elseif ($users[0]['twostep_code'] === null || !hash_equals($users[0]['twostep_code'], $twostep_code)) {
-                $_view['warnings'] = ['2段階認証用コードが違います。'];
+            } elseif ($users[0]['twostep_code'] === null) {
+                $_view['warnings'] = ['2段階認証用コードが無効になっています。コードを再送信してください。'];
+            } elseif (!hash_equals($users[0]['twostep_code'], $twostep_code)) {
+                // 失敗した回数を記録する(上限に達したらコードを無効にする)
+                db_transaction();
+
+                if (service_user_code_failed($id, 'twostep')) {
+                    $_view['warnings'] = ['2段階認証用コードを続けて間違えたため、このコードを無効にしました。コードを再送信してください。'];
+                } else {
+                    $_view['warnings'] = ['2段階認証用コードが違います。'];
+                }
+
+                db_commit();
             } elseif (empty($users[0]['twostep_expire']) || localdate(null, $users[0]['twostep_expire']) < localdate()) {
                 $_view['warnings'] = ['2段階認証用コードの有効期限が終了しています。'];
             } else {
@@ -212,6 +223,7 @@ if ($twostep_send) {
         'set'   => [
             'twostep_code'   => $twostep_code,
             'twostep_expire' => localdate('Y-m-d H:i:s', time() + 60 * 10),
+            'twostep_failed' => null,
         ],
         'where' => [
             'id = :id',
@@ -264,6 +276,7 @@ if ($success) {
             'failed_last'    => null,
             'twostep_code'   => null,
             'twostep_expire' => null,
+            'twostep_failed' => null,
         ],
         'where' => [
             'id = :id AND enabled = 1',
