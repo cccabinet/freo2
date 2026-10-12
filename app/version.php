@@ -1,4 +1,4 @@
 <?php
 
-define('APP_VERSION_NUMBER', '2.0.0-alpha-20');
-define('APP_VERSION_UPDATE', '2026-10-05');
+define('APP_VERSION_NUMBER', '2.0.0-alpha-21');
+define('APP_VERSION_UPDATE', '2026-10-12');
