@@ -1,6 +1,6 @@
 <?php
 
-import('app/services/mail.php');
+import('app/services/user.php');
 
 // 投稿データを確認(確認画面を通っていなければ、入力画面に戻す)
 if (empty($_SESSION['post']['user']) || empty($_SESSION['twostep_verify']) || $_SESSION['twostep_verify']['email'] !== (string)$_SESSION['post']['user']['twostep_email']) {
@@ -71,22 +71,8 @@ if ($send) {
     $_SESSION['twostep_verify']['expire'] = localdate() + 60 * 10;
     $_SESSION['twostep_verify']['failed'] = 0;
 
-    // メール送信内容を作成
-    $_view['code'] = $_SESSION['twostep_verify']['code'];
-
-    $to      = $_SESSION['twostep_verify']['email'];
-    $subject = $GLOBALS['setting']['mail_twostep_subject'];
-    $message = view('mail/email/twostep.php', true);
-    $headers = [
-        'From' => $GLOBALS['setting']['mail_from'],
-    ];
-
     // メールを送信
-    if (service_mail_send($to, $subject, $message, $headers) === false) {
-        error('メールを送信できません。');
-    }
-
-    unset($_view['code']);
+    service_user_twostep_mail($_SESSION['twostep_verify']['email'], $_SESSION['twostep_verify']['code']);
 }
 
 $_view['user'] = $_SESSION['post']['user'];

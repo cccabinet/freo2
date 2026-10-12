@@ -611,6 +611,243 @@ restore_error_handler();
     $GLOBALS['config']['code_failed_limit'] = $code_failed_limit;
 }
 
+// アカウントの凍結の判定テスト
+{
+    // 確認（10回失敗して、最後の失敗から5分以内なら凍結）
+    test_user_set($inserted_id, ['failed' => 10, 'failed_last' => localdate('Y-m-d H:i:s')]);
+    $frozen = service_user_frozen($data_user['username']);
+
+    test_user_set($inserted_id, ['failed' => 9, 'failed_last' => localdate('Y-m-d H:i:s')]);
+    $frozen_9 = service_user_frozen($data_user['username']);
+
+    test_user_set($inserted_id, ['failed' => 10, 'failed_last' => localdate('Y-m-d H:i:s', time() - 60 * 6)]);
+    $frozen_old = service_user_frozen($data_user['username']);
+
+    $frozen_unknown = service_user_frozen('testuser_unknown');
+
+    // 結果
+    test_equals('frozen user', $frozen, true);
+    test_equals('frozen user (9 times)', $frozen_9, false);
+    test_equals('frozen user (after 5 minutes)', $frozen_old, false);
+    test_equals('frozen user (unknown)', $frozen_unknown, false);
+}
+
+// パスワード認証テスト
+{
+    // データ
+    test_user_set($inserted_id, ['failed' => null, 'failed_last' => null]);
+
+    // 確認（正しいパスワード）
+    $user = service_user_authenticate($data_user['username'], $data_user['password']);
+
+    // 結果
+    test_equals('authenticate user', intval($user['id']), $inserted_id);
+    test_array_haskey('authenticate user twostep', $user, 'twostep');
+    test_array_haskey('authenticate user twostep_email', $user, 'twostep_email');
+
+    // 確認（誤ったパスワードは null で、失敗した回数が増えること）
+    $user_wrong = service_user_authenticate($data_user['username'], 'wrongpass1');
+
+    $users = model('select_users', [
+        'select' => 'failed, failed_last',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+
+    // 結果
+    test_equals('authenticate user (wrong password)', $user_wrong, null);
+    test_equals('authenticate user (wrong password) failed', intval($users[0]['failed']), 1);
+    test_not_equals('authenticate user (wrong password) failed_last', $users[0]['failed_last'], null);
+
+    // 確認（存在しないユーザー名）
+    $user_unknown = service_user_authenticate('testuser_unknown', $data_user['password']);
+
+    // 結果
+    test_equals('authenticate user (unknown)', $user_unknown, null);
+}
+
+// 信頼済みのブラウザの判定テスト
+{
+    // データ（コードの入力を省略するブラウザと、しないブラウザ）
+    $trusted_session_id   = rand_string();
+    $untrusted_session_id = rand_string();
+
+    foreach ([$trusted_session_id => 1, $untrusted_session_id => 0] as $session_id => $twostep) {
+        model('insert_sessions', [
+            'values' => [
+                'id'      => $session_id,
+                'user_id' => $inserted_id,
+                'agent'   => 'freo/2',
+                'keep'    => 1,
+                'twostep' => $twostep,
+                'expire'  => localdate('Y-m-d H:i:s', time() + $GLOBALS['config']['cookie_expire']),
+            ],
+        ]);
+    }
+
+    // 結果
+    test_equals('twostep trusted', service_user_twostep_trusted($inserted_id, $trusted_session_id), true);
+    test_equals('twostep trusted (not trusted)', service_user_twostep_trusted($inserted_id, $untrusted_session_id), false);
+    test_equals('twostep trusted (another user)', service_user_twostep_trusted($inserted_id + 1000, $trusted_session_id), false);
+    test_equals('twostep trusted (no session)', service_user_twostep_trusted($inserted_id, null), false);
+}
+
+// 2段階認証用コードの発行テスト
+{
+    // データ（前のコードで3回間違えている）
+    test_user_set($inserted_id, ['twostep_failed' => 3]);
+
+    // 発行
+    $twostep_code = service_user_twostep_issue($inserted_id);
+
+    $users = model('select_users', [
+        'select' => 'twostep_code, twostep_expire, twostep_failed',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+
+    // 結果（16進8桁で、期限は10分後、失敗した回数は数え直す）
+    test_regexp('twostep issue code', $twostep_code, '^[0-9a-f]{8}$');
+    test_equals('twostep issue code saved', $users[0]['twostep_code'], $twostep_code);
+    test_equals('twostep issue expire', $users[0]['twostep_expire'], localdate('Y-m-d H:i:s', time() + 60 * 10));
+    test_equals('twostep issue failed cleared', $users[0]['twostep_failed'], null);
+}
+
+// 2段階認証用コードの照合テスト
+{
+    // データ（上限は設定で変わるので、3回に固定する）
+    $code_failed_limit = $GLOBALS['config']['code_failed_limit'];
+    $GLOBALS['config']['code_failed_limit'] = 3;
+
+    $twostep_code = service_user_twostep_issue($inserted_id);
+
+    // 確認
+    $message_empty   = service_user_twostep_verify($inserted_id, '');
+    $message_wrong   = service_user_twostep_verify($inserted_id, 'zzzzzzzz');
+    $message_correct = service_user_twostep_verify($inserted_id, ' ' . $twostep_code . ' ');
+
+    // 結果（前後の空白は除いて照合する。空欄は失敗に数えない）
+    test_contains('twostep verify (empty)', $message_empty, '入力されていません');
+    test_contains('twostep verify (wrong)', $message_wrong, '違います');
+    test_equals('twostep verify (correct)', $message_correct, null);
+
+    // 確認（期限切れ。コードは合っている）
+    test_user_set($inserted_id, ['twostep_expire' => localdate('Y-m-d H:i:s', time() - 60)]);
+    $message_expired = service_user_twostep_verify($inserted_id, $twostep_code);
+
+    // 結果
+    test_contains('twostep verify (expired)', $message_expired, '有効期限が終了');
+
+    // 確認（続けて間違えると、上限でコードを無効にし、その後は無効と伝えること）
+    service_user_twostep_issue($inserted_id);
+    service_user_twostep_verify($inserted_id, 'zzzzzzzz');
+    service_user_twostep_verify($inserted_id, 'zzzzzzzz');
+    $message_limit   = service_user_twostep_verify($inserted_id, 'zzzzzzzz');
+    $message_invalid = service_user_twostep_verify($inserted_id, 'zzzzzzzz');
+
+    // 結果
+    test_contains('twostep verify (limit)', $message_limit, '無効にしました');
+    test_contains('twostep verify (invalidated)', $message_invalid, '無効になっています');
+
+    // 設定を戻す
+    $GLOBALS['config']['code_failed_limit'] = $code_failed_limit;
+}
+
+// 2段階認証用コードのメールテスト
+{
+    // データ（実際にメールを送信しないよう「送信なし・記録あり」に固定する。件名などの設定も固定する）
+    $mail_config  = [$GLOBALS['config']['mail_send'], $GLOBALS['config']['mail_log']];
+    $mail_setting = $GLOBALS['setting'] ?? null;
+
+    $GLOBALS['config']['mail_send'] = false;
+    $GLOBALS['config']['mail_log']  = true;
+    $GLOBALS['setting'] = [
+        'mail_twostep_subject' => '2段階認証のテスト',
+        'mail_from'            => 'testuser1-from@example.com',
+        'mail_body_begin'      => '',
+        'mail_body_end'        => '',
+    ];
+
+    $mail_to   = 'testuser1-twostep-mail@example.com';
+    $mail_glob = MAIN_APPLICATION_PATH . 'mail/' . localdate('Ymd') . '/*_' . $mail_to . '.txt';
+
+    foreach (glob($mail_glob) as $file) {
+        unlink($file);
+    }
+
+    // 送信
+    service_user_twostep_mail($mail_to, 'abcd1234');
+
+    // 結果
+    $records = glob($mail_glob);
+
+    test_equals('twostep mail record', count($records), 1);
+    test_contains('twostep mail subject', file_get_contents($records[0]), 'subject: 2段階認証のテスト');
+    test_contains('twostep mail code', file_get_contents($records[0]), '2段階認証用コードは abcd1234 です。');
+    test_array_not_haskey('twostep mail view cleared', $_view, 'code');
+
+    // 後始末
+    foreach ($records as $file) {
+        unlink($file);
+    }
+
+    list($GLOBALS['config']['mail_send'], $GLOBALS['config']['mail_log']) = $mail_config;
+    $GLOBALS['setting'] = $mail_setting;
+}
+
+// ログインの完了テスト
+{
+    // データ（失敗した回数と、使い終わったコードが残っている）
+    test_user_set($inserted_id, ['failed' => 3, 'failed_last' => localdate('Y-m-d H:i:s'), 'twostep_code' => 'abcd1234', 'twostep_expire' => localdate('Y-m-d H:i:s'), 'twostep_failed' => 2]);
+
+    // 新しく作られるセッションを見分けるため、このユーザーのセッションを消しておく（トランザクションで元に戻る）
+    db_query('DELETE FROM ' . DATABASE_PREFIX . 'sessions WHERE user_id = ' . db_escape($inserted_id) . ';');
+
+    // ブラウザから実行したときに本物のログイン状態を変えないよう、セッションを退避しておく
+    $session_auth = $_SESSION['auth'] ?? null;
+
+    $_SESSION['auth']['twostep'] = ['id' => $inserted_id, 'keep' => 0];
+
+    // ログイン処理は cookie_set() を呼ぶので、ヘッダー送信済みの警告だけを無視する
+    set_error_handler('test_user_header_error');
+
+    service_user_login_complete($inserted_id, 1, 1);
+
+    restore_error_handler();
+
+    $login_session = $_SESSION['auth'];
+
+    if ($session_auth === null) {
+        unset($_SESSION['auth']);
+    } else {
+        $_SESSION['auth'] = $session_auth;
+    }
+
+    $users = model('select_users', [
+        'select' => 'loggedin, failed, failed_last, twostep_code, twostep_expire, twostep_failed',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+    $sessions = model('select_sessions', [
+        'select' => 'keep, twostep',
+        'where'  => 'user_id = ' . db_escape($inserted_id),
+    ]);
+
+    // 結果（セッションに記録し、認証待ちの状態を消すこと）
+    test_equals('login complete session user', intval($login_session['user']['id']), $inserted_id);
+    test_array_not_haskey('login complete session twostep', $login_session, 'twostep');
+
+    // 結果（失敗した回数と使い終わったコードを消すこと）
+    test_not_equals('login complete loggedin', $users[0]['loggedin'], null);
+    test_equals('login complete failed', $users[0]['failed'], null);
+    test_equals('login complete failed_last', $users[0]['failed_last'], null);
+    test_equals('login complete twostep_code', $users[0]['twostep_code'], null);
+    test_equals('login complete twostep_expire', $users[0]['twostep_expire'], null);
+    test_equals('login complete twostep_failed', $users[0]['twostep_failed'], null);
+
+    // 結果（ログイン状態を記憶し、このブラウザでコードの入力を省略すること）
+    test_equals('login complete session', count($sessions), 1);
+    test_equals('login complete keep', intval($sessions[0]['keep']), 1);
+    test_equals('login complete twostep', intval($sessions[0]['twostep']), 1);
+}
+
 // 操作ログの重複抑止テスト
 {
     // 結果（service_log_record() は同じ model と exec の組み合わせを1リクエストにつき1回しか記録しないため、更新を繰り返してもログは増えない）
@@ -684,4 +921,25 @@ function test_user_header_error($errno, $errstr)
     }
 
     return false;
+}
+
+/**
+ * テスト用ユーザーの列を書き換える（前提の状態を作るため。サービスを通さないので操作ログは残らない）
+ *
+ * @param int   $id
+ * @param array $sets
+ */
+function test_user_set($id, $sets)
+{
+    model('update_users', [
+        'set'   => $sets,
+        'where' => [
+            'id = :id',
+            [
+                'id' => $id,
+            ],
+        ],
+    ], [
+        'id' => $id,
+    ]);
 }
