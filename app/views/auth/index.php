@@ -58,7 +58,7 @@
             <?php endif ?>
 
             <div class="form-floating">
-                <input type="text" name="twostep_code" size="30" value="" class="form-control" id="twostep_code" placeholder="2段階認証用コード" autocomplete="one-time-code">
+                <input type="text" name="twostep_code" size="30" value="" class="form-control" id="twostep_code" placeholder="2段階認証用コード" autocomplete="one-time-code" inputmode="numeric">
                 <label for="twostep_code">2段階認証用コード</label>
             </div>
             <div class="form-group mt-2">

@@ -27,7 +27,7 @@
                     <input type="hidden" name="exec" value="verify">
                     <div class="form-group mb-2">
                         <label class="fw-bold">2段階認証用コード <span class="badge bg-danger"><?php h($GLOBALS['string']['text_required']) ?></span></label>
-                        <input type="text" name="twostep_code" size="30" value="" class="form-control" style="width: 200px;" autocomplete="one-time-code">
+                        <input type="text" name="twostep_code" size="30" value="" class="form-control" style="width: 200px;" autocomplete="one-time-code" inputmode="numeric">
                     </div>
                     <div class="form-group mt-4">
                         <a href="<?php t(MAIN_FILE) ?>/auth/modify?referer=preview" class="btn btn-secondary px-4"><?php h($GLOBALS['string']['button_auth_modify_back']) ?></a>

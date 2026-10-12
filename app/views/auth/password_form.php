@@ -26,7 +26,7 @@
                     <input type="hidden" name="_token" value="<?php t($_view['token']) ?>" class="token">
                     <div class="form-group mb-2">
                         <label class="fw-bold">暗証コード</label>
-                        <input type="text" name="token_code" size="30" value="<?php t($_view['user']['token_code']) ?>" class="form-control">
+                        <input type="text" name="token_code" size="30" value="<?php t($_view['user']['token_code']) ?>" class="form-control" autocomplete="one-time-code" inputmode="numeric">
                     </div>
                     <div class="form-group mb-2">
                         <label class="fw-bold">パスワード</label>
