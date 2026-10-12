@@ -17,6 +17,11 @@ if ($GLOBALS['authority']['power'] < 3) {
     error('不正なアクセスです。');
 }
 
+// 対象を確認（ファイルのパスに使うので、ディレクトリの区切りや相対指定を受け付けない）
+if (!isset($_POST['code']) || !preg_match('/^[\w\-]+$/', $_POST['code'])) {
+    error('不正なアクセスです。');
+}
+
 // テーマを取得
 import(MAIN_PATH . $GLOBALS['config']['theme_path'] . $_POST['code'] . '/' . 'config.php');
 
