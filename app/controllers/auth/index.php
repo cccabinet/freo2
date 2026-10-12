@@ -163,7 +163,7 @@ if ($success) {
 // ログイン確認
 if (!empty($_SESSION['auth']['user']['id'])) {
     if ($_REQUEST['_work'] === 'index') {
-        if (isset($_GET['referer']) && regexp_match('^\/', $_GET['referer'])) {
+        if (isset($_GET['referer']) && is_string($_GET['referer']) && preg_match('#^/(?![/\\\\])#', $_GET['referer'])) {
             $url = $_GET['referer'];
         } else {
             $url = '/auth/home';
