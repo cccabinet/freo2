@@ -19,6 +19,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         error('不正なアクセスです。');
     }
 
+    // メールアドレスを文字列に限定する
+    $_POST['email'] = (isset($_POST['email']) && is_string($_POST['email'])) ? $_POST['email'] : '';
+
     // メールアドレスを検証
     $users = model('select_users', [
         'where' => [

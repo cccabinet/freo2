@@ -6,12 +6,15 @@ $entries = model('select_entries', [
     'where'  => [
         'entries.id = :entry_id',
         [
-            'entry_id' => $_GET['entry_id'],
+            'entry_id' => intval($_GET['entry_id'] ?? 0),
         ],
     ],
 ], [
     'associate' => true,
 ]);
+if (empty($entries)) {
+    warning('エントリーが見つかりません。');
+}
 $entry = $entries[0];
 
 // エントリーを取得

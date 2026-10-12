@@ -68,6 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 } else {
+    // パスワード再発行用URLのパラメーターを確認
+    if (!isset($_GET['key']) || !is_string($_GET['key']) || !isset($_GET['token']) || !is_string($_GET['token'])) {
+        error('不正なアクセスです。');
+    }
+
     // パスワード再発行用URLを検証
     $users = model('select_users', [
         'select' => 'token_expire',

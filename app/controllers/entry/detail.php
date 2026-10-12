@@ -8,7 +8,7 @@ import('app/services/recaptcha.php');
 if (isset($_params[2])) {
     $_GET['code'] = $_params[2];
 }
-if (!isset($_GET['code'])) {
+if (!isset($_GET['code']) || !is_string($_GET['code'])) {
     error('不正なアクセスです。');
 }
 
