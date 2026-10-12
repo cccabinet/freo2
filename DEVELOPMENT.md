@@ -804,6 +804,8 @@ $GLOBALS['plugin']['myplugin']['updated']     = '2026-01-01';
 - **ビューでは本体のヘッダー・フッターをそのまま使えます:** `import('app/views/header.php')`(参考: [plugins/sample/app/views/sample/index.php](plugins/sample/app/views/sample/index.php))
 - **独自の型を追加するなら、詳細ページのURLは `/<型コード>/detail/<コード>` にします**(エントリーの `/entry/detail/<コード>` と同じ形)。本体のパスワード認証のフォーム(`app/views/password_form.php`)やコメントのフォームは、この形で送信先を組み立てます。認証などの後にリダイレクトするときも、同じURLに戻します。
   - 存在しない `work` のURL(たとえば `/<型コード>/<コード>`)は、エラーにならず `<mode>/index.php` が表示されます。リダイレクト先を間違えても一覧が出るだけなので、気付きにくい点に注意してください。
+  - 詳細ページのURLは `service_entry_url($entry)`([app/services/entry.php](app/services/entry.php))で組み立てられます。パスワード認証(`service_entry_password()`)と、コメントの受け付け(`service_comment_acceptable()`・`service_comment_recaptcha()`・`service_comment_normalize()`・`service_comment_default()`・`service_comment_select_approved()`。[app/services/comment.php](app/services/comment.php))もサービスにあるので、本体の `app/controllers/entry/detail.php` と同じ形で書けます。
+  - **コメント先のエントリーは、`service_comment_normalize()` が表示しているエントリーにします。** フォームから送られた `entry_id` は使いません(書き換えて送ると、コメントを受け付けていないエントリーに登録できてしまうため)。
 - **テーブルは `setup/install.php` で作り、`setup/uninstall.php` で削除します。** 関数 `db_query()` / `db_insert()` を使い、失敗したら `error()` で止めます。テーブル名には `DATABASE_PREFIX` を付け、本体や他のプラグインとぶつからないようプラグインコードで始めます。
 
   ```php

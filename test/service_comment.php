@@ -12,6 +12,7 @@ if (!isset($_GET['_test'])) {
 // ライブラリを読み込み
 model('comments.php');
 model('logs.php');
+model('users.php');
 service('comment.php');
 
 // リクエスト情報を用意
@@ -184,6 +185,115 @@ $inserted_id = intval($comments[0]['id']);
 
     test_equals('delete comment log', count($logs), 1);
     test_equals('delete comment log model', $logs[0]['model'], 'comments');
+}
+
+// ログイン状態を退避（ブラウザから実行したときに、本物のログイン状態を変えないため）
+$auth = isset($_SESSION['auth']) ? $_SESSION['auth'] : null;
+unset($_SESSION['auth']);
+
+// コメントの受付の確認テスト
+{
+    // 結果（受け付ける・受け付けない）
+    test_equals('comment acceptable (opened)', service_comment_acceptable(['comment' => 'opened']), true);
+    test_equals('comment acceptable (closed)', service_comment_acceptable(['comment' => 'closed']), false);
+
+    // 結果（登録ユーザーのみ受け付ける場合は、ログインしていなければ受け付けない）
+    test_equals('comment acceptable (user, guest)', service_comment_acceptable(['comment' => 'user']), false);
+
+    $_SESSION['auth']['user']['id'] = 1;
+
+    test_equals('comment acceptable (user, login)', service_comment_acceptable(['comment' => 'user']), true);
+    test_equals('comment acceptable (closed, login)', service_comment_acceptable(['comment' => 'closed']), false);
+
+    unset($_SESSION['auth']);
+}
+
+// reCAPTCHAの確認テスト
+{
+    // データ（reCAPTCHAを無効にする。有効だと Google に接続するため）
+    $recaptcha_enable = $GLOBALS['config']['recaptcha_enable'];
+    $GLOBALS['config']['recaptcha_enable'] = false;
+
+    // 結果（無効なら確認せずに通ること）
+    test_equals('comment recaptcha (disabled)', service_comment_recaptcha(), true);
+
+    $GLOBALS['config']['recaptcha_enable'] = $recaptcha_enable;
+}
+
+// 公開側の投稿データの整理テスト
+{
+    // データ（コメント先を書き換えて送信した場合）
+    $test_data = [
+        'entry_id' => 999,
+        'name'     => 'テスト太郎',
+        'url'      => 'https://example.com/',
+        'message'  => 'コメントの内容です。',
+    ];
+
+    // 整理
+    $comment = service_comment_normalize($test_data, ['id' => 3]);
+
+    // 結果（コメント先は、送信された値ではなく表示しているエントリーになること）
+    test_equals('comment normalize entry_id', $comment['entry_id'], 3);
+    test_equals('comment normalize name', $comment['name'], 'テスト太郎');
+    test_equals('comment normalize message', $comment['message'], 'コメントの内容です。');
+
+    // 整理（項目が送信されなかった場合）
+    $comment = service_comment_normalize([], ['id' => 3]);
+
+    // 結果
+    test_equals('comment normalize (empty) name', $comment['name'], '');
+    test_equals('comment normalize (empty) message', $comment['message'], '');
+}
+
+// 公開側の入力フォームの初期値の取得テスト
+{
+    // 結果（ログインしていなければ空）
+    $comment = service_comment_default();
+
+    test_equals('comment default (guest) name', $comment['name'], model('default_comments')['name']);
+
+    // 結果（ログインしていれば、ユーザーのお名前とURLが入ること）
+    $users = model('select_users', [
+        'select' => 'id, name, url',
+        'where'  => 'enabled = 1',
+        'limit'  => 1,
+    ]);
+
+    $_SESSION['auth']['user']['id'] = $users[0]['id'];
+
+    $comment = service_comment_default();
+
+    unset($_SESSION['auth']);
+
+    test_equals('comment default (login) name', $comment['name'], $users[0]['name']);
+    test_equals('comment default (login) url', $comment['url'], $users[0]['url']);
+}
+
+// ログイン状態を元に戻す
+if ($auth !== null) {
+    $_SESSION['auth'] = $auth;
+}
+
+// 承認済みコメントの取得テスト
+{
+    // データ（エントリー 1 に承認済み2件・未承認1件、エントリー 2 に承認済み1件）
+    foreach ([[1, 1, 'コメント1'], [1, 0, '未承認'], [2, 1, '別のエントリー'], [1, 1, 'コメント2']] as $values) {
+        model('insert_comments', [
+            'values' => [
+                'entry_id' => $values[0],
+                'approved' => $values[1],
+                'name'     => 'テスト太郎',
+                'message'  => $values[2],
+            ],
+        ]);
+    }
+
+    // 取得
+    $comments = service_comment_select_approved(1);
+
+    // 結果（そのエントリーの承認済みのコメントだけが、登録順に取得できること）
+    test_equals('comment select approved', array_column($comments, 'message'), ['コメント1', 'コメント2']);
 }
 
 // トランザクションを終了

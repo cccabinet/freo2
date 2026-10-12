@@ -576,6 +576,42 @@ $inserted_id = intval($entries[0]['id']);
     test_equals('page list url (parent)', service_entry_page_list('ok=post', 'about/staff'), '/admin/page?ok=post&parent=about%2Fstaff');
 }
 
+// 公開側の詳細ページのURLの取得テスト
+{
+    // 結果（ページは /page/<コード>、それ以外は /<型コード>/detail/<コード>）
+    test_equals('entry url (entry)', service_entry_url(['type_code' => 'entry', 'code' => 'hello']), '/entry/detail/hello');
+    test_equals('entry url (page)', service_entry_url(['type_code' => 'page', 'code' => 'about/staff']), '/page/about/staff');
+    test_equals('entry url (plugin type)', service_entry_url(['type_code' => 'gallery', 'code' => 'work1']), '/gallery/detail/work1');
+}
+
+// パスワード認証テスト
+{
+    // データ
+    $entry_passwords = isset($_SESSION['entry_passwords']) ? $_SESSION['entry_passwords'] : null;
+    unset($_SESSION['entry_passwords']);
+
+    $test_entry = [
+        'id'       => $entry_ids['pub_password'],
+        'password' => 'abcd',
+    ];
+
+    // 結果（誤ったパスワードでは認証されず、セッションにも記録されないこと）
+    test_equals('entry password (wrong)', service_entry_password($test_entry, 'abcde'), false);
+    test_equals('entry password (wrong session)', isset($_SESSION['entry_passwords'][$entry_ids['pub_password']]), false);
+    test_equals('entry password (empty)', service_entry_password($test_entry, ''), false);
+
+    // 結果（正しいパスワードで認証され、セッションに記録されること）
+    test_equals('entry password (correct)', service_entry_password($test_entry, 'abcd'), true);
+    test_equals('entry password (correct session)', $_SESSION['entry_passwords'][$entry_ids['pub_password']], true);
+
+    // セッションを元に戻す
+    if ($entry_passwords === null) {
+        unset($_SESSION['entry_passwords']);
+    } else {
+        $_SESSION['entry_passwords'] = $entry_passwords;
+    }
+}
+
 // トランザクションを終了
 db_rollback();
 

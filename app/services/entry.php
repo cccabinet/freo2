@@ -79,6 +79,45 @@ function service_entry_select_published($type, $queries, $options = [])
 }
 
 /**
+ * 公開側の詳細ページのURLを取得
+ *
+ * ページは /page/<コード>、それ以外の型は /<型コード>/detail/<コード>
+ *
+ * @param array $entry
+ *
+ * @return string
+ */
+function service_entry_url($entry)
+{
+    if ($entry['type_code'] === 'page') {
+        return '/page/' . $entry['code'];
+    }
+
+    return '/' . $entry['type_code'] . '/detail/' . $entry['code'];
+}
+
+/**
+ * パスワード認証
+ *
+ * 認証に成功したら、セッションに記録する
+ *
+ * @param array  $entry
+ * @param string $password
+ *
+ * @return bool
+ */
+function service_entry_password($entry, $password)
+{
+    if ($password !== $entry['password']) {
+        return false;
+    }
+
+    $_SESSION['entry_passwords'][$entry['id']] = true;
+
+    return true;
+}
+
+/**
  * エントリーの登録
  *
  * @param array $queries

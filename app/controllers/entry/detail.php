@@ -1,6 +1,7 @@
 <?php
 
 import('app/services/entry.php');
+import('app/services/comment.php');
 import('libs/modules/recaptcha.php');
 
 // 表示対象を取得
@@ -34,38 +35,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (isset($_POST['exec']) && $_POST['exec'] === 'password') {
         // パスワード認証
-        if ($_POST['password'] === $entries[0]['password']) {
-            $_SESSION['entry_passwords'][$entries[0]['id']] = true;
-
+        if (service_entry_password($entries[0], isset($_POST['password']) ? $_POST['password'] : '')) {
             // リダイレクト
-            redirect('/entry/detail/' . $entries[0]['code']);
+            redirect(service_entry_url($entries[0]));
         } else {
             warning('パスワードが違います。');
         }
     } elseif (isset($_POST['exec']) && $_POST['exec'] === 'comment') {
         // コメントの受付を確認
-        if ($entries[0]['comment'] !== 'opened' && ($entries[0]['comment'] !== 'user' || empty($_SESSION['auth']['user']['id']))) {
+        if (!service_comment_acceptable($entries[0])) {
             error('不正なアクセスです。');
         }
 
         // reCAPTCHA
-        if ($GLOBALS['config']['recaptcha_enable'] == true && empty($_SESSION['recaptcha'])) {
-            $result = recaptcha_verify($GLOBALS['config']['recaptcha_secret_key']);
-            if ($result) {
-                $_SESSION['recaptcha'] = true;
-            } else {
-                error('reCAPTCHAでの認証に失敗しました。');
-            }
+        if (!service_comment_recaptcha()) {
+            error('reCAPTCHAでの認証に失敗しました。');
         }
 
         // 入力データを整理
         $post = [
-            'comment' => model('normalize_comments', [
-                'entry_id' => isset($_POST['entry_id']) ? $_POST['entry_id'] : '',
-                'name'     => isset($_POST['name'])     ? $_POST['name']     : '',
-                'url'      => isset($_POST['url'])      ? $_POST['url']      : '',
-                'message'  => isset($_POST['message'])  ? $_POST['message']  : '',
-            ]),
+            'comment' => service_comment_normalize($_POST, $entries[0]),
         ];
 
         // 入力データを検証＆登録
@@ -94,22 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $_view['comment'] = $_SESSION['post']['comment'];
 } else {
     // 初期データを取得
-    $_view['comment'] = model('default_comments');
-
-    if (!empty($_SESSION['auth']['user']['id'])) {
-        // ユーザーを取得
-        $users = model('select_users', [
-            'where' => [
-                'id = :id AND enabled = 1',
-                [
-                    'id' => $_SESSION['auth']['user']['id'],
-                ],
-            ],
-        ]);
-
-        $_view['comment']['name'] = $users[0]['name'];
-        $_view['comment']['url']  = $users[0]['url'];
-    }
+    $_view['comment'] = service_comment_default();
 }
 
 // フィールドを取得
@@ -119,17 +93,7 @@ $_view['fields'] = model('select_fields', [
 ]);
 
 // コメントを取得
-$_view['comments'] = model('select_comments', [
-    'where' => [
-        'comments.approved = 1 AND entries.code = :code',
-        [
-            'code' => $_GET['code'],
-        ],
-    ],
-    'order_by' => 'comments.id',
-], [
-    'associate' => true,
-]);
+$_view['comments'] = service_comment_select_approved($entries[0]['id']);
 
 // タイトル
 if (isset($_view['entry']['title'])) {
