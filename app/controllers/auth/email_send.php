@@ -6,7 +6,7 @@ import('app/services/mail.php');
 // トランザクションを開始
 db_transaction();
 
-// 認証用のトークンを発行(送るたびに作り直す。登録時のトークンは期限切れや、パスワード再設定で消えていることがあるため)
+// 認証用のトークンを発行（送るたびに作り直す。登録時のトークンは期限切れや、パスワード再設定で消えていることがあるため）
 $resource = service_user_update([
     'set'   => [
         'token'        => rand_string(),

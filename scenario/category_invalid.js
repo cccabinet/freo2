@@ -78,7 +78,7 @@ test.scenario = [
             test.reload();
         });
     },
-    // 境界値: コード1文字(下限-1)は入力エラー、名前20文字(上限ちょうど)は入力エラーにならないことを確認
+    // 境界値: コード1文字（下限-1）は入力エラー、名前20文字（上限ちょうど）は入力エラーにならないことを確認
     function() {
         submitAndWait({ code: 'a'.repeat(1), name: 'あ'.repeat(20), type_id: '1' }, function() {
             test.assertText(fieldWarning('code'), 'コードは2文字以上80文字以内で入力してください。', 'コード1文字のエラーが表示されていません。');

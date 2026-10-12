@@ -240,14 +240,14 @@ test.scenario = [
         test.assertText('div.alert-danger', '2段階認証用コードが違います。', '誤ったコードが弾かれていません。（' + mainText() + '）');
         test.click(twostepForm('resend').find('button[type="submit"]'), 'コードの入力画面に再送信のボタンがありません。');
     },
-    // 再送信してもコードの入力画面のままであることを確認して、届いたメールを開く(近いほう＝再送信したほうが返る)
+    // 再送信してもコードの入力画面のままであることを確認して、届いたメールを開く（近いほう＝再送信したほうが返る）
     function() {
         test.assertExists('input[name="twostep_code"]', '再送信した後にコードの入力画面になっていません。（' + mainText() + '）');
         test.assertNotExists('div.alert-danger', '再送信した後にエラーが出ています。');
 
         test.visit('/tool/test/mail?date=' + test.date + '&filename=' + encodeURIComponent(test.time + '_' + scenarioMember.twostepEmail));
     },
-    // メールからコードを読み取り、コードの入力画面に戻る(開き直してもコードは送り直さない)
+    // メールからコードを読み取り、コードの入力画面に戻る（開き直してもコードは送り直さない）
     function() {
         var matches = $('body').text().match(/コードは\s*([0-9a-f]{8})/);
 

@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exec']) && ($_POST['e
                 $_view['warnings'] = ['2段階認証用メールアドレスが登録されていません。'];
             } else {
                 // パスワード認証が済んだことをセッションに記録し、コードの入力を待つ
-                // (コードの画面ではユーザー名・パスワードを受け渡さない)
+                // （コードの画面ではユーザー名・パスワードを受け渡さない）
                 $_SESSION['auth']['twostep'] = [
                     'id'   => $id,
                     'keep' => $keep,

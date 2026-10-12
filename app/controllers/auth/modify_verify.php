@@ -2,13 +2,13 @@
 
 import('app/services/user.php');
 
-// 投稿データを確認(確認画面を通っていなければ、入力画面に戻す)
+// 投稿データを確認（確認画面を通っていなければ、入力画面に戻す）
 if (empty($_SESSION['post']['user']) || empty($_SESSION['twostep_verify']) || $_SESSION['twostep_verify']['email'] !== (string)$_SESSION['post']['user']['twostep_email']) {
     // リダイレクト
     redirect('/auth/modify');
 }
 
-// コードを送るか(画面を最初に開いたときと、再送信のとき)
+// コードを送るか（画面を最初に開いたときと、再送信のとき）
 $send = $_SESSION['twostep_verify']['code'] === null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -35,10 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($twostep_code === '') {
                 $warnings[] = '2段階認証用コードが入力されていません。';
             } elseif (!is_string($_SESSION['twostep_verify']['code'])) {
-                // 続けて間違えて無効にした(false)。null はまだ送っていないことを表す
+                // 続けて間違えて無効にした（false）。null はまだ送っていないことを表す
                 $warnings[] = '2段階認証用コードが無効になっています。コードを再送信してください。';
             } elseif (!hash_equals($_SESSION['twostep_verify']['code'], $twostep_code)) {
-                // 失敗した回数を記録する(上限に達したらコードを無効にする。このコードはセッションにあるので、回数もセッションに持つ)
+                // 失敗した回数を記録する（上限に達したらコードを無効にする。このコードはセッションにあるので、回数もセッションに持つ）
                 $_SESSION['twostep_verify']['failed'] = ($_SESSION['twostep_verify']['failed'] ?? 0) + 1;
 
                 if ($_SESSION['twostep_verify']['failed'] >= $GLOBALS['config']['code_failed_limit']) {

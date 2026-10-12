@@ -2,7 +2,7 @@
 
 import('app/services/user.php');
 
-// 認証用URLを確認(一致しなくても更新は0件で成功するので、先に確認する)
+// 認証用URLを確認（一致しなくても更新は0件で成功するので、先に確認する）
 $users = model('select_users', [
     'select' => 'id',
     'where'  => [

@@ -42,7 +42,7 @@
             </div>
         </form>
         <?php else : ?>
-        <?php /* 送信時に common.js が送信ボタンを無効にする(無効なボタンの name・value は送られない)ので、exec は hidden で送る */ ?>
+        <?php /* 送信時に common.js が送信ボタンを無効にする（無効なボタンの name・value は送られない）ので、exec は hidden で送る */ ?>
         <form action="<?php t(MAIN_FILE) ?>/auth/<?php empty($_GET['referer']) ? '' : t('?referer=' . rawurlencode($_GET['referer'])) ?>" method="post">
             <input type="hidden" name="exec" value="twostep">
             <h1 class="mb-4"><?php h($_view['title']) ?></h1>

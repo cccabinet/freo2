@@ -3,7 +3,7 @@
 // ワンタイムトークン
 $_view['token'] = token('create');
 
-// 入力中の内容の一時保存を削除(ログアウトの直後)
+// 入力中の内容の一時保存を削除（ログアウトの直後）
 if (isset($_SESSION['draft_clear']) && (!isset($_REQUEST['_type']) || $_REQUEST['_type'] === 'html')) {
     $_view['script'] = ($_view['script'] ?? '') . '<script>
             try {

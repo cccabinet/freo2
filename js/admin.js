@@ -38,14 +38,14 @@ function insertMedia(tag) {
  * 入力中の内容の一時保存
  *
  * form.register[data-draft] のタイトルと本文を、記事ごとにlocalStorageへ保存する
- * キーは data-draft(app_draft_key())、data-draft-modified は記事の更新日時
+ * キーは data-draft（app_draft_key()）、data-draft-modified は記事の更新日時
  */
 var draftPrefix  = 'freo2_draft:';
 var draftPending = 'freo2_draft_pending';
 var draftExpire  = 7 * 24 * 60 * 60 * 1000;
 
 /*
- * ストレージを取得(使えない環境ではnull)
+ * ストレージを取得（使えない環境ではnull）
  */
 function draftStorage(name) {
     try {
@@ -60,7 +60,7 @@ function draftStorage(name) {
 }
 
 /*
- * 下書きを取得(無い・壊れている・期限切れならnull)
+ * 下書きを取得（無い・壊れている・期限切れならnull）
  */
 function draftLoad(key) {
     var storage = draftStorage('localStorage');
@@ -98,7 +98,7 @@ function draftCleanup() {
     }
 
     try {
-        // 送信した下書きは、登録が完了した画面(?ok=post)でだけ削除する
+        // 送信した下書きは、登録が完了した画面（?ok=post）でだけ削除する
         // 入力エラーなどで登録できなかった場合は、次に開いた画面で控えだけを消す
         var pending = session.getItem(draftPending);
 
@@ -265,7 +265,7 @@ function draftStart(form) {
         notice.remove();
         paused = false;
 
-        // 入力として扱う(入力破棄確認と、今の更新日時での保存のため)
+        // 入力として扱う（入力破棄確認と、今の更新日時での保存のため）
         title.val(draft.title).trigger('input');
         setText(draft.text);
         textarea.trigger('input');
@@ -723,7 +723,7 @@ $(document).ready(function() {
                     // 入力中の内容の一時保存で使う
                     $(editor).data('editor', instance);
 
-                    // 変更を元のtextareaのinputイベントとして通知する(入力破棄確認・一時保存のため)
+                    // 変更を元のtextareaのinputイベントとして通知する（入力破棄確認・一時保存のため）
                     instance.model.document.on('change:data', function() {
                         $(editor).trigger('input');
                     });
@@ -742,7 +742,7 @@ $(document).ready(function() {
      */
     draftCleanup();
 
-    // CKEditorの準備ができてから、本文を比べる(HTMLの書き方をそろえるため)
+    // CKEditorの準備ができてから、本文を比べる（HTMLの書き方をそろえるため）
     Promise.all(editors).then(function() {
         draftStart($('form.register[data-draft]'));
     });

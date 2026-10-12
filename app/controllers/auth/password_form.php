@@ -33,8 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 入力データを検証＆登録
     $warnings = model('validate_users', $post['user']);
 
-    // 暗証コードの照合に失敗した回数を記録する(上限に達したらコードを無効にする)
-    // 送信前の入力内容検証(_type=json)でも照合が走るので、そちらでも数える(誤っていれば本送信には進まないので、二重には数えない)
+    // 暗証コードの照合に失敗した回数を記録する（上限に達したらコードを無効にする）
+    // 送信前の入力内容検証（_type=json）でも照合が走るので、そちらでも数える（誤っていれば本送信には進まないので、二重には数えない）
     if (isset($warnings['token_code']) && validator_required($post['user']['token_code'])) {
         $users = model('select_users', [
             'select' => 'id, token_code',

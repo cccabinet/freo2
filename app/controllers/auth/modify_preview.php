@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($warnings)) {
         if ($twostep_verify) {
-            // コードの入力画面へ(コードはその画面を開いたときに送る)
+            // コードの入力画面へ（コードはその画面を開いたときに送る）
             $_SESSION['twostep_verify'] = [
                 'email'    => (string)$_SESSION['post']['user']['twostep_email'],
                 'code'     => null,

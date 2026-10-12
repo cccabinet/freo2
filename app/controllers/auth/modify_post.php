@@ -42,7 +42,7 @@ if (empty($users)) {
     error('編集データが見つかりません。');
 }
 
-// 2段階認証用メールアドレスに、コードが届くことを確認したか(確認画面の後のコード入力画面で確認する)
+// 2段階認証用メールアドレスに、コードが届くことを確認したか（確認画面の後のコード入力画面で確認する）
 if (service_user_twostep_verify_required($_SESSION['auth']['user']['id'], $_SESSION['post']['user']['twostep'], $_SESSION['post']['user']['twostep_email'])) {
     if (empty($_SESSION['twostep_verify']['verified']) || $_SESSION['twostep_verify']['email'] !== (string)$_SESSION['post']['user']['twostep_email']) {
         error('2段階認証用メールアドレスの確認が済んでいません。');

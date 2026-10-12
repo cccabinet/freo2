@@ -286,7 +286,7 @@ function service_user_logout($session_id, $user_id)
 }
 
 /**
- * ユーザーのアカウントが凍結されているか(ログインに10回続けて失敗すると、最後の失敗から5分間)
+ * ユーザーのアカウントが凍結されているか（ログインに10回続けて失敗すると、最後の失敗から5分間）
  *
  * @param string $username
  *
@@ -311,12 +311,12 @@ function service_user_frozen($username)
 }
 
 /**
- * ユーザーのパスワード認証(失敗したら、失敗した回数を記録する)
+ * ユーザーのパスワード認証（失敗したら、失敗した回数を記録する）
  *
  * @param string $username
  * @param string $password
  *
- * @return array|null 成功したらユーザー(id, enabled, twostep, twostep_email)、失敗したら null
+ * @return array|null 成功したらユーザー（id, enabled, twostep, twostep_email）、失敗したら null
  */
 function service_user_authenticate($username, $password)
 {
@@ -353,7 +353,7 @@ function service_user_authenticate($username, $password)
         return $users[0];
     }
 
-    // 認証失敗回数を記録(有効なユーザーだけ。存在しないユーザー名なら何も更新しない)
+    // 認証失敗回数を記録（有効なユーザーだけ。存在しないユーザー名なら何も更新しない）
     $resource = service_user_update([
         'set'   => [
             'failed'      => $failed + 1,
@@ -374,7 +374,7 @@ function service_user_authenticate($username, $password)
 }
 
 /**
- * ユーザーの2段階認証で、このブラウザのコードの入力を省略するか(ブラウザを信頼しているか)
+ * ユーザーの2段階認証で、このブラウザのコードの入力を省略するか（ブラウザを信頼しているか）
  *
  * @param string $user_id
  * @param string|null $session_id
@@ -402,7 +402,7 @@ function service_user_twostep_trusted($user_id, $session_id)
 }
 
 /**
- * ユーザーの2段階認証用コードを発行する(有効期限は10分。失敗した回数は数え直す)
+ * ユーザーの2段階認証用コードを発行する（有効期限は10分。失敗した回数は数え直す）
  *
  * @param string $user_id
  *
@@ -433,14 +433,14 @@ function service_user_twostep_issue($user_id)
 }
 
 /**
- * 2段階認証用コードをメールで送る(ログインと、本人が2段階認証用メールアドレスを確認するときに使う)
+ * 2段階認証用コードをメールで送る（ログインと、本人が2段階認証用メールアドレスを確認するときに使う）
  *
  * @param string $email
  * @param string $twostep_code
  */
 function service_user_twostep_mail($email, $twostep_code)
 {
-    // メール送信内容を作成(本文のテンプレートは $_view['code'] を読む)
+    // メール送信内容を作成（本文のテンプレートは $_view['code'] を読む）
     $GLOBALS['_view']['code'] = $twostep_code;
 
     $subject = $GLOBALS['setting']['mail_twostep_subject'];
@@ -458,7 +458,7 @@ function service_user_twostep_mail($email, $twostep_code)
 }
 
 /**
- * ユーザーの2段階認証用コードを照合する(間違えたら失敗した回数を記録し、上限に達したらコードを無効にする)
+ * ユーザーの2段階認証用コードを照合する（間違えたら失敗した回数を記録し、上限に達したらコードを無効にする）
  *
  * @param string $user_id
  * @param string $twostep_code
@@ -506,7 +506,7 @@ function service_user_twostep_verify($user_id, $twostep_code)
 }
 
 /**
- * ユーザーのログインを完了する(セッションへの記録、失敗回数と使い終わったコードの消去、ログイン状態の保持、操作ログ)
+ * ユーザーのログインを完了する（セッションへの記録、失敗回数と使い終わったコードの消去、ログイン状態の保持、操作ログ）
  *
  * @param string $user_id
  * @param int $keep    ログイン状態を記憶するか
@@ -554,7 +554,7 @@ function service_user_login_complete($user_id, $keep, $twostep)
 
 /**
  * ユーザーのコードの照合に失敗した回数を記録し、上限に達したらそのコードを無効にする
- * (パスワード再設定の暗証コードは token、2段階認証用コードは twostep)
+ * （パスワード再設定の暗証コードは token、2段階認証用コードは twostep）
  *
  * @param string $user_id
  * @param string $type
@@ -584,7 +584,7 @@ function service_user_code_failed($user_id, $type)
     $failed = intval($users[0]['failed']) + 1;
 
     if ($failed >= $GLOBALS['config']['code_failed_limit']) {
-        // 上限に達したら、コードを無効にする(回数は、次にコードを発行したときに数え直す)
+        // 上限に達したら、コードを無効にする（回数は、次にコードを発行したときに数え直す）
         $sets = [
             $type . '_code'   => null,
             $type . '_failed' => null,
@@ -613,7 +613,7 @@ function service_user_code_failed($user_id, $type)
 
 /**
  * ユーザーの2段階認証用メールアドレスに、コードが届くかの確認が必要か
- * (2段階認証を有効にするときと、有効のまま2段階認証用メールアドレスを変えるとき)
+ * （2段階認証を有効にするときと、有効のまま2段階認証用メールアドレスを変えるとき）
  *
  * @param string $user_id
  * @param string $twostep

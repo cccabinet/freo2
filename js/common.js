@@ -47,7 +47,7 @@ $(document).ready(function() {
     var changed = false;
     var leaving = false;
 
-    // 入力のたびに記録する(changeだけだと、入力欄からフォーカスを外すまで記録されない)
+    // 入力のたびに記録する（changeだけだと、入力欄からフォーカスを外すまで記録されない）
     // CKEditorの変更は、admin.jsがtextareaのinputイベントとして通知する
     $('form.register input[type=text], form.register textarea').on('input change', function() {
         changed = true;
@@ -178,7 +178,7 @@ $(document).ready(function() {
     });
 
     /*
-     * 2段階認証(管理画面のユーザー編集と、会員のユーザー情報編集)
+     * 2段階認証（管理画面のユーザー編集と、会員のユーザー情報編集）
      */
     $('select[name=twostep]').on('change', function() {
         if ($(this).val() == '1') {
