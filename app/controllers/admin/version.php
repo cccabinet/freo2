@@ -37,7 +37,7 @@ foreach ([
 }
 
 if (empty($gd_formats)) {
-    $gd_version = '利用できません（メディアのサムネイルは作成されません）';
+    $gd_version = '利用できません';
 } else {
     $gd_info = [];
     if (function_exists('gd_info')) {
