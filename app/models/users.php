@@ -452,7 +452,7 @@ function validate_users($queries, $options = [])
             $messages['token_code'] = '暗証コードが入力されていません。';
         } else {
             $users = db_select([
-                'select' => 'id',
+                'select' => 'token_expire',
                 'from'   => DATABASE_PREFIX . 'users',
                 'where'  => [
                     'email = :email AND token_code = :token_code',
@@ -464,6 +464,8 @@ function validate_users($queries, $options = [])
             ]);
             if (empty($users)) {
                 $messages['token_code'] = '暗証コードが違います。';
+            } elseif (empty($users[0]['token_expire']) || localdate(null, $users[0]['token_expire']) < localdate()) {
+                $messages['token_code'] = '暗証コードの有効期限が終了しています。';
             }
         }
     }

@@ -718,7 +718,8 @@ foreach (['テスト属性1', 'テスト属性2'] as $index => $name) {
     // データ（パスワード再設定で使う。メールアドレスと暗証コードの組み合わせを確認する）
     model('update_users', [
         'set'   => [
-            'token_code' => 'ABCD1234',
+            'token_code'   => 'ABCD1234',
+            'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 10),
         ],
         'where' => [
             'id = :id',
@@ -748,6 +749,58 @@ foreach (['テスト属性1', 'テスト属性2'] as $index => $name) {
     test_equals('validate user token_code', count($warnings_valid), 0);
     test_equals('validate user token_code (invalid)', count($warnings_invalid), 1);
     test_equals('validate required user token_code', count($warnings_empty), 1);
+}
+
+// 暗証コードの有効期限テスト
+{
+    // データ（有効期限を過ぎた状態にする）
+    model('update_users', [
+        'set'   => [
+            'token_code'   => 'ABCD1234',
+            'token_expire' => localdate('Y-m-d H:i:s', time() - 1),
+        ],
+        'where' => [
+            'id = :id',
+            [
+                'id' => $inserted_id,
+            ],
+        ],
+    ], [
+        'id' => $inserted_id,
+    ]);
+
+    // 確認
+    $warnings_expired = model('validate_users', [
+        'key'        => 'testuser1@example.com',
+        'token_code' => 'ABCD1234',
+    ]);
+
+    // データ（有効期限が記録されていない場合も、期限切れとして扱う）
+    model('update_users', [
+        'set'   => [
+            'token_code'   => 'ABCD1234',
+            'token_expire' => '',
+        ],
+        'where' => [
+            'id = :id',
+            [
+                'id' => $inserted_id,
+            ],
+        ],
+    ], [
+        'id' => $inserted_id,
+    ]);
+
+    // 確認
+    $warnings_blank = model('validate_users', [
+        'key'        => 'testuser1@example.com',
+        'token_code' => 'ABCD1234',
+    ]);
+
+    // 結果
+    test_equals('validate user token_code (expired)', count($warnings_expired), 1);
+    test_contains('validate user token_code (expired) message', $warnings_expired['token_code'], '有効期限');
+    test_equals('validate user token_code (expire is empty)', count($warnings_blank), 1);
 }
 
 // 属性の更新テスト

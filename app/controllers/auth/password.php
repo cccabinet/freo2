@@ -51,8 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $resource = service_user_update([
                 'set'   => [
                     'token'        => rand_string(),
-                    'token_code'   => rand_number(1000, 9999),
-                    'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 60 * 24),
+                    'token_code'   => rand_number(10000000, 99999999),
+                    'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 10),
                 ],
                 'where' => [
                     'email = :email',
@@ -75,7 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             // メール送信内容を作成
-            $_view['token_code'] = $users[0]['token_code'];
+            $_view['token_code']   = $users[0]['token_code'];
+            $_view['token_expire'] = $users[0]['token_expire'];
 
             $to      = $users[0]['email'];
             $subject = $GLOBALS['setting']['mail_password_subject'];

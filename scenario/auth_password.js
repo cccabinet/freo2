@@ -13,8 +13,8 @@ var newPassword = 'scenario9012';
 /* パスワード再設定メールの件名（設定 mail_password_subject の初期値） */
 var passwordSubject = 'パスワード再設定';
 
-/* 暗証コードは rand_number(1000, 9999) なので、0000 は絶対に一致しない */
-var wrongTokenCode = '0000';
+/* 暗証コードは rand_number(10000000, 99999999) なので、00000000 は絶対に一致しない */
+var wrongTokenCode = '00000000';
 
 /*
  * ステップ間で値を引き継ぐための保存先。
@@ -178,10 +178,13 @@ test.scenario = [
         test.assertText('body', 'to: ' + scenarioMember.email, 'パスワード再設定のメールが記録されていません。（mail_log が無効になっている可能性があります）');
         test.assertText('body', 'subject: ' + passwordSubject, 'メールの件名が「' + passwordSubject + '」になっていません。');
 
-        var matches = $('body').text().match(/認証コード\s*(\d\d\d\d)/);
+        var matches = $('body').text().match(/認証コード\s*(\d{8})/);
         if (!test.assert(matches !== null, 'メールの本文から認証コードを読み取れません。')) {
             return;
         }
+
+        // 有効期限（token_expire）が本文に入っていること
+        test.assert(/有効期限\s*\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}/.test($('body').text()), 'メールの本文に認証コードの有効期限が入っていません。');
 
         sessionStorage.setItem(storageKey.code, matches[1]);
         test.visit(sessionStorage.getItem(storageKey.url));
