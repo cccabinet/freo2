@@ -208,18 +208,6 @@ unset($_SESSION['auth']);
     unset($_SESSION['auth']);
 }
 
-// reCAPTCHAの確認テスト
-{
-    // データ（reCAPTCHAを無効にする。有効だと Google に接続するため）
-    $recaptcha_enable = $GLOBALS['config']['recaptcha_enable'];
-    $GLOBALS['config']['recaptcha_enable'] = false;
-
-    // 結果（無効なら確認せずに通ること）
-    test_equals('comment recaptcha (disabled)', service_comment_recaptcha(), true);
-
-    $GLOBALS['config']['recaptcha_enable'] = $recaptcha_enable;
-}
-
 // 公開側の投稿データの整理テスト
 {
     // データ（コメント先を書き換えて送信した場合）

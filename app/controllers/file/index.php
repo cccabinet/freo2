@@ -1,7 +1,6 @@
 <?php
 
 import('app/services/entry.php');
-import('libs/modules/recaptcha.php');
 
 // 表示対象を取得
 if (!empty($_params[1]) && !empty($_params[2])) {

@@ -2,7 +2,7 @@
 
 import('app/services/entry.php');
 import('app/services/comment.php');
-import('libs/modules/recaptcha.php');
+import('app/services/recaptcha.php');
 
 // 表示対象を取得
 if (isset($_params[1])) {
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // reCAPTCHA
-        if (!service_comment_recaptcha()) {
+        if (!service_recaptcha_verify()) {
             error('reCAPTCHAでの認証に失敗しました。');
         }
 

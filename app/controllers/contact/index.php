@@ -1,6 +1,6 @@
 <?php
 
-import('libs/modules/recaptcha.php');
+import('app/services/recaptcha.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ワンタイムトークン
@@ -9,13 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // reCAPTCHA
-    if ($GLOBALS['config']['recaptcha_enable'] == true && empty($_SESSION['recaptcha'])) {
-        $result = recaptcha_verify($GLOBALS['config']['recaptcha_secret_key']);
-        if ($result) {
-            $_SESSION['recaptcha'] = true;
-        } else {
-            error('reCAPTCHAでの認証に失敗しました。');
-        }
+    if (!service_recaptcha_verify()) {
+        error('reCAPTCHAでの認証に失敗しました。');
     }
 
     // 入力データを整理
