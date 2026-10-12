@@ -61,6 +61,7 @@ $resource = service_user_insert([
         'text'           => $_SESSION['post']['user']['text'],
         'token'          => rand_string(),
         'token_expire'   => localdate('Y-m-d H:i:s', time() + 60 * 60 * 24),
+        'twostep'        => 0,
     ],
 ]);
 if (!$resource) {

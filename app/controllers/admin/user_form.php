@@ -27,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'url'              => isset($_POST['url'])              ? $_POST['url']              : '',
             'text'             => isset($_POST['text'])             ? $_POST['text']             : '',
             'memo'             => isset($_POST['memo'])             ? $_POST['memo']             : '',
+            'twostep'          => isset($_POST['twostep'])          ? $_POST['twostep']          : '',
+            'twostep_email'    => isset($_POST['twostep_email'])    ? $_POST['twostep_email']    : '',
             'attribute_sets'   => isset($_POST['attribute_sets'])   ? $_POST['attribute_sets']   : [],
         ]),
     ];

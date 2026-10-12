@@ -177,4 +177,20 @@ $(document).ready(function() {
         }
     });
 
+    /*
+     * 2段階認証(管理画面のユーザー編集と、会員のユーザー情報編集)
+     */
+    $('select[name=twostep]').on('change', function() {
+        if ($(this).val() == '1') {
+            $('.for-twostep').show();
+        } else {
+            $('.for-twostep').hide();
+        }
+    });
+    if ($('select[name=twostep]').val() == '1') {
+        $('.for-twostep').show();
+    } else {
+        $('.for-twostep').hide();
+    }
+
 });

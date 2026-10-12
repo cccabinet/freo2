@@ -541,6 +541,10 @@ types(型) ─< entries(エントリー) ─────────────
   - どの権限がどの画面に入れるかは [app/controllers/before.php](app/controllers/before.php) に `work` 名の正規表現でまとまっています。
   - `enabled` が 0 のユーザーは、パスワードが合っていてもログインできません。
   - **ログインに10回続けて失敗すると、そのアカウントは5分間凍結されます**(`users.failed`/`failed_last` で判定)。正しいパスワードでも入れなくなり、ログインに成功すると回数はリセットされます。
+  - **2段階認証:** `users.twostep` が 1 のユーザーは、パスワードが通った後に `users.twostep_email` へ送られるコード(`twostep_code`。有効期限 `twostep_expire` は10分)を入力して、はじめてログインできます。設定するのは管理画面のユーザー編集(`/admin/user_form`)と、本人のユーザー情報編集(`/auth/modify`)です。
+    - パスワードが通った時点では `$_SESSION['auth']['twostep']` に「認証待ち」を記録するだけで、コードの画面にユーザー名・パスワードは受け渡しません。使ったコードは、ログインに成功した時点で消します。
+    - 本人が有効にするとき、または有効のまま `twostep_email` を変えるときは、確認画面の後のコード入力画面(`/auth/modify_verify`)で、そのアドレスに送ったコードを入力しないと登録できません(判定は `service_user_twostep_verify_required()`)。送ったコードと確認中のアドレスはセッションに持ちます。管理画面からの設定では確認しません。
+    - 「次回からこのブラウザではコードを入力しない」を選ぶと、そのブラウザのログイン用のセッション(`sessions` の行)の `twostep` が 1 になり、次からコードを省略します。2段階認証を無効にしたときや `twostep_email` を変えたときは、`service_user_twostep_reset()` でそのユーザーの省略をすべて解除します。
 - **`attributes` / `attribute_sets`:** 「有料会員」のような属性です。ユーザーとエントリーの両方にひも付け、`public = 'attribute'` のエントリーを見られる人を絞り込みます。ユーザー側には有効期間(`attribute_begin`/`attribute_end`)も持てます。
   - **フィルター:** `attributes.filterable` が 1 の属性は、ゲストが会員ページの「フィルター」(`/auth/filter`)で、表示するかどうかを自分で選べます。「R-18 は見たくない」のように、**見える範囲を自分で狭める**ための機能です。
     - ログインした時点で [app/controllers/before.php](app/controllers/before.php) が、与えられた属性からフィルター対象で表示を選んでいないものを除いて `$GLOBALS['attributes']` を作ります。判定は `service_entry_select_published()` のままなので、エントリーを取得するすべての画面に効きます。
@@ -586,10 +590,10 @@ types(型) ─< entries(エントリー) ─────────────
 
 | URL | 内容 |
 | --- | --- |
-| `/auth/` | ログイン。ログイン後は `referer` で指定された画面か `/auth/home` に戻る |
+| `/auth/` | ログイン。ログイン後は `referer` で指定された画面か `/auth/home` に戻る。2段階認証を使うユーザーは、同じURLでコードの入力画面に進む(→ [ユーザーと公開制御](#ユーザーと公開制御)) |
 | `/auth/home` | 会員ページ。権限が閲覧者以上なら `/admin/` にリダイレクトされる |
 | `/auth/register` | 会員登録(入力 → `register_preview` → 完了) |
-| `/auth/modify` | 会員情報の編集(入力 → `modify_preview` → 完了) |
+| `/auth/modify` | 会員情報の編集(入力 → `modify_preview` → 完了。2段階認証を有効にするとき・送り先を変えるときは、確認の後に `modify_verify` でコードを入力する) |
 | `/auth/password` | パスワード再設定 |
 | `/auth/email_send` | メールアドレスの存在確認 |
 | `/auth/leave` | 退会(`leave_confirm` で確認 → 完了) |
@@ -600,7 +604,7 @@ types(型) ─< entries(エントリー) ─────────────
 
 - **会員登録と退会は、設定「訪問者によるユーザー新規登録」(`user_use_register`)を有効にしないと使えません。** 無効のままだとログイン画面にリンクが出ず、URL を直接開いてもエラーになります。初期値は無効です。
 - 公開側から登録したユーザーの権限は、`power` が 0 の権限(ゲスト)になります。
-- **メールアドレスの存在確認:** 登録直後は `users.email_verified` が 0 で、会員ページに確認をうながす案内が出ます。`/auth/email_send` からメールを送り、本文に書かれたURL(`/auth/email_verify?key=<メールアドレス>&token=<トークン>`)を開くと 1 になります。
+- **メールアドレスの存在確認:** 登録直後は `users.email_verified` が 0 で、会員ページに確認をうながす案内が出ます。`/auth/email_send` からメールを送り、本文に書かれたURL(`/auth/email_verify?key=<メールアドレス>&token=<トークン>`)を開くと 1 になります。トークンはメールを送るたびに作り直し、有効期限は24時間です。期限を過ぎたURLや誤ったURLを開くとエラーになります。
 - **パスワード再設定:** メールアドレスを送ると、そのユーザーに `token`(URL用)と `token_code`(暗証コード。8桁の数字)が記録されます。画面は `token` 付きのURLへ進み、**メールで届いた暗証コードと新しいパスワード**を入力して完了です。メールに入るのは暗証コードと有効期限だけで、URL は画面の遷移で渡されます。**有効期限(`token_expire`)は発行から10分**で、URL を開くときと送信するときの両方で確認します(期限を過ぎてから送信すると、暗証コードの入力エラーになります)。
 - ログインしていると、お問い合わせやコメントの入力欄には登録した名前・メールアドレスが読み取り専用で入り、`contacts.user_id`/`comments.user_id` にユーザーがひも付きます。
 
@@ -662,6 +666,7 @@ types(型) ─< entries(エントリー) ─────────────
 | 会員登録 | 登録したメールアドレス | `mail/register/send.php` |
 | メールアドレスの存在確認 | 登録されたメールアドレス | `mail/email/verify.php` |
 | パスワード再設定 | 入力されたメールアドレス | `mail/password/send.php` |
+| ログインの2段階認証 | 2段階認証用のメールアドレス | `mail/email/twostep.php` |
 | 退会 | 登録されたメールアドレス | `mail/leave/send.php` |
 
 送信は [app/services/mail.php](app/services/mail.php) の `service_mail_send()` を通します。`APP_MAIL_SEND` を `false`、`APP_MAIL_LOG` を `true` にしておくと、実際には送らずに `mail/<日付>/<時刻>_<宛先>.txt` に記録されます(→ [2. セットアップ](#手順))。
@@ -1119,5 +1124,6 @@ test.scenario = [
 - **物理削除(`DELETE`)の `delete_from` に、テーブルの別名(`AS xxx`)を付けないでください。** MariaDB 11.6 未満 / MySQL 8.0.16 未満では構文エラーになります。`select_*`/`update_*` をコピーして作るときに紛れ込みやすい点です。
 - **テーブルを作るときは、`COLLATE=utf8mb4_general_ci` まで指定します。** `CHARSET` だけだと、MySQL 8 では照合順序が変わります(→ [11. データベースのマイグレーション](#11-データベースのマイグレーション))。
 - **`before.php` の権限チェックは、メニュー・文言を読み込む前に `error()` を呼ぶことがあります。** 公開側のヘッダー・フッターに値を追加するときは、`$GLOBALS['menu_contents']` などが未定義でも動くように `isset()`/`!empty()` で確認します。
+- **POST のフォームでは、送信ボタンの `name`/`value` は送られません。** 二重送信を防ぐため、`js/common.js` が送信時に `form[method=post]` の送信ボタンをすべて無効にするからです(無効なボタンの値はブラウザが送らない)。ボタンで処理を分けたいときは、フォームを分けて `<input type="hidden" name="exec" value="...">` で送ります。
 - **`_post` 系のコントローラーはURLを直接開いても動きません**(`forward()` 経由でしか実行できない)。動作を確認するときはフォームから送信します。
 - **本番では `DEBUG_LEVEL` を必ず `0` にします。** `1` のままだと、誰でもDB管理画面やマイグレーションを開けてしまいます。

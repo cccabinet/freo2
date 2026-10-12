@@ -45,6 +45,7 @@ model('insert_users', [
         'name'           => 'テスト太郎',
         'email'          => 'testuser1@example.com',
         'email_verified' => 1,
+        'twostep'        => 0,
     ],
 ]);
 $users = model('select_users', [

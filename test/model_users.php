@@ -80,6 +80,8 @@ foreach (['テスト属性1', 'テスト属性2'] as $index => $name) {
     test_equals('default user email_verified', $default_user['email_verified'], 0);
     test_equals('default user attribute_begin', $default_user['attribute_begin'], null);
     test_equals('default user failed', $default_user['failed'], null);
+    test_equals('default user twostep', $default_user['twostep'], 0);
+    test_equals('default user twostep_email', $default_user['twostep_email'], null);
     test_equals('default user attribute_sets', $default_user['attribute_sets'], []);
     test_regexp('default user created', $default_user['created'], '^\d{4}\-\d{2}\-\d{2} \d{2}:\d{2}:\d{2}$');
 }
@@ -803,6 +805,98 @@ foreach (['テスト属性1', 'テスト属性2'] as $index => $name) {
     test_equals('validate user token_code (expire is empty)', count($warnings_blank), 1);
 }
 
+// 2段階認証の書式テスト
+{
+    // データ
+    $test_user = $data_validate;
+    $test_user['twostep'] = 'あ';
+
+    // 確認
+    $test_user = model('normalize_users', $test_user);
+    $warnings  = model('validate_users', $test_user);
+
+    // 結果
+    test_equals('validate boolean user twostep', count($warnings), 1);
+}
+
+// 2段階認証用メールアドレスの必須テスト
+{
+    // データ（フォームから送られるので、値は文字列）
+    $test_user = $data_validate;
+    $test_user['twostep']       = '1';
+    $test_user['twostep_email'] = '';
+
+    // 確認
+    $test_user = model('normalize_users', $test_user);
+    $warnings  = model('validate_users', $test_user);
+
+    // 結果
+    test_equals('validate required user twostep_email', count($warnings), 1);
+    test_array_haskey('validate required user twostep_email key', $warnings, 'twostep_email');
+}
+
+// 2段階認証用メールアドレスの必須（2段階認証を利用しない）テスト
+{
+    // データ
+    $test_user = $data_validate;
+    $test_user['twostep']       = '0';
+    $test_user['twostep_email'] = '';
+
+    // 確認
+    $test_user = model('normalize_users', $test_user);
+    $warnings  = model('validate_users', $test_user);
+
+    // 結果
+    test_equals('validate required user twostep_email (not used)', count($warnings), 0);
+}
+
+// 2段階認証用メールアドレスの書式テスト
+{
+    // データ
+    $test_user = $data_validate;
+    $test_user['twostep']       = '1';
+    $test_user['twostep_email'] = 'testuser';
+
+    // 確認
+    $test_user = model('normalize_users', $test_user);
+    $warnings  = model('validate_users', $test_user);
+
+    // 結果
+    test_equals('validate email user twostep_email', count($warnings), 1);
+    test_array_haskey('validate email user twostep_email key', $warnings, 'twostep_email');
+}
+
+// 2段階認証用メールアドレスの長さ（境界値）テスト
+{
+    // データ（@example.com が12文字なので、上限ちょうどの80文字になる）
+    $test_user = $data_validate;
+    $test_user['twostep']       = '1';
+    $test_user['twostep_email'] = str_repeat('a', 68) . '@example.com';
+
+    // 確認
+    $test_user = model('normalize_users', $test_user);
+    $warnings  = model('validate_users', $test_user);
+
+    // 結果
+    test_equals('validate max_length user twostep_email (boundary)', count($warnings), 0);
+}
+
+// 2段階認証用メールアドレスの長さテスト
+{
+    // データ（81文字）
+    $test_user = $data_validate;
+    $test_user['twostep']       = '1';
+    $test_user['twostep_email'] = str_repeat('a', 69) . '@example.com';
+
+    // 確認
+    $test_user = model('normalize_users', $test_user);
+    $warnings  = model('validate_users', $test_user);
+
+    // 結果
+    test_equals('validate max_length user twostep_email', count($warnings), 1);
+    test_array_haskey('validate max_length user twostep_email key', $warnings, 'twostep_email');
+}
+
 // 属性の更新テスト
 {
     // 更新
@@ -1062,6 +1156,7 @@ function test_user_insert($user, $options = [])
             'url'             => $user['url'],
             'text'            => $user['text'],
             'memo'            => $user['memo'],
+            'twostep'         => 0,
         ],
     ], $options);
     if (!$resource) {

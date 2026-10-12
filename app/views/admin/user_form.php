@@ -102,6 +102,18 @@
                                     <?php endforeach ?>
                                 </select>
                             </div>
+                            <div class="form-group mb-2">
+                                <label class="fw-bold">2段階認証 <span class="badge bg-danger">必須</span> <span class="badge text-light bg-secondary" data-toggle="tooltip" title="ログインするとき、パスワードに加えて、2段階認証用メールアドレスに届くコードの入力を求めます。">？</span></label>
+                                <select name="twostep" class="form-select" style="width: 200px;">
+                                    <?php foreach ($GLOBALS['config']['option']['user']['twostep'] as $key => $value) : ?>
+                                    <option value="<?php t($key) ?>"<?php $key == $_view['user']['twostep'] ? e(' selected="selected"') : '' ?>><?php t($value) ?></option>
+                                    <?php endforeach ?>
+                                </select>
+                            </div>
+                            <div class="form-group mb-2 for-twostep">
+                                <label class="fw-bold">2段階認証用メールアドレス <span class="badge bg-danger">必須</span></label>
+                                <input type="text" name="twostep_email" size="30" value="<?php t($_view['user']['twostep_email']) ?>" class="form-control">
+                            </div>
                             <div class="form-group mt-4">
                                 <button type="submit" class="btn btn-primary px-4">登録</button>
                             </div>

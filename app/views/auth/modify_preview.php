@@ -33,7 +33,16 @@
                     <dd class="col-sm-9"><?php if ($_view['user']['url']) : ?><code class="text-dark"><?php h(alt($_view['user']['url'], '-')) ?></code><?php endif ?></dd>
                     <dt class="col-sm-3">自己紹介</dt>
                     <dd class="col-sm-9"><?php h(alt($_view['user']['text'], '-')) ?></dd>
+                    <dt class="col-sm-3">2段階認証</dt>
+                    <dd class="col-sm-9"><?php h($GLOBALS['config']['option']['user']['twostep'][$_view['user']['twostep']] ?? '-') ?></dd>
+                    <?php if ((string)$_view['user']['twostep'] === '1') : ?>
+                    <dt class="col-sm-3">2段階認証用メールアドレス</dt>
+                    <dd class="col-sm-9"><code class="text-dark"><?php h(alt($_view['user']['twostep_email'], '-')) ?></code></dd>
+                    <?php endif ?>
                 </dl>
+                <?php if ($_view['twostep_verify']) : ?>
+                <p>次の画面で、2段階認証用メールアドレスに送るコードを入力して、メールが届くことを確認します。</p>
+                <?php endif ?>
                 <form action="<?php t(MAIN_FILE) ?>/auth/modify_preview" method="post">
                     <input type="hidden" name="_token" value="<?php t($_view['token']) ?>" class="token">
                     <div class="form-group mt-4">

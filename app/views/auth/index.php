@@ -1,6 +1,7 @@
 <?php import('app/views/auth/header.php') ?>
 
     <main class="form-login my-5 text-center">
+        <?php if (empty($_view['twostep'])) : ?>
         <form action="<?php t(MAIN_FILE) ?>/auth/<?php empty($_GET['referer']) ? '' : t('?referer=' . rawurlencode($_GET['referer'])) ?>" method="post">
             <h1 class="mb-4"><?php h($_view['title']) ?></h1>
             <?php e($GLOBALS['setting']['text_auth_index']) ?>
@@ -40,6 +41,41 @@
                 <a href="<?php t(MAIN_FILE) ?>/"><?php h($GLOBALS['string']['text_goto_home']) ?></a>
             </div>
         </form>
+        <?php else : ?>
+        <?php /* 送信時に common.js が送信ボタンを無効にする(無効なボタンの name・value は送られない)ので、exec は hidden で送る */ ?>
+        <form action="<?php t(MAIN_FILE) ?>/auth/<?php empty($_GET['referer']) ? '' : t('?referer=' . rawurlencode($_GET['referer'])) ?>" method="post">
+            <input type="hidden" name="exec" value="twostep">
+            <h1 class="mb-4"><?php h($_view['title']) ?></h1>
+            <p>登録されたメールアドレスに、2段階認証用コードを送信しました。</p>
+
+            <?php if (isset($_view['warnings'])) : ?>
+            <div class="alert alert-danger">
+                <svg class="bi flex-shrink-0 me-2" width="24" height="24"><use xlink:href="#symbol-exclamation-triangle-fill"/></svg>
+                <?php foreach ($_view['warnings'] as $warning) : ?>
+                <?php h($warning) ?>
+                <?php endforeach ?>
+            </div>
+            <?php endif ?>
+
+            <div class="form-floating">
+                <input type="text" name="twostep_code" size="30" value="" class="form-control" id="twostep_code" placeholder="2段階認証用コード" autocomplete="one-time-code">
+                <label for="twostep_code">2段階認証用コード</label>
+            </div>
+            <div class="form-group mt-2">
+                <label><input type="checkbox" name="twostep_session" value="keep" class="form-check-input"<?php isset($_view['user']['twostep_session']) ? e('checked="checked"') : '' ?>> 次回からこのブラウザではコードを入力しない</label>
+            </div>
+            <div class="form-group mt-2">
+                <button type="submit" class="w-100 btn btn-lg btn-primary">認証する</button>
+            </div>
+        </form>
+        <form action="<?php t(MAIN_FILE) ?>/auth/<?php empty($_GET['referer']) ? '' : t('?referer=' . rawurlencode($_GET['referer'])) ?>" method="post" class="mt-4">
+            <input type="hidden" name="exec" value="twostep_resend">
+            <button type="submit" class="btn btn-link">コードを再送信する</button>
+        </form>
+        <div class="form-group mt-1">
+            <a href="<?php t(MAIN_FILE) ?>/auth/<?php empty($_GET['referer']) ? '' : t('?referer=' . rawurlencode($_GET['referer'])) ?>">ログイン画面に戻る</a>
+        </div>
+        <?php endif ?>
 
         <?php e($_view['widget_sets']['auth_home']) ?>
     </main>

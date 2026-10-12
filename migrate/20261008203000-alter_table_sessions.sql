@@ -1,0 +1,1 @@
+ALTER TABLE sessions ADD twostep TINYINT(1) UNSIGNED NOT NULL COMMENT '2段階認証の利用' AFTER keep;

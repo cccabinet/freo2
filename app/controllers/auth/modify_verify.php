@@ -1,0 +1,81 @@
+<?php
+
+import('app/services/mail.php');
+
+// 投稿データを確認(確認画面を通っていなければ、入力画面に戻す)
+if (empty($_SESSION['post']['user']) || empty($_SESSION['twostep_verify']) || $_SESSION['twostep_verify']['email'] !== (string)$_SESSION['post']['user']['twostep_email']) {
+    // リダイレクト
+    redirect('/auth/modify');
+}
+
+// コードを送るか(画面を最初に開いたときと、再送信のとき)
+$send = $_SESSION['twostep_verify']['code'] === null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $warnings = [];
+
+    // ワンタイムトークン
+    if (!token('check')) {
+        $warnings[] = '不正な操作が検出されました。送信内容を確認して再度実行してください。';
+    }
+
+    // アクセス元
+    if (empty($_SERVER['HTTP_REFERER']) || !preg_match('/^' . preg_quote($GLOBALS['config']['http_url'], '/') . '/', $_SERVER['HTTP_REFERER'])) {
+        $warnings[] = '不正なアクセスです。';
+    }
+
+    if (empty($warnings)) {
+        if (isset($_POST['exec']) && $_POST['exec'] === 'resend') {
+            // 2段階認証用コードを再送信
+            $send = true;
+        } else {
+            // 2段階認証用コードを確認
+            $twostep_code = isset($_POST['twostep_code']) ? trim($_POST['twostep_code']) : '';
+
+            if ($twostep_code === '') {
+                $warnings[] = '2段階認証用コードが入力されていません。';
+            } elseif ($_SESSION['twostep_verify']['code'] === null || !hash_equals($_SESSION['twostep_verify']['code'], $twostep_code)) {
+                $warnings[] = '2段階認証用コードが違います。';
+            } elseif ($_SESSION['twostep_verify']['expire'] < localdate()) {
+                $warnings[] = '2段階認証用コードの有効期限が終了しています。コードを再送信してください。';
+            } else {
+                $_SESSION['twostep_verify']['verified'] = true;
+
+                // フォワード
+                forward('/auth/modify_post');
+            }
+        }
+    }
+
+    if (!empty($warnings)) {
+        $_view['warnings'] = $warnings;
+    }
+}
+
+// 2段階認証用コードを送信
+if ($send) {
+    $_SESSION['twostep_verify']['code']   = rand_string(8);
+    $_SESSION['twostep_verify']['expire'] = localdate() + 60 * 10;
+
+    // メール送信内容を作成
+    $_view['code'] = $_SESSION['twostep_verify']['code'];
+
+    $to      = $_SESSION['twostep_verify']['email'];
+    $subject = $GLOBALS['setting']['mail_twostep_subject'];
+    $message = view('mail/email/twostep.php', true);
+    $headers = [
+        'From' => $GLOBALS['setting']['mail_from'],
+    ];
+
+    // メールを送信
+    if (service_mail_send($to, $subject, $message, $headers) === false) {
+        error('メールを送信できません。');
+    }
+
+    unset($_view['code']);
+}
+
+$_view['user'] = $_SESSION['post']['user'];
+
+// タイトル
+$_view['title'] = '2段階認証用メールアドレスの確認';

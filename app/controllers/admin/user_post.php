@@ -37,6 +37,8 @@ if (empty($_SESSION['post']['user']['id'])) {
             'url'             => $_SESSION['post']['user']['url'],
             'text'            => $_SESSION['post']['user']['text'],
             'memo'            => $_SESSION['post']['user']['memo'],
+            'twostep'         => $_SESSION['post']['user']['twostep'],
+            'twostep_email'   => $_SESSION['post']['user']['twostep_email'],
         ],
     ], [
         'attribute_sets' => $_SESSION['post']['user']['attribute_sets'],
@@ -45,6 +47,20 @@ if (empty($_SESSION['post']['user']['id'])) {
         error('データを登録できません。');
     }
 } else {
+    // 変更前の2段階認証の設定を取得
+    $users = model('select_users', [
+        'select' => 'twostep, twostep_email',
+        'where'  => [
+            'id = :id',
+            [
+                'id' => $_SESSION['post']['user']['id'],
+            ],
+        ],
+    ]);
+    if (empty($users)) {
+        error('編集データが見つかりません。');
+    }
+
     // ユーザーを編集
     $sets = [
         'username'        => $_SESSION['post']['user']['username'],
@@ -57,6 +73,8 @@ if (empty($_SESSION['post']['user']['id'])) {
         'url'             => $_SESSION['post']['user']['url'],
         'text'            => $_SESSION['post']['user']['text'],
         'memo'            => $_SESSION['post']['user']['memo'],
+        'twostep'         => $_SESSION['post']['user']['twostep'],
+        'twostep_email'   => $_SESSION['post']['user']['twostep_email'],
     ];
     if (!empty($_SESSION['post']['user']['password'])) {
         $sets['password']      = hash_crypt($_SESSION['post']['user']['password'], $password_salt . ':' . $GLOBALS['config']['hash_salt']);
@@ -77,6 +95,11 @@ if (empty($_SESSION['post']['user']['id'])) {
     ]);
     if (!$resource) {
         error('データを編集できません。');
+    }
+
+    // 2段階認証を無効にしたか、2段階認証用メールアドレスを変えたら、コードの入力を省略しているブラウザを解除
+    if ((string)$_SESSION['post']['user']['twostep'] !== '1' || (string)$users[0]['twostep_email'] !== (string)$_SESSION['post']['user']['twostep_email']) {
+        service_user_twostep_reset($_SESSION['post']['user']['id']);
     }
 }
 

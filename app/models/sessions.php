@@ -83,6 +83,7 @@ function default_sessions()
         'user_id'  => 0,
         'agent'    => '',
         'keep'     => 0,
+        'twostep'  => 0,
         'expire'   => localdate('Y-m-d H:i:s'),
     ];
 }

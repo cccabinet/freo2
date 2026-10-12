@@ -177,8 +177,9 @@ function service_user_login($session_id)
  * @param string $new_session
  * @param string $user_id
  * @param int $keep
+ * @param int $twostep
  */
-function service_user_duration($old_session, $new_session, $user_id, $keep)
+function service_user_duration($old_session, $new_session, $user_id, $keep, $twostep)
 {
     // セッションを取得
     $flag = false;
@@ -212,6 +213,7 @@ function service_user_duration($old_session, $new_session, $user_id, $keep)
                 'user_id' => $user_id,
                 'agent'   => $_SERVER['HTTP_USER_AGENT'],
                 'keep'    => $keep,
+                'twostep' => $twostep,
                 'expire'  => localdate('Y-m-d H:i:s', time() + $expire),
             ],
             'where' => [
@@ -231,6 +233,7 @@ function service_user_duration($old_session, $new_session, $user_id, $keep)
                 'user_id' => $user_id,
                 'agent'   => $_SERVER['HTTP_USER_AGENT'],
                 'keep'    => $keep,
+                'twostep' => $twostep,
                 'expire'  => localdate('Y-m-d H:i:s', time() + $expire),
             ],
         ]);
@@ -271,6 +274,61 @@ function service_user_logout($session_id, $user_id)
             'id = :session AND user_id = :user_id',
             [
                 'session' => $session_id,
+                'user_id' => $user_id,
+            ],
+        ],
+    ]);
+    if (!$resource) {
+        error('データを編集できません。');
+    }
+}
+
+/**
+ * ユーザーの2段階認証用メールアドレスに、コードが届くかの確認が必要か
+ * (2段階認証を有効にするときと、有効のまま2段階認証用メールアドレスを変えるとき)
+ *
+ * @param string $user_id
+ * @param string $twostep
+ * @param string $twostep_email
+ *
+ * @return bool
+ */
+function service_user_twostep_verify_required($user_id, $twostep, $twostep_email)
+{
+    if ((string)$twostep !== '1') {
+        return false;
+    }
+
+    $users = model('select_users', [
+        'select' => 'twostep, twostep_email',
+        'where'  => [
+            'id = :id',
+            [
+                'id' => $user_id,
+            ],
+        ],
+    ]);
+    if (empty($users)) {
+        return true;
+    }
+
+    return (string)$users[0]['twostep'] !== '1' || (string)$users[0]['twostep_email'] !== (string)$twostep_email;
+}
+
+/**
+ * ユーザーの2段階認証で、コードの入力を省略しているブラウザをすべて解除
+ *
+ * @param string $user_id
+ */
+function service_user_twostep_reset($user_id)
+{
+    $resource = service_session_update([
+        'set'   => [
+            'twostep' => 0,
+        ],
+        'where' => [
+            'user_id = :user_id',
+            [
                 'user_id' => $user_id,
             ],
         ],

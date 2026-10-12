@@ -1,6 +1,30 @@
 <?php
 
+import('app/services/user.php');
 import('app/services/mail.php');
+
+// トランザクションを開始
+db_transaction();
+
+// 認証用のトークンを発行(送るたびに作り直す。登録時のトークンは期限切れや、パスワード再設定で消えていることがあるため)
+$resource = service_user_update([
+    'set'   => [
+        'token'        => rand_string(),
+        'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 60 * 24),
+    ],
+    'where' => [
+        'id = :id',
+        [
+            'id' => $_SESSION['auth']['user']['id'],
+        ],
+    ],
+]);
+if (!$resource) {
+    error('データを編集できません。');
+}
+
+// トランザクションを終了
+db_commit();
 
 // メールアドレス認証用URLを通知
 $users = model('select_users', [

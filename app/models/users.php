@@ -470,6 +470,26 @@ function validate_users($queries, $options = [])
         }
     }
 
+    // 2段階認証
+    if (isset($queries['twostep'])) {
+        if (!validator_boolean($queries['twostep'])) {
+            $messages['twostep'] = '2段階認証の書式が不正です。';
+        }
+    }
+
+    // 2段階認証用メールアドレス（2段階認証を利用するときだけ必須）
+    if (isset($queries['twostep_email'])) {
+        if (isset($queries['twostep']) && (string)$queries['twostep'] === '1') {
+            if (!validator_required($queries['twostep_email'])) {
+                $messages['twostep_email'] = '2段階認証用メールアドレスが入力されていません。';
+            } elseif (!validator_email($queries['twostep_email'])) {
+                $messages['twostep_email'] = '2段階認証用メールアドレスの入力内容が正しくありません。';
+            } elseif (!validator_max_length($queries['twostep_email'], 80)) {
+                $messages['twostep_email'] = '2段階認証用メールアドレスは80文字以内で入力してください。';
+            }
+        }
+    }
+
     return $messages;
 }
 
@@ -566,6 +586,10 @@ function default_users()
         'token'           => null,
         'token_code'      => null,
         'token_expire'    => null,
+        'twostep'         => 0,
+        'twostep_email'   => null,
+        'twostep_code'    => null,
+        'twostep_expire'  => null,
         'attribute_sets'  => [],
     ];
 }

@@ -59,6 +59,7 @@ db_transaction();
             'name'           => $data_user['name'],
             'email'          => $data_user['email'],
             'email_verified' => 1,
+            'twostep'        => 0,
         ],
     ]);
 
@@ -263,8 +264,8 @@ set_error_handler('test_user_header_error');
     // データ（ログイン時に新しいセッションIDを発行する）
     $session_id = rand_string();
 
-    // 登録（ログイン状態を保持しない）
-    service_user_duration(null, $session_id, $inserted_id, 0);
+    // 登録（ログイン状態を保持しない。2段階認証のコードの入力も省略しない）
+    service_user_duration(null, $session_id, $inserted_id, 0, 0);
 
     // 結果
     $sessions = model('select_sessions', [
@@ -274,6 +275,7 @@ set_error_handler('test_user_header_error');
     test_equals('duration user session', count($sessions), 1);
     test_equals('duration user session user_id', intval($sessions[0]['user_id']), $inserted_id);
     test_equals('duration user session keep', intval($sessions[0]['keep']), 0);
+    test_equals('duration user session twostep', intval($sessions[0]['twostep']), 0);
     test_equals('duration user session agent', $sessions[0]['agent'], 'freo/2');
 
     // 結果（有効期限は login_expire の分だけ先になること）
@@ -282,12 +284,12 @@ set_error_handler('test_user_header_error');
 
 // セッションの更新テスト
 {
-    // データ（ログイン済みの状態でもう一度ログインし、ログイン状態を保持する）
+    // データ（ログイン済みの状態でもう一度ログインし、ログイン状態を保持する。このブラウザでは2段階認証のコードの入力を省略する）
     $old_session_id = $session_id;
     $session_id     = rand_string();
 
     // 更新
-    service_user_duration($old_session_id, $session_id, $inserted_id, 1);
+    service_user_duration($old_session_id, $session_id, $inserted_id, 1, 1);
 
     // 結果（古いセッションは残らず、新しいセッションになること）
     $sessions_old = model('select_sessions', [
@@ -300,6 +302,7 @@ set_error_handler('test_user_header_error');
     test_equals('duration user session (old)', count($sessions_old), 0);
     test_equals('duration user session (new)', count($sessions), 1);
     test_equals('duration user session (keep)', intval($sessions[0]['keep']), 1);
+    test_equals('duration user session (twostep)', intval($sessions[0]['twostep']), 1);
 
     // 結果（有効期限は cookie_expire の分だけ先になること）
     test_equals('duration user session (expire)', $sessions[0]['expire'], localdate('Y-m-d H:i:s', time() + $GLOBALS['config']['cookie_expire']));
@@ -316,6 +319,7 @@ set_error_handler('test_user_header_error');
             'user_id' => $inserted_id,
             'agent'   => 'freo/2',
             'keep'    => 1,
+            'twostep' => 0,
             'expire'  => localdate('Y-m-d H:i:s', time() - 60),
         ],
     ]);
@@ -324,7 +328,7 @@ set_error_handler('test_user_header_error');
     $old_session_id = $session_id;
     $session_id     = rand_string();
 
-    service_user_duration($old_session_id, $session_id, $inserted_id, 1);
+    service_user_duration($old_session_id, $session_id, $inserted_id, 1, 0);
 
     // 結果
     $sessions = model('select_sessions', [
@@ -412,6 +416,7 @@ restore_error_handler();
             'user_id' => $inserted_id,
             'agent'   => 'freo/2',
             'keep'    => 1,
+            'twostep' => 0,
             'expire'  => localdate('Y-m-d H:i:s', time() - 60),
         ],
     ]);
@@ -442,6 +447,7 @@ restore_error_handler();
             'user_id' => $inserted_id,
             'agent'   => 'freo/2',
             'keep'    => 1,
+            'twostep' => 0,
             'expire'  => localdate('Y-m-d H:i:s', time() + $GLOBALS['config']['cookie_expire']),
         ],
     ]);
@@ -456,6 +462,77 @@ restore_error_handler();
 
     test_equals('logout user session', count($sessions), 1);
     test_equals('logout user session keep', intval($sessions[0]['keep']), 0);
+}
+
+// 2段階認証の省略の解除テスト
+{
+    // データ（このユーザーのブラウザ2つと、ほかのユーザーのブラウザ1つで、コードの入力を省略している）
+    $twostep_session_ids = [rand_string(), rand_string(), rand_string()];
+    $twostep_user_ids    = [$inserted_id, $inserted_id, $inserted_id + 1000];
+
+    foreach ($twostep_session_ids as $index => $twostep_session_id) {
+        model('insert_sessions', [
+            'values' => [
+                'id'      => $twostep_session_id,
+                'user_id' => $twostep_user_ids[$index],
+                'agent'   => 'freo/2',
+                'keep'    => 1,
+                'twostep' => 1,
+                'expire'  => localdate('Y-m-d H:i:s', time() + $GLOBALS['config']['cookie_expire']),
+            ],
+        ]);
+    }
+
+    // 解除
+    service_user_twostep_reset($inserted_id);
+
+    // 結果（このユーザーのブラウザだけが解除され、ほかのユーザーのものは残ること）
+    $sessions = model('select_sessions', [
+        'select' => 'id, twostep',
+        'where'  => 'id IN(' . implode(',', array_map('db_escape', $twostep_session_ids)) . ')',
+    ]);
+    $twosteps = array_column($sessions, 'twostep', 'id');
+
+    test_equals('twostep reset user session', intval($twosteps[$twostep_session_ids[0]]), 0);
+    test_equals('twostep reset user session (another browser)', intval($twosteps[$twostep_session_ids[1]]), 0);
+    test_equals('twostep reset user session (another user)', intval($twosteps[$twostep_session_ids[2]]), 1);
+}
+
+// 2段階認証用メールアドレスの確認が必要かのテスト
+{
+    // 確認（2段階認証を使っていないユーザー。フォームの値は文字列）
+    $required_off    = service_user_twostep_verify_required($inserted_id, '0', '');
+    $required_enable = service_user_twostep_verify_required($inserted_id, '1', 'testuser1-twostep@example.com');
+
+    // データ（2段階認証を使っている状態にする）
+    model('update_users', [
+        'set'   => [
+            'twostep'       => 1,
+            'twostep_email' => 'testuser1-twostep@example.com',
+        ],
+        'where' => [
+            'id = :id',
+            [
+                'id' => $inserted_id,
+            ],
+        ],
+    ], [
+        'id' => $inserted_id,
+    ]);
+
+    // 確認（2段階認証を使っているユーザー）
+    $required_same    = service_user_twostep_verify_required($inserted_id, '1', 'testuser1-twostep@example.com');
+    $required_change  = service_user_twostep_verify_required($inserted_id, '1', 'testuser1-twostep2@example.com');
+    $required_disable = service_user_twostep_verify_required($inserted_id, '0', 'testuser1-twostep@example.com');
+    $required_unknown = service_user_twostep_verify_required($inserted_id + 1000, '1', 'testuser1-twostep@example.com');
+
+    // 結果（有効にするときと、有効のままメールアドレスを変えるときだけ確認する）
+    test_equals('twostep verify required (off)', $required_off, false);
+    test_equals('twostep verify required (enable)', $required_enable, true);
+    test_equals('twostep verify required (same email)', $required_same, false);
+    test_equals('twostep verify required (change email)', $required_change, true);
+    test_equals('twostep verify required (disable)', $required_disable, false);
+    test_equals('twostep verify required (unknown user)', $required_unknown, true);
 }
 
 // 操作ログの重複抑止テスト

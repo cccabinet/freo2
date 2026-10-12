@@ -23,6 +23,11 @@ $GLOBALS['config']['option'] = app_config('APP_OPTION', [
             1 => '有効',
             0 => '無効',
         ],
+        // 2段階認証
+        'twostep' => [
+            1 => '設定する',
+            0 => '設定しない',
+        ],
     ],
     'entry' => [
         // 承認

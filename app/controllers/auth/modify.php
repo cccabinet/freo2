@@ -22,6 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'email'            => isset($_POST['email'])            ? $_POST['email']            : '',
             'url'              => isset($_POST['url'])              ? $_POST['url']              : '',
             'text'             => isset($_POST['text'])             ? $_POST['text']             : '',
+            'twostep'          => isset($_POST['twostep'])          ? $_POST['twostep']          : '',
+            'twostep_email'    => isset($_POST['twostep_email'])    ? $_POST['twostep_email']    : '',
         ]),
     ];
 
@@ -68,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 投稿セッションを初期化
     unset($_SESSION['post']);
+    unset($_SESSION['twostep_verify']);
 
     // 編集開始日時を記録
     $_SESSION['update']['user'] = localdate('Y-m-d H:i:s');

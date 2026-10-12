@@ -531,6 +531,12 @@ $GLOBALS['setting_contents'] = [
             'type'        => 'text',
             'required'    => true,
         ],
+        'mail_twostep_subject' => [
+            'name'        => '2段階認証メールの件名',
+            'explanation' => null,
+            'type'        => 'text',
+            'required'    => true,
+        ],
         'mail_leave_subject' => [
             'name'        => 'ユーザー削除完了メールの件名',
             'explanation' => null,
