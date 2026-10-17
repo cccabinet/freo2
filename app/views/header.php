@@ -17,7 +17,7 @@
             <div class="container px-lg-4 px-0 d-flex align-items-center justify-content-between flex-wrap flex-md-nowrap">
                 <h1 class="mx-0 mx-md-3 my-1 my-md-0"><a href="<?php t(MAIN_FILE) ?>/"><?php h($GLOBALS['setting']['title']) ?></a></h1>
                 <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#globalMenu" aria-controls="globalMenu" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+                    <span class="navbar-toggler-icon" aria-hidden="true"></span>
                 </button>
                 <nav id="globalMenu" class="collapse d-md-block mt-2">
                     <h2 class="d-block d-md-none"><?php h($GLOBALS['string']['heading_menu']) ?></h2>
