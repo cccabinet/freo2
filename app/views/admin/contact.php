@@ -52,7 +52,7 @@
                 <?php /* 表示していない状況の案内（いったん非表示。戻すときは admin/contact.php の $_view['contact_status_hidden'] も戻す）
 
                 <?php if (!empty($_view['contact_status_hidden'])) : ?>
-                <p class="text-muted">
+                <p class="text-body-secondary">
                     <?php h(implode('・', $_view['contact_status_hidden'])) ?>のお問い合わせは表示していません。
                     <a href="<?php t(MAIN_FILE) ?>/admin/contact?status=all<?php t(empty($_GET['keyword']) ? '' : '&keyword=' . rawurlencode($_GET['keyword'])) ?>">すべて表示</a>
                 </p>
