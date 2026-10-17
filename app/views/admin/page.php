@@ -96,7 +96,7 @@
                                     <?php if (isset($_view['children'][$entry['code']])) : ?>
                                     <a href="<?php t(MAIN_FILE) ?>/admin/page?parent=<?php t(rawurlencode($entry['code'])) ?>" class="text-dark"><?php h(truncate($entry['title'], 50)) ?></a>
                                     <?php /* 子ページの数
-                                    <span class="badge bg-secondary text-nowrap">子ページ <?php h($_view['children'][$entry['code']]) ?></span>
+                                    <span class="badge text-bg-secondary text-nowrap">子ページ <?php h($_view['children'][$entry['code']]) ?></span>
                                     */ ?>
                                     <?php else : ?>
                                     <?php h(truncate($entry['title'], 50)) ?>

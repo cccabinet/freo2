@@ -36,11 +36,11 @@
                         </div>
                         <div class="card-body">
                             <div class="form-group mb-2">
-                                <label class="fw-bold">コード <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">コード <span class="badge text-bg-danger">必須</span></label>
                                 <input type="text" name="code" size="30" value="<?php t($_view['widget']['code']) ?>" readonly class="form-control">
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">タイトル <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">タイトル <span class="badge text-bg-danger">必須</span></label>
                                 <input type="text" name="title" size="30" value="<?php t($_view['widget']['title']) ?>" readonly class="form-control">
                             </div>
                             <div class="form-group mb-2">
@@ -48,7 +48,7 @@
                                 <textarea name="text" rows="10" cols="50" class="form-control"><?php t($_view['widget']['text']) ?></textarea>
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">メモ <span class="badge text-light bg-secondary" data-bs-toggle="tooltip" title="公開されないテキストです。">？</span></label>
+                                <label class="fw-bold">メモ <span class="badge text-bg-secondary" data-bs-toggle="tooltip" title="公開されないテキストです。">？</span></label>
                                 <textarea name="memo" rows="10" cols="50" class="form-control"><?php t($_view['widget']['memo']) ?></textarea>
                             </div>
                             <div class="form-group mt-4">

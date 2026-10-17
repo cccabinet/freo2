@@ -36,15 +36,15 @@
                         </div>
                         <div class="card-body">
                             <div class="form-group mb-2">
-                                <label class="fw-bold">コード <span class="badge text-light bg-secondary" data-bs-toggle="tooltip" title="プラグインなどから参照できます。">？</span></label>
+                                <label class="fw-bold">コード <span class="badge text-bg-secondary" data-bs-toggle="tooltip" title="プラグインなどから参照できます。">？</span></label>
                                 <input type="text" name="code" size="30" value="<?php t($_view['field']['code']) ?>" class="form-control">
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">名前 <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">名前 <span class="badge text-bg-danger">必須</span></label>
                                 <input type="text" name="name" size="30" value="<?php t($_view['field']['name']) ?>" class="form-control">
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">対象 <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">対象 <span class="badge text-bg-danger">必須</span></label>
                                 <select name="type_id" class="form-select" style="width: 200px;">
                                     <option value=""></option>
                                     <?php foreach ($_view['types'] as $type) : ?>
@@ -53,7 +53,7 @@
                                 </select>
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">種類 <span class="badge bg-danger">必須</span></label>
+                                <label class="fw-bold">種類 <span class="badge text-bg-danger">必須</span></label>
                                 <select name="kind" class="form-select" style="width: 200px;">
                                     <option value=""></option>
                                     <?php foreach ($GLOBALS['config']['option']['field']['kind'] as $key => $value) : ?>
@@ -70,7 +70,7 @@
                                 </select>
                             </div>
                             <div class="form-group mb-2 for-kind">
-                                <label class="fw-bold">選択肢 <span class="badge text-light bg-secondary" data-bs-toggle="tooltip" title="改行区切りで複数指定できます。">？</span></label>
+                                <label class="fw-bold">選択肢 <span class="badge text-bg-secondary" data-bs-toggle="tooltip" title="改行区切りで複数指定できます。">？</span></label>
                                 <textarea name="choices" rows="5" cols="50" class="form-control"><?php t($_view['field']['choices']) ?></textarea>
                             </div>
                             <div class="form-group mb-2">
@@ -78,11 +78,11 @@
                                 <textarea name="initial" rows="5" cols="50" class="form-control"><?php t($_view['field']['initial']) ?></textarea>
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">説明 <span class="badge text-light bg-secondary" data-bs-toggle="tooltip" title="入力画面に表示する説明です。">？</span></label>
+                                <label class="fw-bold">説明 <span class="badge text-bg-secondary" data-bs-toggle="tooltip" title="入力画面に表示する説明です。">？</span></label>
                                 <input type="text" name="explanation" size="30" value="<?php t($_view['field']['explanation']) ?>" class="form-control">
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">メモ <span class="badge text-light bg-secondary" data-bs-toggle="tooltip" title="公開されないテキストです。">？</span></label>
+                                <label class="fw-bold">メモ <span class="badge text-bg-secondary" data-bs-toggle="tooltip" title="公開されないテキストです。">？</span></label>
                                 <textarea name="memo" rows="10" cols="50" class="form-control"><?php t($_view['field']['memo']) ?></textarea>
                             </div>
                             <div class="form-group mt-4">

@@ -24,7 +24,7 @@
                 <form action="<?php t(MAIN_FILE) ?>/auth/modify" method="post" class="register validate">
                     <input type="hidden" name="_token" value="<?php t($_view['token']) ?>" class="token">
                     <div class="form-group mb-2">
-                        <label class="fw-bold">ユーザー名 <span class="badge bg-danger"><?php h($GLOBALS['string']['text_required']) ?></span></label>
+                        <label class="fw-bold">ユーザー名 <span class="badge text-bg-danger"><?php h($GLOBALS['string']['text_required']) ?></span></label>
                         <input type="text" name="username" size="30" value="<?php t($_view['user']['username']) ?>" class="form-control">
                     </div>
                     <div class="form-group mb-2">
@@ -40,7 +40,7 @@
                         <input type="text" name="name" size="30" value="<?php t($_view['user']['name']) ?>" class="form-control">
                     </div>
                     <div class="form-group mb-2">
-                        <label class="fw-bold">メールアドレス <span class="badge bg-danger"><?php h($GLOBALS['string']['text_required']) ?></span></label>
+                        <label class="fw-bold">メールアドレス <span class="badge text-bg-danger"><?php h($GLOBALS['string']['text_required']) ?></span></label>
                         <input type="text" name="email" size="30" value="<?php t($_view['user']['email']) ?>" class="form-control">
                     </div>
                     <div class="form-group mb-2">
@@ -52,7 +52,7 @@
                         <textarea name="text" rows="10" cols="20" class="form-control"><?php t($_view['user']['text']) ?></textarea>
                     </div>
                     <div class="form-group mb-2">
-                        <label class="fw-bold">2段階認証 <span class="badge bg-danger"><?php h($GLOBALS['string']['text_required']) ?></span></label>
+                        <label class="fw-bold">2段階認証 <span class="badge text-bg-danger"><?php h($GLOBALS['string']['text_required']) ?></span></label>
                         <select name="twostep" class="form-select" style="width: 200px;">
                             <?php foreach ($GLOBALS['config']['option']['user']['twostep'] as $key => $value) : ?>
                             <option value="<?php t($key) ?>"<?php $key == $_view['user']['twostep'] ? e(' selected="selected"') : '' ?>><?php t($value) ?></option>
@@ -61,7 +61,7 @@
                         <div class="form-text">ログインするとき、パスワードに加えて、2段階認証用メールアドレスに届くコードの入力を求めます。</div>
                     </div>
                     <div class="form-group mb-2 for-twostep">
-                        <label class="fw-bold">2段階認証用メールアドレス <span class="badge bg-danger"><?php h($GLOBALS['string']['text_required']) ?></span></label>
+                        <label class="fw-bold">2段階認証用メールアドレス <span class="badge text-bg-danger"><?php h($GLOBALS['string']['text_required']) ?></span></label>
                         <input type="text" name="twostep_email" size="30" value="<?php t($_view['user']['twostep_email']) ?>" class="form-control">
                         <div class="form-text">登録する前に、このメールアドレスにコードを送って、届くことを確認します。</div>
                     </div>

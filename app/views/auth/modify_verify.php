@@ -26,7 +26,7 @@
                     <input type="hidden" name="_token" value="<?php t($_view['token']) ?>" class="token">
                     <input type="hidden" name="exec" value="verify">
                     <div class="form-group mb-2">
-                        <label class="fw-bold">2段階認証用コード <span class="badge bg-danger"><?php h($GLOBALS['string']['text_required']) ?></span></label>
+                        <label class="fw-bold">2段階認証用コード <span class="badge text-bg-danger"><?php h($GLOBALS['string']['text_required']) ?></span></label>
                         <input type="text" name="twostep_code" size="30" value="" class="form-control" style="width: 200px;" autocomplete="one-time-code" inputmode="numeric">
                     </div>
                     <div class="form-group mt-4">
