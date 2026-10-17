@@ -64,7 +64,7 @@
                                 <textarea name="text" rows="10" cols="20" class="form-control"><?php t($_view['user']['text']) ?></textarea>
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">メモ <span class="badge text-light bg-secondary" data-toggle="tooltip" title="公開されないテキストです。">？</span></label>
+                                <label class="fw-bold">メモ <span class="badge text-light bg-secondary" data-bs-toggle="tooltip" title="公開されないテキストです。">？</span></label>
                                 <textarea name="memo" rows="10" cols="50" class="form-control"><?php t($_view['user']['memo']) ?></textarea>
                             </div>
                             <div class="form-group mb-2">
@@ -103,7 +103,7 @@
                                 </select>
                             </div>
                             <div class="form-group mb-2">
-                                <label class="fw-bold">2段階認証 <span class="badge bg-danger">必須</span> <span class="badge text-light bg-secondary" data-toggle="tooltip" title="ログインするとき、パスワードに加えて、2段階認証用メールアドレスに届くコードの入力を求めます。">？</span></label>
+                                <label class="fw-bold">2段階認証 <span class="badge bg-danger">必須</span> <span class="badge text-light bg-secondary" data-bs-toggle="tooltip" title="ログインするとき、パスワードに加えて、2段階認証用メールアドレスに届くコードの入力を求めます。">？</span></label>
                                 <select name="twostep" class="form-select" style="width: 200px;">
                                     <?php foreach ($GLOBALS['config']['option']['user']['twostep'] as $key => $value) : ?>
                                     <option value="<?php t($key) ?>"<?php $key == $_view['user']['twostep'] ? e(' selected="selected"') : '' ?>><?php t($value) ?></option>
