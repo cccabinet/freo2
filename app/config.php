@@ -268,6 +268,17 @@ $GLOBALS['config']['mail_log'] = app_config('APP_MAIL_LOG', false);
 /* プロキシの考慮 */
 $GLOBALS['config']['proxy'] = app_config('APP_PROXY', 0);
 
+/* セキュリティヘッダー（すべての画面で送るHTTPヘッダー。空の配列にすると送らない） */
+$GLOBALS['config']['security_headers'] = app_config('APP_SECURITY_HEADERS', [
+    'X-Content-Type-Options'  => 'nosniff',
+    'X-Frame-Options'         => 'SAMEORIGIN',
+    'Content-Security-Policy' => 'frame-ancestors \'self\'',
+    'Referrer-Policy'         => 'strict-origin-when-cross-origin',
+]);
+
+/* HSTSの有効期間（秒。0なら送らない。HTTPSで開いているときだけ送る） */
+$GLOBALS['config']['hsts_max_age'] = app_config('APP_HSTS_MAX_AGE', 0);
+
 /* AWS */
 $GLOBALS['config']['aws_credential_key'] = app_config('APP_AWS_CREDENTIAL_KEY', null);
 $GLOBALS['config']['aws_credential_secret'] = app_config('APP_AWS_CREDENTIAL_SECRET', null);

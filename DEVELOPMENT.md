@@ -472,6 +472,18 @@ PHPテンプレートです。共通のヘッダー・フッターは、画面�
 - **SQL:** 値はプレースホルダーで渡します(→ [5.3](#53-モデル))。
 - **出力:** エスケープ関数を使います(→ [5.6](#56-ビュー))。
 - **クッキー:** セッション(`PHPSESSID`)と、`cookie_set()` で発行するクッキー(ログイン状態を保持する `auth[session]` など)には、`HttpOnly` と `SameSite=Lax` が付きます(SameSite は PHP 7.3 以上のとき)。`Secure` は HTTPS で開いているときに付き、ロードバランサーなどで HTTPS を終えている構成でも `X-Forwarded-Proto: https` で判定します。`cookie_set()` で発行するクッキーの `Secure` は、`config.php` の `APP_COOKIE_SECURE` で固定することもできます。
+- **セキュリティヘッダー:** [app/controllers/before.php](app/controllers/before.php) が、すべての画面で次のヘッダーを送ります(値は [app/config.php](app/config.php) の `security_headers`)。あわせて、PHP のバージョンが分かる `X-Powered-By` を消します。
+
+  | ヘッダー | 値 | 目的 |
+  | --- | --- | --- |
+  | `X-Content-Type-Options` | `nosniff` | ブラウザがファイルの種類を中身から推測しないようにする |
+  | `X-Frame-Options` | `SAMEORIGIN` | ほかのサイトの iframe に埋め込ませない(クリックジャッキング対策) |
+  | `Content-Security-Policy` | `frame-ancestors 'self'` | 同上(今のブラウザ向け)。スクリプトの読み込み元などは制限しません |
+  | `Referrer-Policy` | `strict-origin-when-cross-origin` | ほかのサイトへは URL ではなくドメインだけを送る |
+
+  - 変えたいときは `config.php` で `APP_SECURITY_HEADERS` を配列ごと定義します(空の配列にすると送りません)。たとえば freo2 の画面をほかのサイトに埋め込みたいなら、`X-Frame-Options` と `Content-Security-Policy` を外します。
+  - **HSTS(`Strict-Transport-Security`)は、既定では送りません。** `config.php` で `define('APP_HSTS_MAX_AGE', 31536000);` のように秒数を指定すると、HTTPS で開いているときだけ送ります。一度送るとブラウザがその期間 HTTPS でしか開かなくなるので、HTTPS で問題なく運用できることを確かめてから、短い期間で始めてください。
+  - **静的なファイル(CSS・画像・アップロードしたファイル)には付きません。** PHP を通らないためです。付けたいときは、Web サーバーの設定(Apache の `mod_headers` など)で付けます。
 
 ---
 
