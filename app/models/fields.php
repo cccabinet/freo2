@@ -155,7 +155,7 @@ function delete_fields($queries, $options = [])
         $ids[] = intval($field['id']);
     }
 
-    if ($options['associate'] === true) {
+    if ($options['associate'] === true && !empty($ids)) {
         // 関連するデータを削除
         $resource = model('delete_field_sets', [
             'where' => 'field_id IN(' . implode(',', array_map('db_escape', $ids)) . ')',

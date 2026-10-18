@@ -158,7 +158,7 @@ function delete_categories($queries, $options = [])
         $ids[] = intval($category['id']);
     }
 
-    if ($options['associate'] === true) {
+    if ($options['associate'] === true && !empty($ids)) {
         // 関連するデータを削除
         $resource = model('delete_category_sets', [
             'where' => 'category_id IN(' . implode(',', array_map('db_escape', $ids)) . ')',

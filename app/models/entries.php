@@ -303,7 +303,7 @@ function delete_entries($queries, $options = [])
         }
     }
 
-    if ($options['field'] === true) {
+    if ($options['field'] === true && !empty($ids)) {
         // 関連するフィールドを削除
         $resource = model('delete_field_sets', [
             'where' => 'entry_id IN(' . implode(',', array_map('db_escape', $ids)) . ')',
@@ -313,7 +313,7 @@ function delete_entries($queries, $options = [])
         }
     }
 
-    if ($options['category'] === true) {
+    if ($options['category'] === true && !empty($ids)) {
         // 関連するカテゴリーを削除
         $resource = model('delete_category_sets', [
             'where' => 'entry_id IN(' . implode(',', array_map('db_escape', $ids)) . ')',
@@ -323,7 +323,7 @@ function delete_entries($queries, $options = [])
         }
     }
 
-    if ($options['attribute'] === true) {
+    if ($options['attribute'] === true && !empty($ids)) {
         // 関連する属性を削除
         $resource = model('delete_attribute_sets', [
             'where' => 'entry_id IN(' . implode(',', array_map('db_escape', $ids)) . ')',

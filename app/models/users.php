@@ -219,7 +219,7 @@ function delete_users($queries, $options = [])
         }
     }
 
-    if ($options['attribute'] === true) {
+    if ($options['attribute'] === true && !empty($ids)) {
         // 関連する属性を削除
         $resource = model('delete_attribute_sets', [
             'where' => 'user_id IN(' . implode(',', array_map('db_escape', $ids)) . ')',

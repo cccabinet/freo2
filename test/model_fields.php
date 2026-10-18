@@ -744,6 +744,19 @@ db_transaction();
     test_equals('delete fields (associate unrelated)', count($field_sets), 1);
 }
 
+// 関連データの削除（該当なし）テスト
+{
+    // 削除（条件に一致するフィールドが無い）
+    $resource = model('delete_fields', [
+        'where' => 'code = \'not_exist\'',
+    ], [
+        'associate' => true,
+    ]);
+
+    // 結果（エラーにならないこと）
+    test_equals('delete fields (no target)', (bool)$resource, true);
+}
+
 // トランザクションを終了
 db_rollback();
 

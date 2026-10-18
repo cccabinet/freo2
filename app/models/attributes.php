@@ -133,7 +133,7 @@ function delete_attributes($queries, $options = [])
         $ids[] = intval($attribute['id']);
     }
 
-    if ($options['associate'] === true) {
+    if ($options['associate'] === true && !empty($ids)) {
         // 関連するデータを削除
         $resource = model('delete_attribute_sets', [
             'where' => 'attribute_id IN(' . implode(',', array_map('db_escape', $ids)) . ')',

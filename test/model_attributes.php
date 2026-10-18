@@ -461,6 +461,19 @@ db_transaction();
     test_equals('delete attributes (associate unrelated)', count($attribute_sets), 2);
 }
 
+// 関連データの削除（該当なし）テスト
+{
+    // 削除（条件に一致する属性が無い）
+    $resource = model('delete_attributes', [
+        'where' => 'name = \'not_exist\'',
+    ], [
+        'associate' => true,
+    ]);
+
+    // 結果（エラーにならないこと）
+    test_equals('delete attributes (no target)', (bool)$resource, true);
+}
+
 // トランザクションを終了
 db_rollback();
 

@@ -608,6 +608,19 @@ $inserted_id = $categories[0]['id'];
     test_equals('delete categories (associate unrelated)', count($category_sets), 1);
 }
 
+// 関連データの削除（該当なし）テスト
+{
+    // 削除（条件に一致するカテゴリーが無い）
+    $resource = model('delete_categories', [
+        'where' => 'code = \'not_exist\'',
+    ], [
+        'associate' => true,
+    ]);
+
+    // 結果（エラーにならないこと）
+    test_equals('delete categories (no target)', (bool)$resource, true);
+}
+
 // トランザクションを終了
 db_rollback();
 
