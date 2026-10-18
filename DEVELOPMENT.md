@@ -471,6 +471,7 @@ PHPテンプレートです。共通のヘッダー・フッターは、画面�
 - **権限:** 管理画面の権限チェックは `before.php` に `work` 名の正規表現でまとまっています。投稿者(power 2)が触れない画面を増やすときは、ここに追記します。
 - **SQL:** 値はプレースホルダーで渡します(→ [5.3](#53-モデル))。
 - **出力:** エスケープ関数を使います(→ [5.6](#56-ビュー))。
+- **クッキー:** セッション(`PHPSESSID`)と、`cookie_set()` で発行するクッキー(ログイン状態を保持する `auth[session]` など)には、`HttpOnly` と `SameSite=Lax` が付きます(SameSite は PHP 7.3 以上のとき)。`Secure` は HTTPS で開いているときに付き、ロードバランサーなどで HTTPS を終えている構成でも `X-Forwarded-Proto: https` で判定します。`cookie_set()` で発行するクッキーの `Secure` は、`config.php` の `APP_COOKIE_SECURE` で固定することもできます。
 
 ---
 

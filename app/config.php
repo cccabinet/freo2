@@ -256,8 +256,8 @@ $GLOBALS['config']['cookie_path'] = app_config('APP_COOKIE_PATH', null);
 /* Cookieが有効なドメイン */
 $GLOBALS['config']['cookie_domain'] = app_config('APP_COOKIE_DOMAIN', null);
 
-/* CookieをHTTPS接続の場合のみ送信 */
-$GLOBALS['config']['cookie_secure'] = app_config('APP_COOKIE_SECURE', false);
+/* CookieをHTTPS接続の場合のみ送信（既定では、HTTPSで開いているときに有効。プロキシの背後でも判定する） */
+$GLOBALS['config']['cookie_secure'] = app_config('APP_COOKIE_SECURE', ssl(true));
 
 /* メールの送信 */
 $GLOBALS['config']['mail_send'] = app_config('APP_MAIL_SEND', true);
