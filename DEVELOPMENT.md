@@ -369,11 +369,12 @@ $categories = model('select_categories', [
 - **ユーザーの入力値は、必ずプレースホルダーで渡します。** `where` に `[SQL, [名前 => 値]]` の形で書くと、`:名前` の部分がエスケープされて埋め込まれます。
 - `values`/`set` の値は自動でエスケープされます。**SQL式をそのまま書きたいときは配列にします**(`'code' => ['CONCAT(\'DELETED \', code)']`)。
 - **`values`/`set` に空文字 `''` を渡すと `NULL` になります。**
-- `'associate' => true` を付けると、関連テーブルを JOIN した結果が返ります(`categories` なら `types.name AS type_name` など)。
+- 取得で `'associate' => true` を付けると、関連テーブルを JOIN した結果が返ります(`categories` なら `types.name AS type_name` など)。`associate` は取得だけのオプションで、削除には使いません(下記)。
 - **削除は論理削除です。** `deleted` 列に日時が入り、`select_*` は削除済みの行を返しません。重複チェックでぶつからないよう、`code` などの先頭には `DELETED <日時> ` が付きます。物理削除したいときは `['softdelete' => false]` を渡します。
   - 接頭辞が付くのは**重複を確認する列だけ**です(`code`、ユーザーは `username` と `email`)。そのため、**削除したものと同じコードやメールアドレスで登録し直せます。**
   - **元に戻す仕組みはありません。** `deleted` を空に戻す処理は本体にないので、論理削除は「一覧から隠して記録を残す」ためのものと考えてください。
-  - ひも付け(`category_sets` など)は、削除のオプション(`associate` など)で**物理削除**されます。
+  - ひも付け(`category_sets` など)は、**既定で一緒に物理削除**されます。消すかどうかは、ひも付けのテーブル名から `_sets` を取った名前のオプションで指定します(`entries` なら `'field'`・`'category'`・`'attribute'`、`categories` なら `'category'`)。残したいときだけ `false` を渡します(`['category' => false]`)。
+  - 自分で `delete_<テーブル>()` を書いて関連データも消すときは、同じ形のオプション(既定 `true`)にし、**削除する行が無いときは関連データの削除を飛ばします**(`if ($options['category'] === true && !empty($ids))`)。IDが空のまま `IN()` を組み立てると、SQL の構文エラーになります。
 - `app/models/` にファイルを置くと、`select_`/`insert_`/`update_`/`delete_`/`normalize_`/`validate_` のうち**定義していないものは、ファイル名をテーブル名とみなして自動で作られます。**
 
 ### 5.4 サービス
@@ -470,6 +471,19 @@ PHPテンプレートです。共通のヘッダー・フッターは、画面�
 - **権限:** 管理画面の権限チェックは `before.php` に `work` 名の正規表現でまとまっています。投稿者(power 2)が触れない画面を増やすときは、ここに追記します。
 - **SQL:** 値はプレースホルダーで渡します(→ [5.3](#53-モデル))。
 - **出力:** エスケープ関数を使います(→ [5.6](#56-ビュー))。
+- **クッキー:** セッション(`PHPSESSID`)と、`cookie_set()` で発行するクッキー(ログイン状態を保持する `auth[session]` など)には、`HttpOnly` と `SameSite=Lax` が付きます(SameSite は PHP 7.3 以上のとき)。`Secure` は HTTPS で開いているときに付き、ロードバランサーなどで HTTPS を終えている構成でも `X-Forwarded-Proto: https` で判定します。`cookie_set()` で発行するクッキーの `Secure` は、`config.php` の `APP_COOKIE_SECURE` で固定することもできます。
+- **セキュリティヘッダー:** [app/controllers/before.php](app/controllers/before.php) が、すべての画面で次のヘッダーを送ります(値は [app/config.php](app/config.php) の `security_headers`)。あわせて、PHP のバージョンが分かる `X-Powered-By` を消します。
+
+  | ヘッダー | 値 | 目的 |
+  | --- | --- | --- |
+  | `X-Content-Type-Options` | `nosniff` | ブラウザがファイルの種類を中身から推測しないようにする |
+  | `X-Frame-Options` | `SAMEORIGIN` | ほかのサイトの iframe に埋め込ませない(クリックジャッキング対策) |
+  | `Content-Security-Policy` | `frame-ancestors 'self'` | 同上(今のブラウザ向け)。スクリプトの読み込み元などは制限しません |
+  | `Referrer-Policy` | `strict-origin-when-cross-origin` | ほかのサイトへは URL ではなくドメインだけを送る |
+
+  - 変えたいときは `config.php` で `APP_SECURITY_HEADERS` を配列ごと定義します(空の配列にすると送りません)。たとえば freo2 の画面をほかのサイトに埋め込みたいなら、`X-Frame-Options` と `Content-Security-Policy` を外します。
+  - **HSTS(`Strict-Transport-Security`)は、既定では送りません。** `config.php` で `define('APP_HSTS_MAX_AGE', 31536000);` のように秒数を指定すると、HTTPS で開いているときだけ送ります。一度送るとブラウザがその期間 HTTPS でしか開かなくなるので、HTTPS で問題なく運用できることを確かめてから、短い期間で始めてください。
+  - **静的なファイル(CSS・画像・アップロードしたファイル)には付きません。** PHP を通らないためです。付けたいときは、Web サーバーの設定(Apache の `mod_headers` など)で付けます。
 
 ---
 
@@ -542,8 +556,10 @@ types(型) ─< entries(エントリー) ─────────────
   - ゲスト: 公開側で会員登録したユーザーです。管理画面には入れません。
   - どの権限がどの画面に入れるかは [app/controllers/before.php](app/controllers/before.php) に `work` 名の正規表現でまとまっています。
   - `enabled` が 0 のユーザーは、パスワードが合っていてもログインできません。
+  - **パスワードは `users.password` にハッシュで保存します。** 方式は `app/config.php` の `hash_algorithm`(`APP_HASH_ALGORITHM` で上書き可)で選び、既定は **bcrypt**(どの環境でも `password_hash()` の組み込みで使える)です。`argon2` は可用性チェック付きのオプション、`md5` は古い PHP 環境向けの互換用です。保存するときは `service_user_password_hash()`、照合するときは `service_user_password_verify()` を使います(`app/services/user.php`)。秘密のペッパー(`config.php` の `hash_pepper`)を HMAC で前処理してからハッシュ化するので、ペッパーを効かせつつ bcrypt の72バイト上限・NUL バイト問題も避けられます。古い方式で保存されたパスワードは、ログインに成功した時点で現在の方式に作り直されます(rehash-on-login)。
   - **ログインに10回続けて失敗すると、そのアカウントは5分間凍結されます**(`users.failed`/`failed_last` で判定)。正しいパスワードでも入れなくなり、ログインに成功すると回数はリセットされます。
   - **2段階認証:** `users.twostep` が 1 のユーザーは、パスワードが通った後に `users.twostep_email` へ送られるコード(`twostep_code`。パスワード再設定の暗証コードと同じく8桁の数字で、どちらも `service_user_code()` が作ります。有効期限 `twostep_expire` は10分)を入力して、はじめてログインできます。設定するのは管理画面のユーザー編集(`/admin/user_form`)と、本人のユーザー情報編集(`/auth/modify`)です。
+    - **コードやトークンは、暗号用の乱数で作ります。** コードは `service_user_code()`(`random_int()`)、URL のトークンとログイン状態を保持するセッションIDは `service_user_token()`(`random_bytes()`。16進数32文字)です。推測されると困る値を新しく作るときも、この2つを使います。levis の `rand_number()` は `mt_rand()` をもとにしていて予測できるので、こうした用途には使いません。`rand_string()` も、古い PHP では予測できる方法に切り替わることがあるので、推測されると困る値には `service_user_token()` を使います。
     - **コードを続けて10回間違えると、そのコードは無効になります**(上限は `app/config.php` の `code_failed_limit`。回数は `users.twostep_failed`)。再送信すると新しいコードで数え直します。アカウントは凍結しません。パスワード再設定の暗証コード(`users.token_failed`)も同じです。
     - パスワードが通った時点では `$_SESSION['auth']['twostep']` に「認証待ち」を記録するだけで、コードの画面にユーザー名・パスワードは受け渡しません。使ったコードは、ログインに成功した時点で消します。
     - 本人が有効にするとき、または有効のまま `twostep_email` を変えるときは、確認画面の後のコード入力画面(`/auth/modify_verify`)で、そのアドレスに送ったコードを入力しないと登録できません(判定は `service_user_twostep_verify_required()`)。送ったコードと確認中のアドレスはセッションに持ちます。管理画面からの設定では確認しません。

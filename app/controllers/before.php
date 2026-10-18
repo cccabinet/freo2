@@ -10,6 +10,16 @@ import('app/services/attribute.php');
 
 import('libs/modules/loader.php');
 
+// セキュリティヘッダーを送る（PHPのバージョンは知らせない）
+header_remove('X-Powered-By');
+
+foreach ($GLOBALS['config']['security_headers'] as $header_name => $header_value) {
+    header($header_name . ': ' . $header_value);
+}
+if ($GLOBALS['config']['hsts_max_age'] > 0 && ssl(true)) {
+    header('Strict-Transport-Security: max-age=' . intval($GLOBALS['config']['hsts_max_age']));
+}
+
 // 設定内容を取得
 $settings = model('select_settings', []);
 $GLOBALS['setting'] = [];

@@ -126,7 +126,7 @@ function service_user_login($session_id)
         }
 
         // セッションを更新
-        $new_session_id = rand_string();
+        $new_session_id = service_user_token();
 
         $resource = service_session_update([
             'set'   => [
@@ -311,6 +311,110 @@ function service_user_frozen($username)
 }
 
 /**
+ * ペッパーを適用したパスワードの前処理（bcrypt/argon2 用）
+ * HMAC を通すことで、ペッパーを効かせつつ bcrypt の72バイト上限・NULバイト問題も回避する。
+ *
+ * @param string $password
+ *
+ * @return string
+ */
+function service_user_password_prepare($password)
+{
+    return base64_encode(hash_hmac('sha256', (string)$password, (string)$GLOBALS['config']['hash_pepper'], true));
+}
+
+/**
+ * パスワードのハッシュを作成する（設定 hash_algorithm に従う）
+ *
+ * @param string $password
+ *
+ * @return string 保存用の文字列（bcrypt/argon2 は password_hash 形式、md5 は「ハッシュ/ペッパー」形式）
+ */
+function service_user_password_hash($password)
+{
+    if ($GLOBALS['config']['hash_algorithm'] === 'md5') {
+        // レガシー（古いPHP環境向けの互換方式）。ハッシュとペッパーを「/」で結合して1つの列に保存する
+        import('libs/modules/hash.php');
+
+        $salt = hash_salt();
+
+        return hash_crypt($password, $salt . ':' . $GLOBALS['config']['hash_pepper']) . '/' . $salt;
+    }
+
+    if ($GLOBALS['config']['hash_algorithm'] === 'argon2') {
+        if (!defined('PASSWORD_ARGON2ID')) {
+            error('この環境では argon2 を利用できません。設定（hash_algorithm）を確認してください。');
+        }
+
+        return password_hash(service_user_password_prepare($password), PASSWORD_ARGON2ID);
+    }
+
+    // 既定: bcrypt（どの環境でも利用できる）
+    return password_hash(service_user_password_prepare($password), PASSWORD_BCRYPT);
+}
+
+/**
+ * パスワードを照合する（保存形式を自動判別する）
+ *
+ * @param string      $password
+ * @param string|null $hash 保存されているハッシュ
+ *
+ * @return bool
+ */
+function service_user_password_verify($password, $hash)
+{
+    if ($hash === null || $hash === '') {
+        return false;
+    }
+
+    // bcrypt / argon2（password_hash 形式。先頭が $）
+    if (strncmp($hash, '$', 1) === 0) {
+        return password_verify(service_user_password_prepare($password), $hash);
+    }
+
+    // レガシー md5（「ハッシュ/ペッパー」形式）
+    import('libs/modules/hash.php');
+
+    $parts = explode('/', $hash, 2);
+    if (count($parts) !== 2) {
+        return false;
+    }
+
+    return hash_equals($parts[0], hash_crypt($password, $parts[1] . ':' . $GLOBALS['config']['hash_pepper']));
+}
+
+/**
+ * 保存されているハッシュを、設定の方式に合わせて作り直すべきかを判定する（ログイン時の付け替え用）
+ *
+ * @param string $hash
+ *
+ * @return bool
+ */
+function service_user_password_needs_rehash($hash)
+{
+    // md5 を選んでいる環境では作り直さない（モダン方式を弱体化させないため、既存のハッシュはそのまま）
+    if ($GLOBALS['config']['hash_algorithm'] === 'md5') {
+        return false;
+    }
+
+    // レガシー md5 形式（先頭が $ でない）なら、設定のモダン方式へ移行する
+    if (strncmp($hash, '$', 1) !== 0) {
+        return true;
+    }
+
+    // すでに password_hash 形式。方式・コストの変更があれば作り直す
+    if ($GLOBALS['config']['hash_algorithm'] === 'argon2') {
+        if (!defined('PASSWORD_ARGON2ID')) {
+            return false;
+        }
+
+        return password_needs_rehash($hash, PASSWORD_ARGON2ID);
+    }
+
+    return password_needs_rehash($hash, PASSWORD_BCRYPT);
+}
+
+/**
  * ユーザーのパスワード認証（失敗したら、失敗した回数を記録する）
  *
  * @param string $username
@@ -320,9 +424,9 @@ function service_user_frozen($username)
  */
 function service_user_authenticate($username, $password)
 {
-    // ログイン失敗回数とパスワードのソルトを取得
+    // ユーザーを取得
     $users = model('select_users', [
-        'select' => 'password_salt, failed',
+        'select' => 'id, enabled, twostep, twostep_email, password, failed',
         'where'  => [
             'username = :username',
             [
@@ -330,30 +434,38 @@ function service_user_authenticate($username, $password)
             ],
         ],
     ]);
-    if (empty($users)) {
-        $password_salt = null;
-        $failed        = null;
-    } else {
-        $password_salt = $users[0]['password_salt'];
-        $failed        = $users[0]['failed'];
-    }
 
-    // パスワード認証
-    $users = model('select_users', [
-        'select' => 'id, enabled, twostep, twostep_email',
-        'where'  => [
-            'username = :username AND password = :password',
-            [
-                'username' => $username,
-                'password' => hash_crypt($password, $password_salt . ':' . $GLOBALS['config']['hash_salt']),
-            ],
-        ],
-    ]);
-    if (!empty($users)) {
-        return $users[0];
+    // パスワード認証（照合は保存形式に応じて PHP 側で行う）
+    if (!empty($users) && service_user_password_verify($password, $users[0]['password'])) {
+        // ログイン時のハッシュ付け替え（設定の方式に合っていなければ作り直す）
+        if (service_user_password_needs_rehash($users[0]['password'])) {
+            $resource = service_user_update([
+                'set'   => [
+                    'password' => service_user_password_hash($password),
+                ],
+                'where' => [
+                    'id = :id',
+                    [
+                        'id' => $users[0]['id'],
+                    ],
+                ],
+            ]);
+            if (!$resource) {
+                error('データを編集できません。');
+            }
+        }
+
+        return [
+            'id'            => $users[0]['id'],
+            'enabled'       => $users[0]['enabled'],
+            'twostep'       => $users[0]['twostep'],
+            'twostep_email' => $users[0]['twostep_email'],
+        ];
     }
 
     // 認証失敗回数を記録（有効なユーザーだけ。存在しないユーザー名なら何も更新しない）
+    $failed = empty($users) ? null : $users[0]['failed'];
+
     $resource = service_user_update([
         'set'   => [
             'failed'      => $failed + 1,
@@ -408,7 +520,19 @@ function service_user_twostep_trusted($user_id, $session_id)
  */
 function service_user_code()
 {
-    return (string)rand_number(10000000, 99999999);
+    // 推測されないよう、暗号用の乱数を使う
+    return (string)random_int(10000000, 99999999);
+}
+
+/**
+ * トークンを作る（ログイン状態を保持するセッションID、パスワード再設定・メールアドレスの存在確認のURL用。16進数32文字）
+ *
+ * @return string
+ */
+function service_user_token()
+{
+    // 推測されないよう、暗号用の乱数を使う
+    return bin2hex(random_bytes(16));
 }
 
 /**
@@ -556,7 +680,7 @@ function service_user_login_complete($user_id, $keep, $twostep)
     // ログイン状態を保持
     $old_session = isset($_COOKIE['auth']['session']) ? $_COOKIE['auth']['session'] : null;
 
-    service_user_duration($old_session, rand_string(), $user_id, $keep, $twostep);
+    service_user_duration($old_session, service_user_token(), $user_id, $keep, $twostep);
 
     // 操作ログの記録
     service_log_record('管理者用ページにログインしました。');
@@ -716,7 +840,7 @@ function service_user_password_issue($email)
 
     $resource = service_user_update([
         'set'   => [
-            'token'        => rand_string(),
+            'token'        => service_user_token(),
             'token_code'   => service_user_code(),
             'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 10),
             'token_failed' => null,
@@ -824,7 +948,7 @@ function service_user_email_issue($user_id)
 {
     $resource = service_user_update([
         'set'   => [
-            'token'        => rand_string(),
+            'token'        => service_user_token(),
             'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 60 * 24),
         ],
         'where' => [

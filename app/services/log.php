@@ -92,11 +92,11 @@ function service_log_record($message = null, $model = null, $exec = null)
     // IPアドレス
     $ip = clientip($GLOBALS['config']['proxy']);
 
-    // ユーザーエージェント
+    // ユーザーエージェント（長いものは切り詰める）
     if (empty($_SERVER['HTTP_USER_AGENT'])) {
         $agent = null;
     } else {
-        $agent = $_SERVER['HTTP_USER_AGENT'];
+        $agent = truncate($_SERVER['HTTP_USER_AGENT'], 255, '');
     }
 
     // ページ（長いクエリ文字列は切り詰める）

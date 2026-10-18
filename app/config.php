@@ -12,8 +12,11 @@ $GLOBALS['config']['http_url'] = app_config('APP_HTTP_URL', '');
 /* 設置ディレクトリ */
 $GLOBALS['config']['http_path'] = app_config('APP_HTTP_PATH', dirname($_SERVER['SCRIPT_NAME']) . '/');
 
-/* ハッシュ作成用ソルト */
-$GLOBALS['config']['hash_salt'] = app_config('APP_HASH_SALT', 'RKH7X92N4P');
+/* ハッシュ作成用ペッパー（DBには保存しない秘密値。公開しない） */
+$GLOBALS['config']['hash_pepper'] = app_config('APP_HASH_PEPPER', 'RKH7X92N4P');
+
+/* パスワードのハッシュ方式（bcrypt / argon2 / md5）。argon2 は PHP が対応している環境のみ。md5 は古いPHP環境向けの互換用 */
+$GLOBALS['config']['hash_algorithm'] = app_config('APP_HASH_ALGORITHM', 'bcrypt');
 
 /* オプション項目 */
 $GLOBALS['config']['option'] = app_config('APP_OPTION', [
@@ -253,8 +256,8 @@ $GLOBALS['config']['cookie_path'] = app_config('APP_COOKIE_PATH', null);
 /* Cookieが有効なドメイン */
 $GLOBALS['config']['cookie_domain'] = app_config('APP_COOKIE_DOMAIN', null);
 
-/* CookieをHTTPS接続の場合のみ送信 */
-$GLOBALS['config']['cookie_secure'] = app_config('APP_COOKIE_SECURE', false);
+/* CookieをHTTPS接続の場合のみ送信（既定では、HTTPSで開いているときに有効。プロキシの背後でも判定する） */
+$GLOBALS['config']['cookie_secure'] = app_config('APP_COOKIE_SECURE', ssl(true));
 
 /* メールの送信 */
 $GLOBALS['config']['mail_send'] = app_config('APP_MAIL_SEND', true);
@@ -264,6 +267,17 @@ $GLOBALS['config']['mail_log'] = app_config('APP_MAIL_LOG', false);
 
 /* プロキシの考慮 */
 $GLOBALS['config']['proxy'] = app_config('APP_PROXY', 0);
+
+/* セキュリティヘッダー（すべての画面で送るHTTPヘッダー。空の配列にすると送らない） */
+$GLOBALS['config']['security_headers'] = app_config('APP_SECURITY_HEADERS', [
+    'X-Content-Type-Options'  => 'nosniff',
+    'X-Frame-Options'         => 'SAMEORIGIN',
+    'Content-Security-Policy' => 'frame-ancestors \'self\'',
+    'Referrer-Policy'         => 'strict-origin-when-cross-origin',
+]);
+
+/* HSTSの有効期間（秒。0なら送らない。HTTPSで開いているときだけ送る） */
+$GLOBALS['config']['hsts_max_age'] = app_config('APP_HSTS_MAX_AGE', 0);
 
 /* AWS */
 $GLOBALS['config']['aws_credential_key'] = app_config('APP_AWS_CREDENTIAL_KEY', null);

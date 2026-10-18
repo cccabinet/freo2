@@ -30,7 +30,7 @@ define('DATABASE_USERNAME', '');
 define('DATABASE_PASSWORD', '');
 define('DATABASE_NAME', '');
 define('DATABASE_PREFIX', '');
-define('DATABASE_CHARSET', 'UTF8');
+define('DATABASE_CHARSET', 'utf8mb4');
 define('DATABASE_CHARSET_INPUT_FROM', 'UTF-8');
 define('DATABASE_CHARSET_INPUT_TO', 'UTF-8');
 define('DATABASE_CHARSET_OUTPUT_FROM', 'UTF-8');

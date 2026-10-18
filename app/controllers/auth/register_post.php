@@ -2,7 +2,6 @@
 
 import('app/services/user.php');
 import('app/services/mail.php');
-import('libs/modules/hash.php');
 
 // 権限を確認
 if (isset($GLOBALS['authority'])) {
@@ -26,9 +25,6 @@ if (empty($_SESSION['post'])) {
     redirect('/register');
 }
 
-// パスワードのソルトを作成
-$password_salt = hash_salt();
-
 // 権限を決定
 $authorities = model('select_authorities', [
     'where' => [
@@ -50,8 +46,7 @@ db_transaction();
 $resource = service_user_insert([
     'values' => [
         'username'       => $_SESSION['post']['user']['username'],
-        'password'       => hash_crypt($_SESSION['post']['user']['password'], $password_salt . ':' . $GLOBALS['config']['hash_salt']),
-        'password_salt'  => $password_salt,
+        'password'       => service_user_password_hash($_SESSION['post']['user']['password']),
         'authority_id'   => $authority_id,
         'enabled'        => $enabled,
         'name'           => $_SESSION['post']['user']['name'],

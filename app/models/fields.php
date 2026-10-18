@@ -139,7 +139,7 @@ function delete_fields($queries, $options = [])
     $queries = db_placeholder($queries);
     $options = [
         'softdelete' => isset($options['softdelete']) ? $options['softdelete'] : true,
-        'associate'  => isset($options['associate'])  ? $options['associate']  : false,
+        'field'      => isset($options['field'])      ? $options['field']      : true,
     ];
 
     // 削除するデータのIDを取得
@@ -155,7 +155,7 @@ function delete_fields($queries, $options = [])
         $ids[] = intval($field['id']);
     }
 
-    if ($options['associate'] === true) {
+    if ($options['field'] === true && !empty($ids)) {
         // 関連するデータを削除
         $resource = model('delete_field_sets', [
             'where' => 'field_id IN(' . implode(',', array_map('db_escape', $ids)) . ')',

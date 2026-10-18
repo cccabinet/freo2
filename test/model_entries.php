@@ -1552,6 +1552,17 @@ $file_field_directory = $GLOBALS['config']['file_target']['field'] . $file_id . 
     test_equals('view entries title', $view_entry['title'], 'テスト1');
 }
 
+// 関連データの削除（該当なし）テスト
+{
+    // 削除（条件に一致するエントリーが無い。フィールド・カテゴリー・属性のひも付けは既定で削除する）
+    $resource = model('delete_entries', [
+        'where' => 'code = \'not_exist\'',
+    ]);
+
+    // 結果（エラーにならないこと）
+    test_equals('delete entries (no target)', (bool)$resource, true);
+}
+
 // トランザクションを終了
 db_rollback();
 

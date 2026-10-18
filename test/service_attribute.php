@@ -205,7 +205,7 @@ $inserted_id = intval($attributes[0]['id']);
             ],
         ],
     ], [
-        'associate' => true,
+        'attribute' => true,
     ]);
 
     // 結果
@@ -220,7 +220,7 @@ $inserted_id = intval($attributes[0]['id']);
         'where' => 'attribute_id = ' . $inserted_id,
     ]);
 
-    test_equals('delete attribute (associate)', count($attribute_sets), 0);
+    test_equals('delete attribute (attribute_sets)', count($attribute_sets), 0);
 
     // 結果（操作ログが記録されること）
     $logs = model('select_logs', [

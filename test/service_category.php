@@ -11,6 +11,7 @@ if (!isset($_GET['_test'])) {
 
 // ライブラリを読み込み
 model('categories.php');
+model('category_sets.php');
 model('logs.php');
 service('category.php');
 

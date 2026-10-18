@@ -219,7 +219,7 @@ function delete_users($queries, $options = [])
         }
     }
 
-    if ($options['attribute'] === true) {
+    if ($options['attribute'] === true && !empty($ids)) {
         // 関連する属性を削除
         $resource = model('delete_attribute_sets', [
             'where' => 'user_id IN(' . implode(',', array_map('db_escape', $ids)) . ')',
@@ -570,7 +570,6 @@ function default_users()
         'enabled'         => 1,
         'username'        => '',
         'password'        => '',
-        'password_salt'   => '',
         'authority_id'    => 0,
         'attribute_begin' => null,
         'attribute_end'   => null,

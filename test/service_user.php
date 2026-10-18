@@ -45,15 +45,11 @@ db_transaction();
 
 // ユーザーの登録テスト
 {
-    // データ
-    $password_salt = hash_salt();
-
     // 登録
     service_user_insert([
         'values' => [
             'username'       => $data_user['username'],
-            'password'       => hash_crypt($data_user['password'], $password_salt . ':' . $GLOBALS['config']['hash_salt']),
-            'password_salt'  => $password_salt,
+            'password'       => service_user_password_hash($data_user['password']),
             'authority_id'   => $data_user['authority_id'],
             'enabled'        => $data_user['enabled'],
             'name'           => $data_user['name'],
@@ -91,9 +87,9 @@ $inserted_id = intval($users[0]['id']);
 
 // パスワード認証テスト
 {
-    // 確認（auth/index.php と同じ方法でソルトを取得し、ハッシュで照合する）
+    // 確認（保存されているハッシュを取得して照合する）
     $users = model('select_users', [
-        'select' => 'password_salt',
+        'select' => 'id, enabled, password',
         'where'  => [
             'username = :username',
             [
@@ -101,36 +97,15 @@ $inserted_id = intval($users[0]['id']);
             ],
         ],
     ]);
-    $password_salt = $users[0]['password_salt'];
-
-    $users_valid = model('select_users', [
-        'select' => 'id, enabled',
-        'where'  => [
-            'username = :username AND password = :password',
-            [
-                'username' => 'testuser1',
-                'password' => hash_crypt('abcd1234', $password_salt . ':' . $GLOBALS['config']['hash_salt']),
-            ],
-        ],
-    ]);
-    $users_invalid = model('select_users', [
-        'select' => 'id, enabled',
-        'where'  => [
-            'username = :username AND password = :password',
-            [
-                'username' => 'testuser1',
-                'password' => hash_crypt('abcd12345', $password_salt . ':' . $GLOBALS['config']['hash_salt']),
-            ],
-        ],
-    ]);
 
     // 結果
-    test_equals('authenticate user', count($users_valid), 1);
-    test_equals('authenticate user id', intval($users_valid[0]['id']), $inserted_id);
-    test_equals('authenticate user enabled', intval($users_valid[0]['enabled']), 1);
+    test_equals('authenticate user', count($users), 1);
+    test_equals('authenticate user id', intval($users[0]['id']), $inserted_id);
+    test_equals('authenticate user enabled', intval($users[0]['enabled']), 1);
+    test_equals('authenticate user password', service_user_password_verify('abcd1234', $users[0]['password']), true);
 
     // 結果（パスワードが違えば認証できないこと）
-    test_equals('authenticate user (invalid password)', count($users_invalid), 0);
+    test_equals('authenticate user (invalid password)', service_user_password_verify('abcd12345', $users[0]['password']), false);
 }
 
 // ユーザーの更新テスト
@@ -709,6 +684,34 @@ restore_error_handler();
     // 結果（数字8桁の文字列。hash_equals() で照合するので文字列で返す）
     test_regexp('user code', $code, '^[0-9]{8}$');
     test_equals('user code type', is_string($code), true);
+
+    // 結果（先頭は0にならない。シナリオが 00000000 を「絶対に一致しないコード」として使っているため）
+    test_not_equals('user code (leading zero)', $code[0], '0');
+
+    // 結果（続けて作ると別の値になる。10回のうち1回でも違えばよい）
+    $codes = [];
+    for ($i = 0; $i < 10; $i++) {
+        $codes[] = service_user_code();
+    }
+
+    test_equals('user code (random)', count(array_unique($codes)) > 1, true);
+}
+
+// トークンの作成テスト
+{
+    // 確認
+    $token = service_user_token();
+
+    // 結果（16進数32文字。セッションIDやURLに入れるので、記号を含まない）
+    test_regexp('user token', $token, '^[0-9a-f]{32}$');
+
+    // 結果（続けて作ると別の値になる）
+    $tokens = [];
+    for ($i = 0; $i < 10; $i++) {
+        $tokens[] = service_user_token();
+    }
+
+    test_equals('user token (random)', count(array_unique($tokens)), 10);
 }
 
 // 2段階認証用コードの発行テスト

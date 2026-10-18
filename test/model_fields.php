@@ -726,7 +726,7 @@ db_transaction();
     model('delete_fields', [
         'where' => 'code IN(' . db_escape('test4') . ', ' . db_escape('test5') . ')',
     ], [
-        'associate' => true,
+        'field' => true,
     ]);
 
     // 結果（削除したフィールドのひも付けは消えること）
@@ -734,14 +734,27 @@ db_transaction();
         'where' => 'field_id IN(' . implode(',', $associate_ids) . ')',
     ]);
 
-    test_equals('delete fields (associate)', count($field_sets), 0);
+    test_equals('delete fields (field_sets)', count($field_sets), 0);
 
     // 結果（無関係なひも付けは残ること）
     $field_sets = model('select_field_sets', [
         'where' => 'field_id = ' . $unrelated_id,
     ]);
 
-    test_equals('delete fields (associate unrelated)', count($field_sets), 1);
+    test_equals('delete fields (field_sets unrelated)', count($field_sets), 1);
+}
+
+// 関連データの削除（該当なし）テスト
+{
+    // 削除（条件に一致するフィールドが無い）
+    $resource = model('delete_fields', [
+        'where' => 'code = \'not_exist\'',
+    ], [
+        'field' => true,
+    ]);
+
+    // 結果（エラーにならないこと）
+    test_equals('delete fields (no target)', (bool)$resource, true);
 }
 
 // トランザクションを終了

@@ -590,7 +590,7 @@ $inserted_id = $categories[0]['id'];
     model('delete_categories', [
         'where' => 'code IN(\'test4\', \'test5\')',
     ], [
-        'associate' => true,
+        'category' => true,
     ]);
 
     // 結果（削除したカテゴリーのひも付けは消えること）
@@ -598,14 +598,27 @@ $inserted_id = $categories[0]['id'];
         'where' => 'category_id IN(' . implode(',', $associate_ids) . ')',
     ]);
 
-    test_equals('delete categories (associate)', count($category_sets), 0);
+    test_equals('delete categories (category_sets)', count($category_sets), 0);
 
     // 結果（無関係なひも付けは残ること）
     $category_sets = model('select_category_sets', [
         'where' => 'category_id = ' . $unrelated_id,
     ]);
 
-    test_equals('delete categories (associate unrelated)', count($category_sets), 1);
+    test_equals('delete categories (category_sets unrelated)', count($category_sets), 1);
+}
+
+// 関連データの削除（該当なし）テスト
+{
+    // 削除（条件に一致するカテゴリーが無い）
+    $resource = model('delete_categories', [
+        'where' => 'code = \'not_exist\'',
+    ], [
+        'category' => true,
+    ]);
+
+    // 結果（エラーにならないこと）
+    test_equals('delete categories (no target)', (bool)$resource, true);
 }
 
 // トランザクションを終了
