@@ -14,6 +14,7 @@ model('users.php');
 model('attributes.php');
 model('attribute_sets.php');
 import('libs/modules/hash.php');
+import('app/services/user.php');
 
 // 既存データ削除
 // users は admin などの前提データ（シナリオテストが使う）があるため、テスト用のユーザーだけを削除する
@@ -154,18 +155,21 @@ foreach (['テスト属性1', 'テスト属性2'] as $index => $name) {
 
 // パスワードの保存テスト
 {
-    // 確認（認証と同じ方法でハッシュを作り、登録した値と突き合わせる）
+    // 確認
     $users = model('select_users', [
-        'select' => 'password, password_salt',
+        'select' => 'password',
         'where'  => 'id = ' . intval($inserted_id),
     ]);
 
     // 結果（平文では保存されていないこと）
     test_not_equals('insert user password (raw)', $users[0]['password'], 'abcd1234');
-    test_not_equals('insert user password_salt', $users[0]['password_salt'], '');
 
-    // 結果（ソルトと合わせたハッシュが一致すること）
-    test_equals('insert user password', $users[0]['password'], hash_crypt('abcd1234', $users[0]['password_salt'] . ':' . $GLOBALS['config']['hash_salt']));
+    // 結果（既定の bcrypt 形式で保存されていること）
+    test_equals('insert user password (bcrypt)', strncmp($users[0]['password'], '$2y$', 4), 0);
+
+    // 結果（照合が通ること・誤ったパスワードは通らないこと）
+    test_equals('verify user password', service_user_password_verify('abcd1234', $users[0]['password']), true);
+    test_equals('verify user password (wrong)', service_user_password_verify('wrong', $users[0]['password']), false);
 }
 
 // 有効の書式テスト
@@ -757,11 +761,12 @@ foreach (['テスト属性1', 'テスト属性2'] as $index => $name) {
 
 // 暗証コードの有効期限テスト
 {
-    // データ（有効期限を過ぎた状態にする）
+    // データ（有効期限を過ぎた状態にする。localdate() はプロセス開始時刻を static で保持するため、
+    // テストの実行に時間がかかっても確実に過去になるよう、有効側と同じだけ（10分）過去にする）
     model('update_users', [
         'set'   => [
             'token_code'   => 'ABCD1234',
-            'token_expire' => localdate('Y-m-d H:i:s', time() - 1),
+            'token_expire' => localdate('Y-m-d H:i:s', time() - 60 * 10),
         ],
         'where' => [
             'id = :id',
@@ -1141,13 +1146,10 @@ if (!isset($_GET['_test'])) {
  */
 function test_user_insert($user, $options = [])
 {
-    $password_salt = hash_salt();
-
     $resource = model('insert_users', [
         'values' => [
             'username'        => $user['username'],
-            'password'        => hash_crypt($user['password'], $password_salt . ':' . $GLOBALS['config']['hash_salt']),
-            'password_salt'   => $password_salt,
+            'password'        => service_user_password_hash($user['password']),
             'authority_id'    => $user['authority_id'],
             'attribute_begin' => $user['attribute_begin'],
             'attribute_end'   => $user['attribute_end'],

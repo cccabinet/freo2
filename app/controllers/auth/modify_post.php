@@ -1,7 +1,6 @@
 <?php
 
 import('app/services/user.php');
-import('libs/modules/hash.php');
 
 // フォワードを確認
 if (forward() === null) {
@@ -13,9 +12,6 @@ if (empty($_SESSION['post'])) {
     // リダイレクト
     redirect('/auth/modify');
 }
-
-// パスワードのソルトを作成
-$password_salt = hash_salt();
 
 // 属性を取得
 $attribute_sets = model('select_attribute_sets', [
@@ -63,8 +59,7 @@ $sets = [
     'twostep_email' => $_SESSION['post']['user']['twostep_email'],
 ];
 if (!empty($_SESSION['post']['user']['password'])) {
-    $sets['password']      = hash_crypt($_SESSION['post']['user']['password'], $password_salt . ':' . $GLOBALS['config']['hash_salt']);
-    $sets['password_salt'] = $password_salt;
+    $sets['password'] = service_user_password_hash($_SESSION['post']['user']['password']);
 }
 $resource = service_user_update([
     'set'   => $sets,

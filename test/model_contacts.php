@@ -36,7 +36,6 @@ model('insert_users', [
     'values' => [
         'username'       => 'testuser1',
         'password'       => 'dummy',
-        'password_salt'  => 'dummy',
         'authority_id'   => 3,
         'enabled'        => 1,
         'name'           => 'テスト太郎',

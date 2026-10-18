@@ -570,7 +570,6 @@ function default_users()
         'enabled'         => 1,
         'username'        => '',
         'password'        => '',
-        'password_salt'   => '',
         'authority_id'    => 0,
         'attribute_begin' => null,
         'attribute_end'   => null,

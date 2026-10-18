@@ -1,7 +1,6 @@
 <?php
 
 import('app/services/user.php');
-import('libs/modules/hash.php');
 
 // 権限を確認
 if (isset($GLOBALS['authority'])) {
@@ -23,14 +22,10 @@ if (empty($_SESSION['post'])) {
 // トランザクションを開始
 db_transaction();
 
-// パスワードのソルトを作成
-$password_salt = hash_salt();
-
 // ユーザーを編集
 $resource = service_user_update([
     'set'   => [
-        'password'      => hash_crypt($_SESSION['post']['user']['password'], $password_salt . ':' . $GLOBALS['config']['hash_salt']),
-        'password_salt' => $password_salt,
+        'password'      => service_user_password_hash($_SESSION['post']['user']['password']),
         'token'         => null,
         'token_code'    => null,
         'token_expire'  => null,

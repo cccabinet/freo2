@@ -12,8 +12,11 @@ $GLOBALS['config']['http_url'] = app_config('APP_HTTP_URL', '');
 /* 設置ディレクトリ */
 $GLOBALS['config']['http_path'] = app_config('APP_HTTP_PATH', dirname($_SERVER['SCRIPT_NAME']) . '/');
 
-/* ハッシュ作成用ソルト */
-$GLOBALS['config']['hash_salt'] = app_config('APP_HASH_SALT', 'RKH7X92N4P');
+/* ハッシュ作成用ペッパー（DBには保存しない秘密値。公開しない） */
+$GLOBALS['config']['hash_pepper'] = app_config('APP_HASH_PEPPER', 'RKH7X92N4P');
+
+/* パスワードのハッシュ方式（bcrypt / argon2 / md5）。argon2 は PHP が対応している環境のみ。md5 は古いPHP環境向けの互換用 */
+$GLOBALS['config']['hash_algorithm'] = app_config('APP_HASH_ALGORITHM', 'bcrypt');
 
 /* オプション項目 */
 $GLOBALS['config']['option'] = app_config('APP_OPTION', [

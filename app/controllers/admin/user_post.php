@@ -1,7 +1,6 @@
 <?php
 
 import('app/services/user.php');
-import('libs/modules/hash.php');
 
 // フォワードを確認
 if (forward() === null) {
@@ -14,9 +13,6 @@ if (empty($_SESSION['post'])) {
     redirect('/admin/user_form');
 }
 
-// パスワードのソルトを作成
-$password_salt = hash_salt();
-
 // トランザクションを開始
 db_transaction();
 
@@ -25,8 +21,7 @@ if (empty($_SESSION['post']['user']['id'])) {
     $resource = service_user_insert([
         'values' => [
             'username'        => $_SESSION['post']['user']['username'],
-            'password'        => hash_crypt($_SESSION['post']['user']['password'], $password_salt . ':' . $GLOBALS['config']['hash_salt']),
-            'password_salt'   => $password_salt,
+            'password'        => service_user_password_hash($_SESSION['post']['user']['password']),
             'authority_id'    => $_SESSION['post']['user']['authority_id'],
             'attribute_begin' => $_SESSION['post']['user']['attribute_begin'],
             'attribute_end'   => $_SESSION['post']['user']['attribute_end'],
@@ -77,8 +72,7 @@ if (empty($_SESSION['post']['user']['id'])) {
         'twostep_email'   => $_SESSION['post']['user']['twostep_email'],
     ];
     if (!empty($_SESSION['post']['user']['password'])) {
-        $sets['password']      = hash_crypt($_SESSION['post']['user']['password'], $password_salt . ':' . $GLOBALS['config']['hash_salt']);
-        $sets['password_salt'] = $password_salt;
+        $sets['password'] = service_user_password_hash($_SESSION['post']['user']['password']);
     }
     $resource = service_user_update([
         'set'   => $sets,

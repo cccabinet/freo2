@@ -45,15 +45,11 @@ db_transaction();
 
 // ユーザーの登録テスト
 {
-    // データ
-    $password_salt = hash_salt();
-
     // 登録
     service_user_insert([
         'values' => [
             'username'       => $data_user['username'],
-            'password'       => hash_crypt($data_user['password'], $password_salt . ':' . $GLOBALS['config']['hash_salt']),
-            'password_salt'  => $password_salt,
+            'password'       => service_user_password_hash($data_user['password']),
             'authority_id'   => $data_user['authority_id'],
             'enabled'        => $data_user['enabled'],
             'name'           => $data_user['name'],
@@ -91,9 +87,9 @@ $inserted_id = intval($users[0]['id']);
 
 // パスワード認証テスト
 {
-    // 確認（auth/index.php と同じ方法でソルトを取得し、ハッシュで照合する）
+    // 確認（保存されているハッシュを取得して照合する）
     $users = model('select_users', [
-        'select' => 'password_salt',
+        'select' => 'id, enabled, password',
         'where'  => [
             'username = :username',
             [
@@ -101,36 +97,15 @@ $inserted_id = intval($users[0]['id']);
             ],
         ],
     ]);
-    $password_salt = $users[0]['password_salt'];
-
-    $users_valid = model('select_users', [
-        'select' => 'id, enabled',
-        'where'  => [
-            'username = :username AND password = :password',
-            [
-                'username' => 'testuser1',
-                'password' => hash_crypt('abcd1234', $password_salt . ':' . $GLOBALS['config']['hash_salt']),
-            ],
-        ],
-    ]);
-    $users_invalid = model('select_users', [
-        'select' => 'id, enabled',
-        'where'  => [
-            'username = :username AND password = :password',
-            [
-                'username' => 'testuser1',
-                'password' => hash_crypt('abcd12345', $password_salt . ':' . $GLOBALS['config']['hash_salt']),
-            ],
-        ],
-    ]);
 
     // 結果
-    test_equals('authenticate user', count($users_valid), 1);
-    test_equals('authenticate user id', intval($users_valid[0]['id']), $inserted_id);
-    test_equals('authenticate user enabled', intval($users_valid[0]['enabled']), 1);
+    test_equals('authenticate user', count($users), 1);
+    test_equals('authenticate user id', intval($users[0]['id']), $inserted_id);
+    test_equals('authenticate user enabled', intval($users[0]['enabled']), 1);
+    test_equals('authenticate user password', service_user_password_verify('abcd1234', $users[0]['password']), true);
 
     // 結果（パスワードが違えば認証できないこと）
-    test_equals('authenticate user (invalid password)', count($users_invalid), 0);
+    test_equals('authenticate user (invalid password)', service_user_password_verify('abcd12345', $users[0]['password']), false);
 }
 
 // ユーザーの更新テスト
