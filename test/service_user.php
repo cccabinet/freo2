@@ -684,6 +684,34 @@ restore_error_handler();
     // 結果（数字8桁の文字列。hash_equals() で照合するので文字列で返す）
     test_regexp('user code', $code, '^[0-9]{8}$');
     test_equals('user code type', is_string($code), true);
+
+    // 結果（先頭は0にならない。シナリオが 00000000 を「絶対に一致しないコード」として使っているため）
+    test_not_equals('user code (leading zero)', $code[0], '0');
+
+    // 結果（続けて作ると別の値になる。10回のうち1回でも違えばよい）
+    $codes = [];
+    for ($i = 0; $i < 10; $i++) {
+        $codes[] = service_user_code();
+    }
+
+    test_equals('user code (random)', count(array_unique($codes)) > 1, true);
+}
+
+// トークンの作成テスト
+{
+    // 確認
+    $token = service_user_token();
+
+    // 結果（16進数32文字。セッションIDやURLに入れるので、記号を含まない）
+    test_regexp('user token', $token, '^[0-9a-f]{32}$');
+
+    // 結果（続けて作ると別の値になる）
+    $tokens = [];
+    for ($i = 0; $i < 10; $i++) {
+        $tokens[] = service_user_token();
+    }
+
+    test_equals('user token (random)', count(array_unique($tokens)), 10);
 }
 
 // 2段階認証用コードの発行テスト

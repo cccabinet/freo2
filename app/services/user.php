@@ -126,7 +126,7 @@ function service_user_login($session_id)
         }
 
         // セッションを更新
-        $new_session_id = rand_string();
+        $new_session_id = service_user_token();
 
         $resource = service_session_update([
             'set'   => [
@@ -520,7 +520,19 @@ function service_user_twostep_trusted($user_id, $session_id)
  */
 function service_user_code()
 {
-    return (string)rand_number(10000000, 99999999);
+    // 推測されないよう、暗号用の乱数を使う
+    return (string)random_int(10000000, 99999999);
+}
+
+/**
+ * トークンを作る（ログイン状態を保持するセッションID、パスワード再設定・メールアドレスの存在確認のURL用。16進数32文字）
+ *
+ * @return string
+ */
+function service_user_token()
+{
+    // 推測されないよう、暗号用の乱数を使う
+    return bin2hex(random_bytes(16));
 }
 
 /**
@@ -668,7 +680,7 @@ function service_user_login_complete($user_id, $keep, $twostep)
     // ログイン状態を保持
     $old_session = isset($_COOKIE['auth']['session']) ? $_COOKIE['auth']['session'] : null;
 
-    service_user_duration($old_session, rand_string(), $user_id, $keep, $twostep);
+    service_user_duration($old_session, service_user_token(), $user_id, $keep, $twostep);
 
     // 操作ログの記録
     service_log_record('管理者用ページにログインしました。');
@@ -828,7 +840,7 @@ function service_user_password_issue($email)
 
     $resource = service_user_update([
         'set'   => [
-            'token'        => rand_string(),
+            'token'        => service_user_token(),
             'token_code'   => service_user_code(),
             'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 10),
             'token_failed' => null,
@@ -936,7 +948,7 @@ function service_user_email_issue($user_id)
 {
     $resource = service_user_update([
         'set'   => [
-            'token'        => rand_string(),
+            'token'        => service_user_token(),
             'token_expire' => localdate('Y-m-d H:i:s', time() + 60 * 60 * 24),
         ],
         'where' => [
