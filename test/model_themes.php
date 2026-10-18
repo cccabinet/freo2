@@ -218,6 +218,20 @@ db_transaction();
     test_equals('validate regexp theme version', count($warnings), 1);
 }
 
+// バージョンの書式（数字とドット以外が混ざる）テスト
+{
+    // データ
+    $test_theme = $data_theme;
+    $test_theme['code']    = 'test2';
+    $test_theme['version'] = 'v1.0';
+
+    // 確認
+    $warnings = model('validate_themes', $test_theme);
+
+    // 結果
+    test_equals('validate regexp theme version (mixed)', count($warnings), 1);
+}
+
 // バージョンの長さ（境界値）テスト
 {
     // データ（上限ちょうどのため警告は出ない）

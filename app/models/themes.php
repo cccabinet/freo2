@@ -207,7 +207,7 @@ function validate_themes($queries, $options = [])
     if (isset($queries['version'])) {
         if (!validator_required($queries['version'])) {
             $messages['version'] = 'バージョンが入力されていません。';
-        } elseif (!validator_regexp($queries['version'], '[\d\.]')) {
+        } elseif (!validator_regexp($queries['version'], '^[\d\.]+$')) {
             $messages['version'] = 'バージョンは数値で入力してください。';
         } elseif (!validator_max_length($queries['version'], 20)) {
             $messages['version'] = 'バージョンは20文字以内で入力してください。';

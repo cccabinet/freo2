@@ -218,6 +218,20 @@ db_transaction();
     test_equals('validate regexp plugin version', count($warnings), 1);
 }
 
+// バージョンの書式（数字とドット以外が混ざる）テスト
+{
+    // データ
+    $test_plugin = $data_plugin;
+    $test_plugin['code']    = 'test2';
+    $test_plugin['version'] = 'v1.0';
+
+    // 確認
+    $warnings = model('validate_plugins', $test_plugin);
+
+    // 結果
+    test_equals('validate regexp plugin version (mixed)', count($warnings), 1);
+}
+
 // バージョンの長さ（境界値）テスト
 {
     // データ（上限ちょうどのため警告は出ない）
