@@ -200,18 +200,16 @@ function validate_logs($queries, $options = [])
 function default_logs()
 {
     return [
-        'id'            => null,
-        'created'       => localdate('Y-m-d H:i:s'),
-        'modified'      => localdate('Y-m-d H:i:s'),
-        'deleted'       => null,
-        'user_id'       => null,
-        'administrator' => null,
-        'ip'            => '',
-        'agent'         => null,
-        'model'         => null,
-        'exec'          => null,
-        'message'       => null,
-        'detail'        => null,
-        'page'          => '',
+        'id'       => null,
+        'created'  => localdate('Y-m-d H:i:s'),
+        'modified' => localdate('Y-m-d H:i:s'),
+        'deleted'  => null,
+        'user_id'  => null,
+        'ip'       => '',
+        'agent'    => null,
+        'model'    => null,
+        'exec'     => null,
+        'message'  => null,
+        'page'     => '',
     ];
 }

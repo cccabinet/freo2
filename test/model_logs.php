@@ -70,6 +70,20 @@ $user_id = intval($users[0]['id']);
     test_regexp('default log created', $default_log['created'], '^\d{4}\-\d{2}\-\d{2} \d{2}:\d{2}:\d{2}$');
 }
 
+// 初期値のキーテスト（テーブルの列と一致すること）
+{
+    // 確認
+    $default_log = model('default_logs');
+    $columns     = array_column(db_result(db_query('SHOW COLUMNS FROM ' . DATABASE_PREFIX . 'logs;')), 'Field');
+
+    sort($columns);
+    $keys = array_keys($default_log);
+    sort($keys);
+
+    // 結果
+    test_equals('default log keys', $keys, $columns);
+}
+
 // 正常登録テスト
 {
     // データ
