@@ -11,6 +11,7 @@ if (!isset($_GET['_test'])) {
 
 // ライブラリを読み込み
 model('fields.php');
+model('field_sets.php');
 model('logs.php');
 service('field.php');
 

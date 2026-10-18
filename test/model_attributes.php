@@ -443,7 +443,7 @@ db_transaction();
     model('delete_attributes', [
         'where' => 'name IN(' . db_escape('テスト属性4') . ', ' . db_escape('テスト属性5') . ')',
     ], [
-        'associate' => true,
+        'attribute' => true,
     ]);
 
     // 結果（削除した属性のひも付けは、ユーザー側もエントリー側も消えること）
@@ -451,14 +451,14 @@ db_transaction();
         'where' => 'attribute_id IN(' . implode(',', $associate_ids) . ')',
     ]);
 
-    test_equals('delete attributes (associate)', count($attribute_sets), 0);
+    test_equals('delete attributes (attribute_sets)', count($attribute_sets), 0);
 
     // 結果（無関係なひも付けは残ること）
     $attribute_sets = model('select_attribute_sets', [
         'where' => 'attribute_id = ' . $unrelated_id,
     ]);
 
-    test_equals('delete attributes (associate unrelated)', count($attribute_sets), 2);
+    test_equals('delete attributes (attribute_sets unrelated)', count($attribute_sets), 2);
 }
 
 // 関連データの削除（該当なし）テスト
@@ -467,7 +467,7 @@ db_transaction();
     $resource = model('delete_attributes', [
         'where' => 'name = \'not_exist\'',
     ], [
-        'associate' => true,
+        'attribute' => true,
     ]);
 
     // 結果（エラーにならないこと）

@@ -117,7 +117,7 @@ function delete_attributes($queries, $options = [])
     $queries = db_placeholder($queries);
     $options = [
         'softdelete' => isset($options['softdelete']) ? $options['softdelete'] : true,
-        'associate'  => isset($options['associate'])  ? $options['associate']  : false,
+        'attribute'  => isset($options['attribute'])  ? $options['attribute']  : true,
     ];
 
     // 削除するデータのIDを取得
@@ -133,7 +133,7 @@ function delete_attributes($queries, $options = [])
         $ids[] = intval($attribute['id']);
     }
 
-    if ($options['associate'] === true && !empty($ids)) {
+    if ($options['attribute'] === true && !empty($ids)) {
         // 関連するデータを削除
         $resource = model('delete_attribute_sets', [
             'where' => 'attribute_id IN(' . implode(',', array_map('db_escape', $ids)) . ')',

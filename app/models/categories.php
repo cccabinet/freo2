@@ -142,7 +142,7 @@ function delete_categories($queries, $options = [])
     $queries = db_placeholder($queries);
     $options = [
         'softdelete' => isset($options['softdelete']) ? $options['softdelete'] : true,
-        'associate'  => isset($options['associate'])  ? $options['associate']  : false,
+        'category'   => isset($options['category'])   ? $options['category']   : true,
     ];
 
     // 削除するデータのIDを取得
@@ -158,7 +158,7 @@ function delete_categories($queries, $options = [])
         $ids[] = intval($category['id']);
     }
 
-    if ($options['associate'] === true && !empty($ids)) {
+    if ($options['category'] === true && !empty($ids)) {
         // 関連するデータを削除
         $resource = model('delete_category_sets', [
             'where' => 'category_id IN(' . implode(',', array_map('db_escape', $ids)) . ')',

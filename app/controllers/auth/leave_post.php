@@ -36,7 +36,7 @@ $resource = service_user_delete([
         ],
     ],
 ], [
-    'associate' => true,
+    'attribute' => true,
 ]);
 if (!$resource) {
     error('データを削除できません。');
