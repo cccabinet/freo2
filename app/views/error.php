@@ -1,4 +1,4 @@
-<?php if (isset($GLOBALS['config'])) : ?>
+<?php if (function_exists('loader_file') && isset($GLOBALS['setting'])) : ?>
 <?php import('app/views/header.php') ?>
 <?php else : ?>
 <!DOCTYPE html>
@@ -20,10 +20,10 @@
         <p><a href="<?php t(MAIN_FILE) ?>/" class="btn btn-secondary">BACK</a></p>
     </div>
 
-<?php if (isset($GLOBALS['config'])) : ?>
+<?php if (function_exists('loader_file') && isset($GLOBALS['setting'])) : ?>
 <?php import('app/views/footer.php') ?>
 <?php else : ?>
-        <?php if (function_exists('loader_js')) : ?>
+        <?php if (function_exists('loader_file')) : ?>
         <script src="<?php t($GLOBALS['config']['http_path']) ?><?php t(loader_js('jquery.min.js')) ?>"></script>
         <?php import('app/views/test.php') ?>
         <?php endif ?>
