@@ -52,6 +52,7 @@
                         <textarea name="text" rows="10" cols="20" class="form-control"><?php t($_view['user']['text']) ?></textarea>
                     </div>
                     <h2 class="h5 mt-4 mb-3 pb-2 border-bottom">2段階認証</h2>
+                    <p>ログインするとき、パスワードに加えて、認証用メールアドレスに届くコードの入力を求めます。</p>
                     <div class="form-group mb-2">
                         <label class="fw-bold">利用 <span class="badge bg-danger"><?php h($GLOBALS['string']['text_required']) ?></span></label>
                         <select name="twostep" class="form-select" style="width: 200px;">
@@ -59,7 +60,6 @@
                             <option value="<?php t($key) ?>"<?php $key == $_view['user']['twostep'] ? e(' selected="selected"') : '' ?>><?php t($value) ?></option>
                             <?php endforeach ?>
                         </select>
-                        <div class="form-text">ログインするとき、パスワードに加えて、認証用メールアドレスに届くコードの入力を求めます。</div>
                     </div>
                     <div class="form-group mb-2 for-twostep">
                         <label class="fw-bold">認証用メールアドレス <span class="badge bg-danger"><?php h($GLOBALS['string']['text_required']) ?></span></label>
