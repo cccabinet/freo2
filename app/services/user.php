@@ -578,7 +578,7 @@ function service_user_twostep_mail($email, $twostep_code)
     $GLOBALS['_view']['code'] = $twostep_code;
 
     $subject = $GLOBALS['setting']['mail_twostep_subject'];
-    $message = view('mail/email/twostep.php', true);
+    $message = view('mail/auth/twostep.php', true);
     $headers = [
         'From' => $GLOBALS['setting']['mail_from'],
     ];
@@ -883,7 +883,7 @@ function service_user_password_mail($email, $token_code, $token_expire)
     $GLOBALS['_view']['token_expire'] = $token_expire;
 
     $subject = $GLOBALS['setting']['mail_password_subject'];
-    $message = view('mail/password/send.php', true);
+    $message = view('mail/auth/password.php', true);
     $headers = [
         'From' => $GLOBALS['setting']['mail_from'],
     ];
@@ -987,7 +987,7 @@ function service_user_email_mail($email, $token)
     $GLOBALS['_view']['url'] = $GLOBALS['config']['http_url'] . '/auth/email_verify?key=' . rawurlencode($email) . '&token=' . $token;
 
     $subject = $GLOBALS['setting']['mail_verify_subject'];
-    $message = view('mail/email/verify.php', true);
+    $message = view('mail/auth/email_verify.php', true);
     $headers = [
         'From' => $GLOBALS['setting']['mail_from'],
     ];

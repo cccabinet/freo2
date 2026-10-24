@@ -48,7 +48,7 @@ db_commit();
 // ユーザー削除完了を通知
 $to      = $users[0]['email'];
 $subject = $GLOBALS['setting']['mail_leave_subject'];
-$message = view('mail/leave/send.php', true);
+$message = view('mail/auth/leave.php', true);
 $headers = [
     'From' => $GLOBALS['setting']['mail_from'],
 ];

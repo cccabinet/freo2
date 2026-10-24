@@ -682,11 +682,13 @@ types(型) ─< entries(エントリー) ─────────────
 | --- | --- | --- |
 | お問い合わせの送信 | 設定の送信先(`mail_to`) | `mail/contact/send_admin.php` |
 | 同上(自動返信) | 入力されたメールアドレス | `mail/contact/send_user.php` |
-| 会員登録 | 登録したメールアドレス | `mail/register/send.php` |
-| メールアドレスの存在確認 | 登録されたメールアドレス | `mail/email/verify.php` |
-| パスワード再設定 | 入力されたメールアドレス | `mail/password/send.php` |
-| ログインの2段階認証 | 2段階認証用メールアドレス | `mail/email/twostep.php` |
-| 退会 | 登録されたメールアドレス | `mail/leave/send.php` |
+| 会員登録 | 登録したメールアドレス | `mail/auth/register.php` |
+| メールアドレスの存在確認 | 登録されたメールアドレス | `mail/auth/email_verify.php` |
+| パスワード再設定 | 入力されたメールアドレス | `mail/auth/password.php` |
+| ログインの2段階認証 | 2段階認証用メールアドレス | `mail/auth/twostep.php` |
+| 退会 | 登録されたメールアドレス | `mail/auth/leave.php` |
+
+テンプレートは、コントローラーと同じく **`mail/<mode>/<名前>.php` の2階層**に置きます(会員向けの画面から送るメールは `mail/auth/`)。プラグインでメールを足すときも、プラグインの `app/views/mail/<mode>/` に置きます。
 
 送信は [app/services/mail.php](app/services/mail.php) の `service_mail_send()` を通します。`APP_MAIL_SEND` を `false`、`APP_MAIL_LOG` を `true` にしておくと、実際には送らずに `mail/<日付>/<時刻>_<宛先>.txt` に記録されます(→ [2. セットアップ](#手順))。
 

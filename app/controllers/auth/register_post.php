@@ -78,7 +78,7 @@ $users = model('select_users', [
 // ユーザー登録完了を通知
 $to      = $users[0]['email'];
 $subject = $GLOBALS['setting']['mail_register_subject'];
-$message = view('mail/register/send.php', true);
+$message = view('mail/auth/register.php', true);
 $headers = [
     'From' => $GLOBALS['setting']['mail_from'],
 ];
