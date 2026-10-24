@@ -13,6 +13,9 @@ if (isset($_REQUEST['_mode']) && preg_match('/^(test_index|test_exec)$/', $_REQU
     $test_mode = true;
 }
 
+// 設定の読み込み（app/config.php）でも使えるよう記録
+$GLOBALS['test_mode'] = $test_mode;
+
 // テスト中ならテスト用データベースに接続
 if ($test_mode) {
     db_connect([

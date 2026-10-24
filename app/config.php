@@ -259,11 +259,21 @@ $GLOBALS['config']['cookie_domain'] = app_config('APP_COOKIE_DOMAIN', null);
 /* CookieをHTTPS接続の場合のみ送信（既定では、HTTPSで開いているときに有効。プロキシの背後でも判定する） */
 $GLOBALS['config']['cookie_secure'] = app_config('APP_COOKIE_SECURE', ssl(true));
 
-/* メールの送信 */
-$GLOBALS['config']['mail_send'] = app_config('APP_MAIL_SEND', true);
+/* メールの送信（null: 送信しない、sendmail: mail() で送信、smtp: mail_smtp の設定でSMTPサーバーから送信）。テスト中は設定に関係なく送信しない */
+$GLOBALS['config']['mail_send'] = empty($GLOBALS['test_mode']) ? app_config('APP_MAIL_SEND', 'sendmail') : null;
 
 /* メールの記録 */
 $GLOBALS['config']['mail_log'] = app_config('APP_MAIL_LOG', false);
+
+/* SMTPサーバー（mail_send が smtp のときに使う。encryption は tls（STARTTLS）・ssl・none） */
+$GLOBALS['config']['mail_smtp'] = app_config('APP_MAIL_SMTP', [
+    'host'       => '',
+    'port'       => 587,
+    'encryption' => 'tls',
+    'username'   => '',
+    'password'   => '',
+    'timeout'    => 10,
+]);
 
 /* プロキシの考慮 */
 $GLOBALS['config']['proxy'] = app_config('APP_PROXY', 0);

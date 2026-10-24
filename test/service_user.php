@@ -832,7 +832,7 @@ restore_error_handler();
     $mail_config  = [$GLOBALS['config']['mail_send'], $GLOBALS['config']['mail_log']];
     $mail_setting = $GLOBALS['setting'] ?? null;
 
-    $GLOBALS['config']['mail_send'] = false;
+    $GLOBALS['config']['mail_send'] = null;
     $GLOBALS['config']['mail_log']  = true;
     $GLOBALS['setting'] = [
         'mail_twostep_subject' => '2段階認証のテスト',
@@ -1066,7 +1066,7 @@ restore_error_handler();
     $mail_config  = [$GLOBALS['config']['mail_send'], $GLOBALS['config']['mail_log']];
     $mail_setting = $GLOBALS['setting'] ?? null;
 
-    $GLOBALS['config']['mail_send'] = false;
+    $GLOBALS['config']['mail_send'] = null;
     $GLOBALS['config']['mail_log']  = true;
     $GLOBALS['setting'] = [
         'mail_password_subject' => 'パスワード再設定のテスト',

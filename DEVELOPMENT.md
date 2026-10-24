@@ -112,11 +112,11 @@ Laravel などに慣れていると最初は戸惑いますが、処理はファ
    define('APP_HTTP_URL', 'http://localhost/freo2/index.php');
    define('APP_STORAGE_TYPE', 'file');
    define('APP_STORAGE_URL', 'http://localhost/freo2');
-   define('APP_MAIL_SEND', false);
+   define('APP_MAIL_SEND', null);
    define('APP_MAIL_LOG', true);
    ```
 
-   `APP_MAIL_SEND` を `false`、`APP_MAIL_LOG` を `true` にすると、システムはメールを実際には送らず、`mail` フォルダ内に送信内容をテキストファイルで記録します。**`index.php` と同じ階層に `mail` フォルダを作成しておきます。**
+   `APP_MAIL_SEND` を `null`、`APP_MAIL_LOG` を `true` にすると、システムはメールを実際には送らず、`mail` フォルダ内に送信内容をテキストファイルで記録します。**`index.php` と同じ階層に `mail` フォルダを作成しておきます。**
 
 5. **テーブルを作る**
    `?_mode=info_levis` を開き、「levis: PHP Framework」という画面が表示されることを確認します。
@@ -236,7 +236,7 @@ freo2/
 
 **`libs/` の中は、原則として編集しません。** フレームワーク [levis](https://github.com/refirio/levis) のファイルで、levis を更新すると上書きされるためです。修正が必要になったら、levis 側で対応します。
 
-ただし `libs/modules/` の次の5つは、**freo2 のために追加したモジュール**です。levis には含まれないので、freo2 側で修正してかまいません。
+ただし `libs/modules/` の次の6つは、**freo2 のために追加したモジュール**です。levis には含まれないので、freo2 側で修正してかまいません。
 
 | ファイル | 内容 |
 | --- | --- |
@@ -244,6 +244,7 @@ freo2/
 | `loader.php` | CSS・JavaScript の読み込み(キャッシュ回避のため、更新日時をクエリに付ける) |
 | `recaptcha.php` | reCAPTCHA |
 | `s3.php` | Amazon S3 |
+| `smtp.php` | SMTP でのメールの送信 |
 | `validator.php` | 入力値の検証 |
 
 `libs/cores/` のすべてと、`libs/modules/` のそれ以外(`cookie.php`・`directory.php`・`file.php`・`hash.php`・`mail.php`・`string.php`・`ui.php`)は levis のファイルです。
@@ -690,7 +691,34 @@ types(型) ─< entries(エントリー) ─────────────
 
 テンプレートは、コントローラーと同じく **`mail/<mode>/<名前>.php` の2階層**に置きます(会員向けの画面から送るメールは `mail/auth/`)。プラグインでメールを足すときも、プラグインの `app/views/mail/<mode>/` に置きます。
 
-送信は [app/services/mail.php](app/services/mail.php) の `service_mail_send()` を通します。`APP_MAIL_SEND` を `false`、`APP_MAIL_LOG` を `true` にしておくと、実際には送らずに `mail/<日付>/<時刻>_<宛先>.txt` に記録されます(→ [2. セットアップ](#手順))。
+送信は [app/services/mail.php](app/services/mail.php) の `service_mail_send()` を通します。送り方は、直下の `config.php` の `APP_MAIL_SEND` で選びます。
+
+| `APP_MAIL_SEND` | 動作 |
+| --- | --- |
+| `'sendmail'`(初期値) | PHP の `mail()` で送る |
+| `'smtp'` | `APP_MAIL_SMTP` で指定した SMTP サーバーから送る(下記) |
+| `null` | 送らない |
+
+それ以外の値(書き間違いなど)のときは、送信の失敗として扱い、エラーログに出します。**テスト中(単体テスト・シナリオテスト)は、`APP_MAIL_SEND` に関係なく `null`(送らない)になります**(テスト用の宛先に実際に送ってしまわないため。判定はテスト用データベースへの切り替えと同じ [app/database.php](app/database.php))。`APP_MAIL_SEND` を `null`、`APP_MAIL_LOG` を `true` にしておくと、実際には送らずに `mail/<日付>/<時刻>_<宛先>.txt` に記録されます(→ [2. セットアップ](#手順))。
+
+**SMTP で送る:** Amazon SES やレンタルサーバーの SMTP サーバーから送りたいときは、直下の `config.php` で `APP_MAIL_SEND` を `'smtp'` にし、`APP_MAIL_SMTP` を定義します(項目は [app/config.php](app/config.php) の `mail_smtp`)。
+
+```php
+define('APP_MAIL_SEND', 'smtp');
+define('APP_MAIL_SMTP', [
+    'host'       => 'email-smtp.ap-northeast-1.amazonaws.com',
+    'port'       => 587,
+    'encryption' => 'tls',   // tls(587番などで STARTTLS)/ ssl(465番)/ none(暗号化しない)
+    'username'   => 'XXXXXXXXXX',
+    'password'   => 'YYYYYYYYYY',
+    'timeout'    => 10,      // 接続・応答を待つ秒数
+]);
+```
+
+- 送信元(エンベロープ)には、設定「メール設定」の送信元(`From` ヘッダー)のアドレスを使います。Amazon SES では、このアドレス(またはドメイン)を SES で認証しておきます。
+- 認証は AUTH PLAIN か AUTH LOGIN(サーバーが対応しているほう)、`username` が空なら認証しません。サーバーの証明書は検証します。
+- 送れなかったときは、ほかの送信の失敗と同じくエラー画面になり、理由(接続できない・認証に失敗したなど)を PHP のエラーログに出します。
+- SMTP の処理は [libs/modules/smtp.php](libs/modules/smtp.php) の `smtp_send()` です。引数は levis の `mail_send()` と同じ(先頭に接続設定)で、メールの組み立て(文字コードの変換・ヘッダー)も `mail()` で送るときと同じ `mail_build()` を使います。
 
 ### メニュー
 
@@ -942,7 +970,7 @@ CLI で実行するときは、設定ファイルやマイグレーションの�
 ### その他
 
 - 変数の中身を見る: `debug($value);`(`var_dump` を `<pre>` で囲んで出力)
-- 開発中にメールの内容を確認する: `APP_MAIL_SEND` を `false`、`APP_MAIL_LOG` を `true` にすると、`mail/<日付>/` にテキストで記録されます(`index.php` と同じ階層の `mail/` はあらかじめ作成しておく)
+- 開発中にメールの内容を確認する: `APP_MAIL_SEND` を `null`、`APP_MAIL_LOG` を `true` にすると、`mail/<日付>/` にテキストで記録されます(`index.php` と同じ階層の `mail/` はあらかじめ作成しておく)
 
 ---
 
@@ -1027,7 +1055,7 @@ db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'categories;');
 - **データベースへの変更はトランザクションで元に戻します。** ファイルの作成など、トランザクションで戻らないものはテストの中で消します。
 - **確認する内容ごとに `{ }` のブロックへ分け、「データ → 確認 → 結果」の順に書きます。** ただし **`{ }` はスコープを作りません。** ブロックの中で使った変数名は、テスト全体の変数を上書きします。
 - 検証のテストは、**意図した1件だけ警告が出ること**(`count($warnings) === 1`)を確認する形が定型です。ほかの項目に巻き込まれないよう、重複を確認する `code` などは登録済みの値と衝突させません。
-- **設定で変わる挙動は、テスト側で固定します。** メールの送信(`mail_send`)やアップロード先(`storage_type`)は設定しだいなので、そのままだと**実際にメールを送ったり、本番のストレージを操作したり**します。冒頭で `$GLOBALS['config']` を書き換え、末尾で戻します。
+- **設定で変わる挙動は、テスト側で固定します。** アップロード先(`storage_type`)などは設定しだいなので、そのままだと**本番のストレージを操作したり**します。冒頭で `$GLOBALS['config']` を書き換え、末尾で戻します。メールの送信(`mail_send`)は、テスト中は自動で `null`(送らない)になりますが、記録(`mail_log`)を見るテストは記録の設定も固定します。
 - **サービスのテストは、モデルのテストの写しにしません。** サービスが足しているのは操作ログの記録と排他制御(編集画面を開いた後に更新されていないかの確認)、失敗したときの `error()` なので、そこを確認します。
 - CLI から実行するときは、冒頭で `$_SERVER['REMOTE_ADDR']` を設定します。操作ログはこの値を `logs.ip`(`NOT NULL`)に入れるので、無いとサービスのテストが途中で止まります。
 
