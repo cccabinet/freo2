@@ -30,13 +30,16 @@
                     <dt class="col-sm-3">メールアドレス</dt>
                     <dd class="col-sm-9"><code class="text-dark"><?php h(alt($_view['user']['email'], '-')) ?></code></dd>
                     <dt class="col-sm-3">URL</dt>
-                    <dd class="col-sm-9"><?php if ($_view['user']['url']) : ?><code class="text-dark"><?php h(alt($_view['user']['url'], '-')) ?></code><?php endif ?></dd>
+                    <dd class="col-sm-9"><code class="text-dark"><?php h(alt($_view['user']['url'], '-')) ?></code></dd>
                     <dt class="col-sm-3">自己紹介</dt>
                     <dd class="col-sm-9"><?php h(alt($_view['user']['text'], '-')) ?></dd>
-                    <dt class="col-sm-3">2段階認証</dt>
+                </dl>
+                <h2 class="h5 mt-4 mb-3 pb-2 border-bottom">2段階認証</h2>
+                <dl class="row">
+                    <dt class="col-sm-3">利用</dt>
                     <dd class="col-sm-9"><?php h($GLOBALS['config']['option']['user']['twostep'][$_view['user']['twostep']] ?? '-') ?></dd>
                     <?php if ((string)$_view['user']['twostep'] === '1') : ?>
-                    <dt class="col-sm-3">2段階認証用メールアドレス</dt>
+                    <dt class="col-sm-3">認証用メールアドレス</dt>
                     <dd class="col-sm-9"><code class="text-dark"><?php h(alt($_view['user']['twostep_email'], '-')) ?></code></dd>
                     <?php endif ?>
                 </dl>
