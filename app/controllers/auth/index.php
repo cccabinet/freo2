@@ -9,7 +9,17 @@ $keep         = 0;
 $trusted      = false;
 $twostep_send = false;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exec']) && ($_POST['exec'] === 'twostep' || $_POST['exec'] === 'twostep_resend')) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !token('check')) {
+    // ワンタイムトークン（画面を開いたまま期限が切れることがあるので、エラー画面にせずにログイン画面へ戻す）
+    unset($_SESSION['auth']['twostep']);
+
+    $_view['user'] = [
+        'username' => isset($_POST['username']) && is_string($_POST['username']) ? $_POST['username'] : '',
+        'password' => '',
+    ];
+
+    $_view['warnings'] = ['もう一度ログインしてください。'];
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exec']) && ($_POST['exec'] === 'twostep' || $_POST['exec'] === 'twostep_resend')) {
     // 2段階認証（パスワード認証が済み、コードの入力を待っている状態）
     if (empty($_SESSION['auth']['twostep']['id'])) {
         $users = [];

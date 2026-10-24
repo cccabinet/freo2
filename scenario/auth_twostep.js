@@ -145,11 +145,15 @@ test.scenario = [
     // 正しいコードを送り、このブラウザを信頼する
     // （コードの画面は POST の結果なので、メールを見に行くと戻れない。認証待ちの状態はセッションに残っているので、同じ内容のフォームを組み立てて送る）
     function() {
-        var code = sessionStorage.getItem(scenarioKeyCode);
-        var form = $('<form method="post"></form>').attr('action', location.pathname);
+        var code  = sessionStorage.getItem(scenarioKeyCode);
+        var token = $('form input[name="_token"]').first().val();
+        var form  = $('<form method="post"></form>').attr('action', location.pathname);
 
         sessionStorage.removeItem(scenarioKeyCode);
 
+        test.assert(token, 'ログイン画面にワンタイムトークンがありません。');
+
+        form.append($('<input type="hidden" name="_token">').val(token));
         form.append($('<input type="hidden" name="exec" value="twostep">'));
         form.append($('<input type="hidden" name="twostep_code">').val(code));
         form.append($('<input type="hidden" name="twostep_session" value="keep">'));
