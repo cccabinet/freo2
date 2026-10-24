@@ -59,7 +59,10 @@ if (DEBUG_LEVEL) {
 
         exit;
     } elseif (isset($_params[2]) && $_params[2] === 'image') {
-        // 画像
+        // 画像（シナリオテストのスクリーンショット。保存先はテスト中にだけ定義される）
+        if (!app_test()) {
+            return;
+        }
         if (empty($_POST['name']) || !preg_match('/^[\w\-\.]+$/', $_POST['name'])) {
             return;
         }
@@ -88,7 +91,7 @@ if (DEBUG_LEVEL) {
         }
 
         // 画像を保存
-        if (imagepng($image, $GLOBALS['config']['file_target']['test'] . $_POST['name'])) {
+        if (imagepng($image, $GLOBALS['config']['file_target']['scenario'] . $_POST['name'])) {
             ok();
         } else {
             error('画像を保存できません。');

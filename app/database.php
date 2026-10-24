@@ -1,23 +1,12 @@
 <?php
 
-// コマンドラインからの実行を考慮
+// コマンドラインからの実行を考慮（app_test() が _mode で単体テストを判定できるよう、ルーティングより前に入れる）
 if (php_sapi_name() === 'cli' && isset($_SERVER['argv'][1])) {
     $_REQUEST['_mode'] = $_SERVER['argv'][1];
 }
 
-// テスト中か否かを判定
-$test_mode = false;
-if (isset($_REQUEST['_mode']) && preg_match('/^(test_index|test_exec)$/', $_REQUEST['_mode'])) {
-    $test_mode = true;
-} elseif (isset($_GET['test']) || isset($_SESSION['test'])) {
-    $test_mode = true;
-}
-
-// 設定の読み込み（app/config.php）でも使えるよう記録
-$GLOBALS['test_mode'] = $test_mode;
-
 // テスト中ならテスト用データベースに接続
-if ($test_mode) {
+if (app_test()) {
     db_connect([
         'test' => [
             'host'     => defined('APP_TEST_DATABASE_HOST') ? APP_TEST_DATABASE_HOST : DATABASE_HOST,
