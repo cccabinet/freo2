@@ -426,7 +426,7 @@ function service_user_authenticate($username, $password)
 {
     // ユーザーを取得
     $users = model('select_users', [
-        'select' => 'id, enabled, twostep, twostep_email, password, failed',
+        'select' => 'id, enabled, twostep, twostep_email, password, failed, failed_last',
         'where'  => [
             'username = :username',
             [
@@ -463,8 +463,12 @@ function service_user_authenticate($username, $password)
         ];
     }
 
-    // 認証失敗回数を記録（有効なユーザーだけ。存在しないユーザー名なら何も更新しない）
-    $failed = empty($users) ? null : $users[0]['failed'];
+    // 認証失敗回数を記録（前の失敗から凍結の期間が過ぎていれば、1から数え直す）
+    if (empty($users) || empty($users[0]['failed_last']) || localdate(null, $users[0]['failed_last']) + 60 * 5 <= localdate()) {
+        $failed = 0;
+    } else {
+        $failed = $users[0]['failed'];
+    }
 
     $resource = service_user_update([
         'set'   => [
