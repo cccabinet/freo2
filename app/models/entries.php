@@ -1003,7 +1003,7 @@ function set_file_entries($entry_id, $files, $picture_files)
                         continue;
                     }
 
-                    if (service_storage_put($directory . $filename, $data['data']) === false) {
+                    if (set_file_entries_put($directory . $filename, $data) === false) {
                         error('ファイル ' . $filename . ' を保存できません。');
                     }
                 }
@@ -1017,7 +1017,7 @@ function set_file_entries($entry_id, $files, $picture_files)
 
                 service_storage_put($directory);
 
-                if (service_storage_put($directory . $filename, $files[$file]['data']) === false) {
+                if (set_file_entries_put($directory . $filename, $files[$file]) === false) {
                     error('ファイル ' . $filename . ' を保存できません。');
                 } else {
                     if ($target === 'field') {
@@ -1077,6 +1077,28 @@ function set_file_entries($entry_id, $files, $picture_files)
     if (!$resource) {
         error('データを編集できません。');
     }
+}
+
+/**
+ * アップロードされたファイルを保存
+ * （一時ファイルがあれば複製する。内容を読み込まないので、大きなファイルでもメモリを使わない。一時ファイルは呼び出し側が後で消す）
+ *
+ * @param string $key
+ * @param array  $file ['name' => ファイル名, 'temp' => 一時ファイルの場所] または ['name' => ファイル名, 'data' => 内容]
+ *
+ * @return bool
+ */
+function set_file_entries_put($key, $file)
+{
+    if (isset($file['temp'])) {
+        if (!service_storage_exist($file['temp'])) {
+            return false;
+        }
+
+        return service_storage_copy($key, $file['temp']);
+    }
+
+    return service_storage_put($key, $file['data']);
 }
 
 /**

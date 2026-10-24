@@ -47,10 +47,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     error('アップロードできるファイル形式は' . implode('、', $names) . 'のみです。', ['token' => token('create')]);
                 }
 
-                $_SESSION['file'][$_GET['target']][$_GET['key']][$index + $key] = [
-                    'name' => $_FILES[$_GET['key']]['name'][$index],
-                    'data' => file_get_contents($tmp_name),
-                ];
+                // 内容は一時ファイルに保存し、セッションには名前と場所だけを入れる（セッションに入れると、大きなファイルで画面が開けなくなるため）
+                $file = service_entry_file_upload($_FILES[$_GET['key']]['name'][$index], $tmp_name);
+                if ($file === false) {
+                    error('ファイルを保存できません。', ['token' => token('create')]);
+                }
+
+                $_SESSION['file'][$_GET['target']][$_GET['key']][$index + $key] = $file;
 
                 $files[] = [
                     'name' => $_FILES[$_GET['key']]['name'][$index],
@@ -76,10 +79,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 error('アップロードできるファイル形式は' . implode('、', $names) . 'のみです。', ['token' => token('create')]);
             }
 
-            $_SESSION['file'][$_GET['target']][$_GET['key']] = [
-                'name' => $_FILES[$_GET['key']]['name'],
-                'data' => file_get_contents($_FILES[$_GET['key']]['tmp_name']),
-            ];
+            // 内容は一時ファイルに保存し、セッションには名前と場所だけを入れる（差し替える前の一時ファイルは消す）
+            $file = service_entry_file_upload($_FILES[$_GET['key']]['name'], $_FILES[$_GET['key']]['tmp_name']);
+            if ($file === false) {
+                error('ファイルを保存できません。', ['token' => token('create')]);
+            }
+
+            if (isset($_SESSION['file'][$_GET['target']][$_GET['key']]['temp']) && service_storage_exist($_SESSION['file'][$_GET['target']][$_GET['key']]['temp'])) {
+                service_storage_remove($_SESSION['file'][$_GET['target']][$_GET['key']]['temp']);
+            }
+
+            $_SESSION['file'][$_GET['target']][$_GET['key']] = $file;
 
             $files[] = [
                 'name' => $_FILES[$_GET['key']]['name'],

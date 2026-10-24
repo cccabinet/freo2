@@ -235,6 +235,9 @@ $GLOBALS['config']['file_dummy'] = app_config('APP_FILE_DUMMY', [
     'image' => 'img/admin/no_file.png',
 ]);
 
+/* 一時ファイルを残す時間（秒。アップロードしたまま登録されなかった一時ファイルは、これより古くなったら削除する） */
+$GLOBALS['config']['temp_retention'] = app_config('APP_TEMP_RETENTION', 60 * 60 * 8);
+
 /* 画像リサイズ時のサイズ（メディアのサムネイルに使用。縦横比を保ってこの範囲に収める） */
 $GLOBALS['config']['resize_width'] = app_config('APP_RESIZE_WIDTH', 400);
 $GLOBALS['config']['resize_height'] = app_config('APP_RESIZE_HEIGHT', 400);

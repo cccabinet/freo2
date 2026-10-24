@@ -25,7 +25,7 @@ $mime    = null;
 $content = null;
 
 if (empty($_SESSION['file'][$_GET['target']][$_GET['key']]['delete'])) {
-    if (isset($_GET['index']) && isset($_SESSION['file'][$_GET['target']][$_GET['key']][$_GET['index']]['name']) && isset($_SESSION['file'][$_GET['target']][$_GET['key']][$_GET['index']]['data'])) {
+    if (isset($_GET['index']) && isset($_SESSION['file'][$_GET['target']][$_GET['key']][$_GET['index']]['name'])) {
         // ダミー画像ファイルを取得
         foreach (array_keys($GLOBALS['config']['file_permission'][$_GET['format']]) as $permission) {
             if (preg_match($GLOBALS['config']['file_permission'][$_GET['format']][$permission]['regexp'], $_SESSION['file'][$_GET['target']][$_GET['key']][$_GET['index']]['name'])) {
@@ -36,9 +36,9 @@ if (empty($_SESSION['file'][$_GET['target']][$_GET['key']]['delete'])) {
             }
         }
 
-        // コンテンツ
-        $content = $_SESSION['file'][$_GET['target']][$_GET['key']][$_GET['index']]['data'];
-    } elseif (isset($_SESSION['file'][$_GET['target']][$_GET['key']]['name']) && isset($_SESSION['file'][$_GET['target']][$_GET['key']]['data'])) {
+        // コンテンツ（一時ファイルから読む）
+        $content = service_entry_file_data($_SESSION['file'][$_GET['target']][$_GET['key']][$_GET['index']]);
+    } elseif (isset($_SESSION['file'][$_GET['target']][$_GET['key']]['name'])) {
         // セッションからファイルを取得
         foreach (array_keys($GLOBALS['config']['file_permission'][$_GET['format']]) as $permission) {
             if (preg_match($GLOBALS['config']['file_permission'][$_GET['format']][$permission]['regexp'], $_SESSION['file'][$_GET['target']][$_GET['key']]['name'])) {
@@ -49,8 +49,8 @@ if (empty($_SESSION['file'][$_GET['target']][$_GET['key']]['delete'])) {
             }
         }
 
-        // コンテンツ
-        $content = $_SESSION['file'][$_GET['target']][$_GET['key']]['data'];
+        // コンテンツ（一時ファイルから読む）
+        $content = service_entry_file_data($_SESSION['file'][$_GET['target']][$_GET['key']]);
     } elseif ($_GET['target'] === 'entry' && isset($_GET['id'])) {
         // 登録内容からファイルを取得
         $results = model('select_entries', [

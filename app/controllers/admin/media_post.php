@@ -36,14 +36,16 @@ if (isset($_SESSION['post']['media']['name']) && isset($_SESSION['post']['media'
         service_media_thumbnail_create(($directory ? $directory . '/' : '') . $media);
     }
 
-    // 古いファイルを削除
+    // このメディアの一時ファイルと、古い一時ファイルを削除（記事の入力画面の一時ファイルは、そちらで消すので残す）
     $files = service_storage_list($GLOBALS['config']['file_target']['temp']);
 
     foreach ($files as $file) {
-        if (preg_match('/^' . preg_quote(session_id() . '_', '/') . '/', $file['name']) || ($file['name'] != '.gitkeep' && $file['modified'] < localdate() - 60 * 60)) {
+        if (preg_match('/^' . preg_quote(session_id() . '_', '/') . '/', $file['name']) && !preg_match('/^' . preg_quote(session_id() . '_entry_', '/') . '/', $file['name'])) {
             service_storage_remove($GLOBALS['config']['file_target']['temp'] . $file['name']);
         }
     }
+
+    service_storage_temp_clean();
 } else {
     // リダイレクト
     redirect('/admin/media_form?warning=post' . ($directory === '' ? '' : '&directory=' . $directory) . (empty($_REQUEST['_type']) ? '' : '&_type=' . $_REQUEST['_type']));

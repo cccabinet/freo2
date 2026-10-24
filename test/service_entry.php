@@ -612,6 +612,61 @@ $inserted_id = intval($entries[0]['id']);
     }
 }
 
+// アップロードされたファイルの一時ファイルテスト
+{
+    // データ（一時ファイルの置き場所をテスト用のディレクトリに向け、アップロードされたファイルの代わりを置く）
+    service_storage_init();
+
+    $temp_target  = $GLOBALS['config']['file_target']['temp'];
+    $session_file = $_SESSION['file'] ?? null;
+
+    $GLOBALS['config']['file_target']['temp'] = $GLOBALS['config']['file_target']['temp'] . 'test_entry_file/';
+
+    directory_rmdir($GLOBALS['config']['file_target']['temp']);
+    directory_mkdir($GLOBALS['config']['file_target']['temp']);
+    file_put_contents($GLOBALS['config']['file_target']['temp'] . 'upload.tmp', '画像のつもりのデータ');
+
+    // 確認（保存）
+    $file = service_entry_file_upload('写真.jpg', $GLOBALS['config']['file_target']['temp'] . 'upload.tmp');
+
+    // 結果（名前と一時ファイルの場所だけを返し、内容は一時ファイルに入ること）
+    test_equals('entry file upload name', $file['name'], '写真.jpg');
+    test_array_not_haskey('entry file upload data', $file, 'data');
+    test_regexp('entry file upload temp', $file['temp'], '^' . preg_quote($GLOBALS['config']['file_target']['temp'], '/') . '.*_entry_[0-9a-f]{32}$');
+    test_equals('entry file upload content', file_get_contents($file['temp']), '画像のつもりのデータ');
+
+    // 結果（内容の取得。一時ファイルが無ければ null、以前の形なら data を返すこと）
+    test_equals('entry file data', service_entry_file_data($file), '画像のつもりのデータ');
+    test_equals('entry file data (no temp file)', service_entry_file_data(['name' => 'a.jpg', 'temp' => $GLOBALS['config']['file_target']['temp'] . 'nothing']), null);
+    test_equals('entry file data (data)', service_entry_file_data(['name' => 'a.jpg', 'data' => '内容']), '内容');
+
+    // 確認（破棄。一括アップロードと単体のアップロードの一時ファイルが両方消えること）
+    $file2 = service_entry_file_upload('b.jpg', $GLOBALS['config']['file_target']['temp'] . 'upload.tmp');
+
+    $_SESSION['file'] = [
+        'entry' => [
+            'pictures'  => [$file],
+            'thumbnail' => $file2,
+        ],
+    ];
+
+    service_entry_file_clear();
+
+    // 結果
+    test_equals('entry file clear session', isset($_SESSION['file']), false);
+    test_equals('entry file clear temp (pictures)', is_file($file['temp']), false);
+    test_equals('entry file clear temp (thumbnail)', is_file($file2['temp']), false);
+
+    // 設定とセッションを元に戻す
+    directory_rmdir($GLOBALS['config']['file_target']['temp']);
+
+    $GLOBALS['config']['file_target']['temp'] = $temp_target;
+
+    if ($session_file !== null) {
+        $_SESSION['file'] = $session_file;
+    }
+}
+
 // トランザクションを終了
 db_rollback();
 

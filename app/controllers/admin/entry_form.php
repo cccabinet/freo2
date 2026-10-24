@@ -125,7 +125,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // 投稿セッションを初期化
         unset($_SESSION['post']);
-        unset($_SESSION['file']);
+
+        // 投稿ファイルを破棄
+        service_entry_file_clear();
     }
 
     // 編集開始日時を記録
