@@ -62,6 +62,17 @@ div.dashboard a {
     overflow-x: hidden;
     overflow-y: auto;
 }
+@media (max-width: 767.98px) {
+    .sidebar {
+        position: static;
+        padding: 0;
+    }
+    .sidebar .sidebar-sticky {
+        position: static;
+        height: auto;
+        overflow-y: visible;
+    }
+}
 .sidebar .sidebar-sticky::-webkit-scrollbar {
     width: 10px;
 }

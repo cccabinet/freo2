@@ -132,6 +132,35 @@ directory_mkdir($test_directory);
     test_equals('remove storage directory exists', is_dir($test_directory . 'zip/'), false);
 }
 
+// 古い一時ファイルの削除テスト
+{
+    // データ（一時ファイルの置き場所をテスト用のディレクトリに向け、残す時間を固定する）
+    $temp_target    = $GLOBALS['config']['file_target']['temp'];
+    $temp_retention = $GLOBALS['config']['temp_retention'];
+
+    $GLOBALS['config']['file_target']['temp'] = $test_directory . 'temps/';
+    $GLOBALS['config']['temp_retention']      = 60 * 60 * 8;
+
+    service_storage_put($test_directory . 'temps/');
+    service_storage_put($test_directory . 'temps/old.jpg', 'データ');
+    service_storage_put($test_directory . 'temps/new.jpg', 'データ');
+    service_storage_put($test_directory . 'temps/directory/');
+    touch($test_directory . 'temps/old.jpg', localdate() - 60 * 60 * 9);
+    touch($test_directory . 'temps/new.jpg', localdate() - 60 * 60 * 7);
+
+    // 削除
+    service_storage_temp_clean();
+
+    // 結果（残す時間より古いファイルだけが消え、ディレクトリは残ること）
+    test_equals('temp clean storage old', service_storage_exist($test_directory . 'temps/old.jpg'), false);
+    test_equals('temp clean storage new', service_storage_exist($test_directory . 'temps/new.jpg'), true);
+    test_equals('temp clean storage directory', is_dir($test_directory . 'temps/directory/'), true);
+
+    // 設定を戻す
+    $GLOBALS['config']['file_target']['temp'] = $temp_target;
+    $GLOBALS['config']['temp_retention']      = $temp_retention;
+}
+
 // テストで作成したファイルを削除
 directory_rmdir($test_directory);
 

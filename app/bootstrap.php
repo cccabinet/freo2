@@ -14,6 +14,22 @@ function app_config($key, $default)
 }
 
 /**
+ * Return whether a test (unit test or scenario test) is running.
+ *
+ * @return bool
+ */
+function app_test()
+{
+    // 単体テスト（ブラウザでも CLI でも _mode で分かる）
+    if (isset($_REQUEST['_mode']) && preg_match('/^(test_index|test_exec)$/', $_REQUEST['_mode'])) {
+        return true;
+    }
+
+    // シナリオテスト（?test= は最初のページだけなので、2ページ目からはセッションで分かる。セッションの開始後に呼ぶこと）
+    return isset($_GET['test']) || isset($_SESSION['test']);
+}
+
+/**
  * Return the dataset from association.
  *
  * @param string $get_key
@@ -133,8 +149,8 @@ function app_badge($key, $value)
  */
 function app_draft_key($type_id = null, $entry_id = null)
 {
-    // 同じドメインに設置した別の freo2 と混ざらないよう、設置パスを含める
-    $key = 'freo2_draft:' . $GLOBALS['config']['http_path'] . ':' . $_SESSION['auth']['user']['id'] . ':';
+    // 同じドメインに設置した別の freo2 と混ざらないよう、設置パスを含める（テスト中は、テスト用データベースのIDの下書きと混ざらないよう目印を付ける）
+    $key = 'freo2_draft:' . $GLOBALS['config']['http_path'] . ':' . (app_test() ? 'test:' : '') . $_SESSION['auth']['user']['id'] . ':';
 
     // 型を指定しなければ、ユーザーの下書きすべてに共通する接頭辞を返す
     if ($type_id !== null) {

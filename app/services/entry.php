@@ -1,6 +1,7 @@
 <?php
 
 import('app/services/log.php');
+import('app/services/storage.php');
 
 /**
  * 公開エントリーの取得
@@ -363,4 +364,64 @@ function service_entry_page_list($query, $parent)
     }
 
     return $url;
+}
+
+/**
+ * アップロードされたファイルを一時ファイルに保存（セッションには、返した名前と一時ファイルの場所だけを入れる）
+ *
+ * @param string $name     ファイル名
+ * @param string $tmp_name アップロードされたファイルの場所
+ *
+ * @return array|false ['name' => ファイル名, 'temp' => 一時ファイルの場所]、保存できなければ false
+ */
+function service_entry_file_upload($name, $tmp_name)
+{
+    // 古い一時ファイルを削除
+    service_storage_temp_clean();
+
+    // ファイル名は利用者の入力なので、一時ファイルの名前には使わない
+    $temp = $GLOBALS['config']['file_target']['temp'] . session_id() . '_entry_' . bin2hex(random_bytes(16));
+
+    if (service_storage_put($temp, file_get_contents($tmp_name)) === false) {
+        return false;
+    }
+
+    return [
+        'name' => $name,
+        'temp' => $temp,
+    ];
+}
+
+/**
+ * アップロードされたファイルの内容を取得（一時ファイルから読む。以前の形でセッションに内容があれば、それを返す）
+ *
+ * @param array $file
+ *
+ * @return string|null
+ */
+function service_entry_file_data($file)
+{
+    if (isset($file['temp'])) {
+        return service_storage_exist($file['temp']) ? service_storage_get($file['temp']) : null;
+    }
+
+    return isset($file['data']) ? $file['data'] : null;
+}
+
+/**
+ * アップロードされたファイルの情報を破棄（一時ファイルも削除する）
+ *
+ * @return void
+ */
+function service_entry_file_clear()
+{
+    if (isset($_SESSION['file'])) {
+        array_walk_recursive($_SESSION['file'], function ($value, $key) {
+            if ($key === 'temp' && service_storage_exist($value)) {
+                service_storage_remove($value);
+            }
+        });
+    }
+
+    unset($_SESSION['file']);
 }

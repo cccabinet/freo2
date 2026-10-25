@@ -152,6 +152,29 @@ function service_storage_remove($key)
 }
 
 /**
+ * 古い一時ファイルを削除（アップロードしたまま登録されなかったもの）
+ *
+ * @return void
+ */
+function service_storage_temp_clean()
+{
+    $limit = localdate() - $GLOBALS['config']['temp_retention'];
+
+    foreach (service_storage_list($GLOBALS['config']['file_target']['temp']) as $file) {
+        if ($file['type'] !== 'file') {
+            continue;
+        }
+
+        // S3 の更新日時は日時のオブジェクトで返るので、タイムスタンプにそろえる
+        $modified = is_numeric($file['modified']) ? intval($file['modified']) : strtotime((string)$file['modified']);
+
+        if ($modified !== false && $modified < $limit) {
+            service_storage_remove($GLOBALS['config']['file_target']['temp'] . $file['name']);
+        }
+    }
+}
+
+/**
  * オブジェクトを一覧
  *
  * @param string $key

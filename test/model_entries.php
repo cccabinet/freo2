@@ -1238,6 +1238,29 @@ $file_field_directory = $GLOBALS['config']['file_target']['field'] . $file_id . 
     test_equals('set file entries thumbnail (pictures)', is_file($file_entry_directory . 'photo1.jpg'), true);
 }
 
+// 一時ファイルからの保存テスト
+{
+    // データ（アップロードされたファイルは一時ファイルに入っていて、セッションには名前と場所だけがある）
+    directory_mkdir($file_directory . 'temps/');
+    file_put_contents($file_directory . 'temps/upload4', 'photo4のデータ');
+
+    $test_files = [
+        'pictures' => [
+            [
+                'name' => 'photo4.jpg',
+                'temp' => $file_directory . 'temps/upload4',
+            ],
+        ],
+    ];
+
+    // 更新
+    test_entry_file_update($file_id, $test_files, ['photo1.jpg', 'photo2.jpg', 'photo4.jpg']);
+
+    // 結果（一時ファイルの内容で保存され、一時ファイルは残ること。消すのは登録の後の service_entry_file_clear()）
+    test_equals('set file entries pictures (temp)', file_get_contents($file_entry_directory . 'photo4.jpg'), 'photo4のデータ');
+    test_equals('set file entries pictures (temp kept)', is_file($file_directory . 'temps/upload4'), true);
+}
+
 // 画像の削除テスト
 {
     // データ（アップロードはせず、選んだ画像から photo2.jpg を外した状態）

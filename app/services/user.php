@@ -426,7 +426,7 @@ function service_user_authenticate($username, $password)
 {
     // ユーザーを取得
     $users = model('select_users', [
-        'select' => 'id, enabled, twostep, twostep_email, password, failed',
+        'select' => 'id, enabled, twostep, twostep_email, password, failed, failed_last',
         'where'  => [
             'username = :username',
             [
@@ -463,8 +463,12 @@ function service_user_authenticate($username, $password)
         ];
     }
 
-    // 認証失敗回数を記録（有効なユーザーだけ。存在しないユーザー名なら何も更新しない）
-    $failed = empty($users) ? null : $users[0]['failed'];
+    // 認証失敗回数を記録（前の失敗から凍結の期間が過ぎていれば、1から数え直す）
+    if (empty($users) || empty($users[0]['failed_last']) || localdate(null, $users[0]['failed_last']) + 60 * 5 <= localdate()) {
+        $failed = 0;
+    } else {
+        $failed = $users[0]['failed'];
+    }
 
     $resource = service_user_update([
         'set'   => [
@@ -578,7 +582,7 @@ function service_user_twostep_mail($email, $twostep_code)
     $GLOBALS['_view']['code'] = $twostep_code;
 
     $subject = $GLOBALS['setting']['mail_twostep_subject'];
-    $message = view('mail/email/twostep.php', true);
+    $message = view('mail/auth/twostep.php', true);
     $headers = [
         'From' => $GLOBALS['setting']['mail_from'],
     ];
@@ -883,7 +887,7 @@ function service_user_password_mail($email, $token_code, $token_expire)
     $GLOBALS['_view']['token_expire'] = $token_expire;
 
     $subject = $GLOBALS['setting']['mail_password_subject'];
-    $message = view('mail/password/send.php', true);
+    $message = view('mail/auth/password.php', true);
     $headers = [
         'From' => $GLOBALS['setting']['mail_from'],
     ];
@@ -987,7 +991,7 @@ function service_user_email_mail($email, $token)
     $GLOBALS['_view']['url'] = $GLOBALS['config']['http_url'] . '/auth/email_verify?key=' . rawurlencode($email) . '&token=' . $token;
 
     $subject = $GLOBALS['setting']['mail_verify_subject'];
-    $message = view('mail/email/verify.php', true);
+    $message = view('mail/auth/email_verify.php', true);
     $headers = [
         'From' => $GLOBALS['setting']['mail_from'],
     ];

@@ -112,11 +112,11 @@ Laravel などに慣れていると最初は戸惑いますが、処理はファ
    define('APP_HTTP_URL', 'http://localhost/freo2/index.php');
    define('APP_STORAGE_TYPE', 'file');
    define('APP_STORAGE_URL', 'http://localhost/freo2');
-   define('APP_MAIL_SEND', false);
+   define('APP_MAIL_SEND', null);
    define('APP_MAIL_LOG', true);
    ```
 
-   `APP_MAIL_SEND` を `false`、`APP_MAIL_LOG` を `true` にすると、システムはメールを実際には送らず、`mail` フォルダ内に送信内容をテキストファイルで記録します。**`index.php` と同じ階層に `mail` フォルダを作成しておきます。**
+   `APP_MAIL_SEND` を `null`、`APP_MAIL_LOG` を `true` にすると、システムはメールを実際には送らず、`mail` フォルダ内に送信内容をテキストファイルで記録します。**`index.php` と同じ階層に `mail` フォルダを作成しておきます。**
 
 5. **テーブルを作る**
    `?_mode=info_levis` を開き、「levis: PHP Framework」という画面が表示されることを確認します。
@@ -236,7 +236,7 @@ freo2/
 
 **`libs/` の中は、原則として編集しません。** フレームワーク [levis](https://github.com/refirio/levis) のファイルで、levis を更新すると上書きされるためです。修正が必要になったら、levis 側で対応します。
 
-ただし `libs/modules/` の次の5つは、**freo2 のために追加したモジュール**です。levis には含まれないので、freo2 側で修正してかまいません。
+ただし `libs/modules/` の次の6つは、**freo2 のために追加したモジュール**です。levis には含まれないので、freo2 側で修正してかまいません。
 
 | ファイル | 内容 |
 | --- | --- |
@@ -244,6 +244,7 @@ freo2/
 | `loader.php` | CSS・JavaScript の読み込み(キャッシュ回避のため、更新日時をクエリに付ける) |
 | `recaptcha.php` | reCAPTCHA |
 | `s3.php` | Amazon S3 |
+| `smtp.php` | SMTP でのメールの送信 |
 | `validator.php` | 入力値の検証 |
 
 `libs/cores/` のすべてと、`libs/modules/` のそれ以外(`cookie.php`・`directory.php`・`file.php`・`hash.php`・`mail.php`・`string.php`・`ui.php`)は levis のファイルです。
@@ -557,7 +558,7 @@ types(型) ─< entries(エントリー) ─────────────
   - どの権限がどの画面に入れるかは [app/controllers/before.php](app/controllers/before.php) に `work` 名の正規表現でまとまっています。
   - `enabled` が 0 のユーザーは、パスワードが合っていてもログインできません。
   - **パスワードは `users.password` にハッシュで保存します。** 方式は `app/config.php` の `hash_algorithm`(`APP_HASH_ALGORITHM` で上書き可)で選び、既定は **bcrypt**(どの環境でも `password_hash()` の組み込みで使える)です。`argon2` は可用性チェック付きのオプション、`md5` は古い PHP 環境向けの互換用です。保存するときは `service_user_password_hash()`、照合するときは `service_user_password_verify()` を使います(`app/services/user.php`)。秘密のペッパー(`config.php` の `hash_pepper`)を HMAC で前処理してからハッシュ化するので、ペッパーを効かせつつ bcrypt の72バイト上限・NUL バイト問題も避けられます。古い方式で保存されたパスワードは、ログインに成功した時点で現在の方式に作り直されます(rehash-on-login)。
-  - **ログインに10回続けて失敗すると、そのアカウントは5分間凍結されます**(`users.failed`/`failed_last` で判定)。正しいパスワードでも入れなくなり、ログインに成功すると回数はリセットされます。
+  - **ログインに10回続けて失敗すると、そのアカウントは5分間凍結されます**(`users.failed`/`failed_last` で判定)。正しいパスワードでも入れなくなり、ログインに成功すると回数はリセットされます。前の失敗から5分以上たってから失敗したときは、1回目から数え直します(凍結が明けた後も、改めて10回試せます)。
   - **2段階認証:** `users.twostep` が 1 のユーザーは、パスワードが通った後に `users.twostep_email` へ送られるコード(`twostep_code`。パスワード再設定の暗証コードと同じく8桁の数字で、どちらも `service_user_code()` が作ります。有効期限 `twostep_expire` は10分)を入力して、はじめてログインできます。設定するのは管理画面のユーザー編集(`/admin/user_form`)と、本人のユーザー情報編集(`/auth/modify`)です。
     - **コードやトークンは、暗号用の乱数で作ります。** コードは `service_user_code()`(`random_int()`)、URL のトークンとログイン状態を保持するセッションIDは `service_user_token()`(`random_bytes()`。16進数32文字)です。推測されると困る値を新しく作るときも、この2つを使います。levis の `rand_number()` は `mt_rand()` をもとにしていて予測できるので、こうした用途には使いません。`rand_string()` も、古い PHP では予測できる方法に切り替わることがあるので、推測されると困る値には `service_user_token()` を使います。
     - **コードを続けて10回間違えると、そのコードは無効になります**(上限は `app/config.php` の `code_failed_limit`。回数は `users.twostep_failed`)。再送信すると新しいコードで数え直します。アカウントは凍結しません。パスワード再設定の暗証コード(`users.token_failed`)も同じです。
@@ -682,13 +683,42 @@ types(型) ─< entries(エントリー) ─────────────
 | --- | --- | --- |
 | お問い合わせの送信 | 設定の送信先(`mail_to`) | `mail/contact/send_admin.php` |
 | 同上(自動返信) | 入力されたメールアドレス | `mail/contact/send_user.php` |
-| 会員登録 | 登録したメールアドレス | `mail/register/send.php` |
-| メールアドレスの存在確認 | 登録されたメールアドレス | `mail/email/verify.php` |
-| パスワード再設定 | 入力されたメールアドレス | `mail/password/send.php` |
-| ログインの2段階認証 | 2段階認証用メールアドレス | `mail/email/twostep.php` |
-| 退会 | 登録されたメールアドレス | `mail/leave/send.php` |
+| 会員登録 | 登録したメールアドレス | `mail/auth/register.php` |
+| メールアドレスの存在確認 | 登録されたメールアドレス | `mail/auth/email_verify.php` |
+| パスワード再設定 | 入力されたメールアドレス | `mail/auth/password.php` |
+| ログインの2段階認証 | 2段階認証用メールアドレス | `mail/auth/twostep.php` |
+| 退会 | 登録されたメールアドレス | `mail/auth/leave.php` |
 
-送信は [app/services/mail.php](app/services/mail.php) の `service_mail_send()` を通します。`APP_MAIL_SEND` を `false`、`APP_MAIL_LOG` を `true` にしておくと、実際には送らずに `mail/<日付>/<時刻>_<宛先>.txt` に記録されます(→ [2. セットアップ](#手順))。
+テンプレートは、コントローラーと同じく **`mail/<mode>/<名前>.php` の2階層**に置きます(会員向けの画面から送るメールは `mail/auth/`)。プラグインでメールを足すときも、プラグインの `app/views/mail/<mode>/` に置きます。
+
+送信は [app/services/mail.php](app/services/mail.php) の `service_mail_send()` を通します。送り方は、直下の `config.php` の `APP_MAIL_SEND` で選びます。
+
+| `APP_MAIL_SEND` | 動作 |
+| --- | --- |
+| `'sendmail'`(初期値) | PHP の `mail()` で送る |
+| `'smtp'` | `APP_MAIL_SMTP` で指定した SMTP サーバーから送る(下記) |
+| `null` | 送らない |
+
+それ以外の値(書き間違いなど)のときは、送信の失敗として扱い、エラーログに出します。**テスト中(単体テスト・シナリオテスト)は、`APP_MAIL_SEND` に関係なく `null`(送らない)、`APP_MAIL_LOG` に関係なく記録あり**になります(→ [13. テスト](#13-テスト))。`APP_MAIL_SEND` を `null`、`APP_MAIL_LOG` を `true` にしておくと、実際には送らずに `mail/<日付>/<時刻>_<宛先>.txt` に記録されます(→ [2. セットアップ](#手順))。
+
+**SMTP で送る:** Amazon SES やレンタルサーバーの SMTP サーバーから送りたいときは、直下の `config.php` で `APP_MAIL_SEND` を `'smtp'` にし、`APP_MAIL_SMTP` を定義します(項目は [app/config.php](app/config.php) の `mail_smtp`)。
+
+```php
+define('APP_MAIL_SEND', 'smtp');
+define('APP_MAIL_SMTP', [
+    'host'       => 'email-smtp.ap-northeast-1.amazonaws.com',
+    'port'       => 587,
+    'encryption' => 'tls',   // tls(587番などで STARTTLS)/ ssl(465番)/ none(暗号化しない)
+    'username'   => 'XXXXXXXXXX',
+    'password'   => 'YYYYYYYYYY',
+    'timeout'    => 10,      // 接続・応答を待つ秒数
+]);
+```
+
+- 送信元(エンベロープ)には、設定「メール設定」の送信元(`From` ヘッダー)のアドレスを使います。Amazon SES では、このアドレス(またはドメイン)を SES で認証しておきます。
+- 認証は AUTH PLAIN か AUTH LOGIN(サーバーが対応しているほう)、`username` が空なら認証しません。サーバーの証明書は検証します。
+- 送れなかったときは、ほかの送信の失敗と同じくエラー画面になり、理由(接続できない・認証に失敗したなど)を PHP のエラーログに出します。
+- SMTP の処理は [libs/modules/smtp.php](libs/modules/smtp.php) の `smtp_send()` です。引数は levis の `mail_send()` と同じ(先頭に接続設定)で、メールの組み立て(文字コードの変換・ヘッダー)も `mail()` で送るときと同じ `mail_build()` を使います。
 
 ### メニュー
 
@@ -882,6 +912,10 @@ $GLOBALS['plugin']['myplugin']['updated']     = '2026-01-01';
   - **登録が完了したと判断するのは、送信した後に `?ok=post` の付いた画面を開いたときです。** 登録処理の最後は、本体と同じく `redirect('/admin/<一覧>?ok=post')` にします。
   - `data-draft-modified` は、保存されている内容が一時保存より新しいか(ほかの人が更新したか)を判断するのに使います。
   - 明示的にログアウトすると、そのユーザーの一時保存は削除されます(ログイン画面で `$_view['script']` を通してスクリプトを出すので、テーマで `auth/footer.php` を差し替えるときはこの出力を残します)。
+- **エントリーの入力画面で画像・ファイルをアップロードさせるなら、本体の `entry_form` と同じく `/admin/file_upload` を使います。** アップロードされたファイルは一時ファイル(`files/temps/`)に保存され、セッション(`$_SESSION['file']`)には名前と一時ファイルの場所だけが入ります(内容をセッションに入れると、大きなファイルで画面が開けなくなるため)。
+  - 入力画面を新しく開いたときと、登録が終わったときは、`unset($_SESSION['file'])` ではなく **`service_entry_file_clear()`**([app/services/entry.php](app/services/entry.php))を呼びます。一時ファイルも一緒に消えます。
+  - 登録は、本体と同じく `$_SESSION['file']` を `service_entry_insert()`/`update()` の `files` に渡します(保存先へは一時ファイルを複製します)。
+  - 登録されずに残った一時ファイルは、`app/config.php` の `temp_retention`(初期値8時間)を過ぎると、次にアップロードしたときに削除されます。
 - **静的ファイル(JS/CSS)はプラグインのディレクトリに置き(例: `plugins/<コード>/js/admin.js`)、そのファイルを使う画面のプラグインのビューから読み込みます。** 本体の `js/admin.js` などには書き足さないでください(プラグインを入れ外しするたびに本体を直す必要が出るため)。
   - 読み込みには `loader_file()` を使います(キャッシュ回避のため、ファイルの更新日時をクエリに付ける)。`loader_js()` は本体の `js/` 配下専用なので、プラグインのファイルには使えません。
   - 公開側・会員向け(`auth`)・管理画面のフッターはどれも、`$_view['script']` の内容を `</body>` の直前(jQuery などの読み込みより後)に出力します。ビューで `footer.php` を import する前に代入します。
@@ -940,14 +974,26 @@ CLI で実行するときは、設定ファイルやマイグレーションの�
 ### その他
 
 - 変数の中身を見る: `debug($value);`(`var_dump` を `<pre>` で囲んで出力)
-- 開発中にメールの内容を確認する: `APP_MAIL_SEND` を `false`、`APP_MAIL_LOG` を `true` にすると、`mail/<日付>/` にテキストで記録されます(`index.php` と同じ階層の `mail/` はあらかじめ作成しておく)
+- 開発中にメールの内容を確認する: `APP_MAIL_SEND` を `null`、`APP_MAIL_LOG` を `true` にすると、`mail/<日付>/` にテキストで記録されます(`index.php` と同じ階層の `mail/` はあらかじめ作成しておく)
 
 ---
 
 ## 13. テスト
 
 単体テストとブラウザテスト(シナリオテスト)があり、どちらもデータベースを読み書きします。
-テスト中の接続先データベースは、自動で **`<DATABASE_NAME>-test`**(例: `freo2-test`)に切り替わります([app/database.php](app/database.php))。
+テスト中の接続先データベースは、自動で **`<DATABASE_NAME>-test`**(例: `freo2-test`)に切り替わります([app/database.php](app/database.php))。あわせて、[app/config.php](app/config.php) の次の設定も、`config.php` の定数に関係なく固定されます。
+
+| 設定 | テスト中の値 | 理由 |
+| --- | --- | --- |
+| `mail_send` | `null`(送らない) | テスト用の宛先に実際に送らないため |
+| `mail_log` | `true`(記録する) | シナリオテストが記録からメールの内容を確かめるため(`mail/` フォルダが必要です) |
+| `storage_type`・`storage_url` | `'file'`・設置URL | S3 などを使う環境でも、テスト用データベースのIDで実際のストレージのファイルを消さないため |
+| `file_target` | `files/tests/` の中(`entries/`・`fields/`・`medias/`・`thumbnails/`。一時ファイルの `temps/` はそのまま) | 同じく、テスト用データベースのIDで `files/entries/<ID>/` などの実際のファイルを消さないため。テスト中だけ、シナリオテストのスクリーンショットの保存先 `scenario`(`files/scenarios/`)も加わります |
+| `recaptcha_enable` | `false` | シナリオテストのブラウザでは reCAPTCHA の確認を通れないため |
+
+入力中の内容の一時保存のキー(`app_draft_key()`)にも、テスト中は `test:` が入ります。普段使っているブラウザでシナリオを流しても、テスト用データベースの記事の一時保存が、同じ番号の普段の記事に出てこないためです。
+
+テスト中かどうかは、[app/bootstrap.php](app/bootstrap.php) の `app_test()` で判定します。単体テストは `_mode`(`test_index`/`test_exec`)、シナリオテストは `?test=` かセッション(`$_SESSION['test']`)で見るので、**セッションが始まった後**(`database()` 以降)に呼びます。テスト中だけ動きを変えたい処理を足すときも、この関数を使います。
 
 テストはテーブルを空にするので、あらかじめテスト用のデータベースを作っておきます(例: データベース名 `freo2-test`、照合順序 `utf8mb4_general_ci`)。
 テーブルを作るには、`config.php` の `DATABASE_NAME` を一時的にテスト用データベースに変えてマイグレーションを実行し、終わったら元に戻します。
@@ -1025,7 +1071,7 @@ db_query('TRUNCATE TABLE ' . DATABASE_PREFIX . 'categories;');
 - **データベースへの変更はトランザクションで元に戻します。** ファイルの作成など、トランザクションで戻らないものはテストの中で消します。
 - **確認する内容ごとに `{ }` のブロックへ分け、「データ → 確認 → 結果」の順に書きます。** ただし **`{ }` はスコープを作りません。** ブロックの中で使った変数名は、テスト全体の変数を上書きします。
 - 検証のテストは、**意図した1件だけ警告が出ること**(`count($warnings) === 1`)を確認する形が定型です。ほかの項目に巻き込まれないよう、重複を確認する `code` などは登録済みの値と衝突させません。
-- **設定で変わる挙動は、テスト側で固定します。** メールの送信(`mail_send`)やアップロード先(`storage_type`)は設定しだいなので、そのままだと**実際にメールを送ったり、本番のストレージを操作したり**します。冒頭で `$GLOBALS['config']` を書き換え、末尾で戻します。
+- **設定で変わる挙動は、テスト側で固定します。** メール・ストレージ・reCAPTCHA はテスト中は自動で固定されます(上の表)が、テストで確かめたい値があれば、冒頭で `$GLOBALS['config']` を書き換え、末尾で戻します。アップロード先(`file_target`)はテスト中は `files/tests/` の中になりますが、ファイルを作ったり消したりする単体テストは、ほかのテストやシナリオと混ざらないよう、さらに専用のディレクトリに向けて最後に消します。
 - **サービスのテストは、モデルのテストの写しにしません。** サービスが足しているのは操作ログの記録と排他制御(編集画面を開いた後に更新されていないかの確認)、失敗したときの `error()` なので、そこを確認します。
 - CLI から実行するときは、冒頭で `$_SERVER['REMOTE_ADDR']` を設定します。操作ログはこの値を `logs.ip`(`NOT NULL`)に入れるので、無いとサービスのテストが途中で止まります。
 

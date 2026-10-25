@@ -13,7 +13,7 @@ if (!isset($_GET['_test'])) {
 service('mail.php');
 
 // 実際にメールを送信しないよう、テスト中は「送信なし・記録あり」に固定する
-$GLOBALS['config']['mail_send'] = false;
+$GLOBALS['config']['mail_send'] = null;
 $GLOBALS['config']['mail_log']  = true;
 
 // 記録先ディレクトリ
@@ -28,6 +28,7 @@ $data_recipients = [
     'wordwrap' => 'test2@example.com',
     'boundary' => 'test3@example.com',
     'disabled' => 'test4@example.com',
+    'invalid'  => 'test5@example.com',
 ];
 
 // 前回の実行で残ったファイルを削除
@@ -107,7 +108,7 @@ foreach ($data_recipients as $to) {
 // 送信も記録もしない設定のテスト
 {
     // 設定
-    $GLOBALS['config']['mail_send'] = false;
+    $GLOBALS['config']['mail_send'] = null;
     $GLOBALS['config']['mail_log']  = false;
 
     // 送信
@@ -120,6 +121,29 @@ foreach ($data_recipients as $to) {
 
     // 設定を戻す
     $GLOBALS['config']['mail_log'] = true;
+}
+
+// 送信方法の設定が正しくないときのテスト
+{
+    // 設定（書き間違いや、以前の true・false）
+    $results = [];
+    foreach (['smpt', true, false] as $value) {
+        $GLOBALS['config']['mail_send'] = $value;
+
+        // 送信（エラーログに出る内容は、テストの出力に混ざらないよう捨てる）
+        $error_log = ini_set('error_log', '/dev/null');
+
+        $results[] = service_mail_send($data_recipients['invalid'], '件名', '本文。');
+
+        ini_set('error_log', $error_log);
+    }
+
+    // 結果（送信の失敗として扱い、記録もしない）
+    test_equals('send mail invalid setting', $results, [false, false, false]);
+    test_equals('send mail invalid setting record', count(test_mail_records($directory, $data_recipients['invalid'])), 0);
+
+    // 設定を戻す
+    $GLOBALS['config']['mail_send'] = null;
 }
 
 // テストで作成したファイルを削除

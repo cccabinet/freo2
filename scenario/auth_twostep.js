@@ -64,7 +64,7 @@ test.scenario = [
         test.assert(userRow(scenarioMember.username).length === 0, 'ユーザー ' + scenarioMember.username + ' が残っています。前回のテストが中断した可能性があります。');
         test.click('a:contains("ユーザー登録")');
     },
-    // 2段階認証を「設定する」にした会員を登録（2段階認証用メールアドレスの必須も確認）
+    // 2段階認証を「利用する」にした会員を登録（2段階認証用メールアドレスの必須も確認）
     function() {
         var form      = $('form.register');
         var authority = optionByText(form, 'authority_id', scenarioMember.authority);
@@ -80,7 +80,7 @@ test.scenario = [
         authority.prop('selected', true);
         form.find('select[name="twostep"]').val('1').trigger('change');
 
-        test.assert(form.find('.for-twostep').is(':visible'), '「設定する」にしても2段階認証用メールアドレスの欄が出ません。');
+        test.assert(form.find('.for-twostep').is(':visible'), '「利用する」にしても2段階認証用メールアドレスの欄が出ません。');
 
         // メールアドレスを空のまま送ると、必須の入力エラーだけが出ること
         $('div.warning').remove();
@@ -145,11 +145,15 @@ test.scenario = [
     // 正しいコードを送り、このブラウザを信頼する
     // （コードの画面は POST の結果なので、メールを見に行くと戻れない。認証待ちの状態はセッションに残っているので、同じ内容のフォームを組み立てて送る）
     function() {
-        var code = sessionStorage.getItem(scenarioKeyCode);
-        var form = $('<form method="post"></form>').attr('action', location.pathname);
+        var code  = sessionStorage.getItem(scenarioKeyCode);
+        var token = $('form input[name="_token"]').first().val();
+        var form  = $('<form method="post"></form>').attr('action', location.pathname);
 
         sessionStorage.removeItem(scenarioKeyCode);
 
+        test.assert(token, 'ログイン画面にワンタイムトークンがありません。');
+
+        form.append($('<input type="hidden" name="_token">').val(token));
         form.append($('<input type="hidden" name="exec" value="twostep">'));
         form.append($('<input type="hidden" name="twostep_code">').val(code));
         form.append($('<input type="hidden" name="twostep_session" value="keep">'));
@@ -174,7 +178,7 @@ test.scenario = [
 
         test.visit('/auth/modify');
     },
-    // 本人が2段階認証を「設定しない」にする
+    // 本人が2段階認証を「利用しない」にする
     function() {
         var form = $('form.register');
 
@@ -183,14 +187,14 @@ test.scenario = [
 
         form.find('select[name="twostep"]').val('0').trigger('change');
 
-        test.assert(form.find('.for-twostep').is(':hidden'), '「設定しない」にしても2段階認証用メールアドレスの欄が消えません。');
+        test.assert(form.find('.for-twostep').is(':hidden'), '「利用しない」にしても2段階認証用メールアドレスの欄が消えません。');
 
         test.click('form.register button[type="submit"]');
     },
     // 確認画面を確認して登録
     function() {
-        test.assertText('main dl', '設定しない', '確認画面に「設定しない」が出ていません。（' + mainText() + '）');
-        test.assertNoText('main dl', scenarioMember.twostepEmail, '「設定しない」なのに確認画面に2段階認証用メールアドレスが出ています。');
+        test.assertText('main dl', '利用しない', '確認画面に「利用しない」が出ていません。（' + mainText() + '）');
+        test.assertNoText('main dl', scenarioMember.twostepEmail, '「利用しない」なのに確認画面に2段階認証用メールアドレスが出ています。');
 
         test.click('main form button[type="submit"]');
     },
@@ -209,7 +213,7 @@ test.scenario = [
 
         test.visit('/auth/modify');
     },
-    // 同じメールアドレスのまま、もう一度「設定する」にする
+    // 同じメールアドレスのまま、もう一度「利用する」にする
     function() {
         var form = $('form.register');
 
@@ -220,7 +224,7 @@ test.scenario = [
     },
     // 確認画面: 有効にするので、次の画面でコードを確認する旨が出ていること
     function() {
-        test.assertText('main dl', '設定する', '確認画面に「設定する」が出ていません。（' + mainText() + '）');
+        test.assertText('main dl', '利用する', '確認画面に「利用する」が出ていません。（' + mainText() + '）');
         test.assertText('main', '次の画面で、2段階認証用メールアドレスに送るコードを入力して', '確認画面に、コードを確認する旨が出ていません。');
 
         test.click('main form button[type="submit"]');

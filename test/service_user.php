@@ -650,6 +650,58 @@ restore_error_handler();
     test_equals('authenticate user (unknown)', $user_unknown, null);
 }
 
+// 失敗回数の数え直しテスト（前の失敗から5分が過ぎていれば、1から数え直す）
+{
+    // 確認（前の失敗から5分以内なら、回数が積み上がる）
+    test_user_set($inserted_id, ['failed' => 3, 'failed_last' => localdate('Y-m-d H:i:s')]);
+    service_user_authenticate($data_user['username'], 'wrongpass1');
+
+    $users = model('select_users', [
+        'select' => 'failed',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+    $failed_recent = intval($users[0]['failed']);
+
+    // 確認（9回失敗した直後にもう1回失敗すると、凍結される）
+    test_user_set($inserted_id, ['failed' => 9, 'failed_last' => localdate('Y-m-d H:i:s')]);
+    service_user_authenticate($data_user['username'], 'wrongpass1');
+
+    $frozen_10 = service_user_frozen($data_user['username']);
+
+    // 確認（凍結が明けた後に失敗しても、すぐには凍結されない）
+    test_user_set($inserted_id, ['failed' => 10, 'failed_last' => localdate('Y-m-d H:i:s', time() - 60 * 6)]);
+    service_user_authenticate($data_user['username'], 'wrongpass1');
+
+    $users = model('select_users', [
+        'select' => 'failed',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+    $failed_unfrozen = intval($users[0]['failed']);
+    $frozen_unfrozen = service_user_frozen($data_user['username']);
+
+    // 確認（前の失敗が古ければ、残っていた回数を引き継がない）
+    test_user_set($inserted_id, ['failed' => 9, 'failed_last' => localdate('Y-m-d H:i:s', time() - 60 * 60 * 24)]);
+    service_user_authenticate($data_user['username'], 'wrongpass1');
+
+    $users = model('select_users', [
+        'select' => 'failed',
+        'where'  => 'id = ' . db_escape($inserted_id),
+    ]);
+    $failed_old = intval($users[0]['failed']);
+    $frozen_old = service_user_frozen($data_user['username']);
+
+    // 結果
+    test_equals('authenticate user failed (recent)', $failed_recent, 4);
+    test_equals('authenticate user frozen (10 times)', $frozen_10, true);
+    test_equals('authenticate user failed (after frozen)', $failed_unfrozen, 1);
+    test_equals('authenticate user frozen (after frozen)', $frozen_unfrozen, false);
+    test_equals('authenticate user failed (old)', $failed_old, 1);
+    test_equals('authenticate user frozen (old)', $frozen_old, false);
+
+    // データ
+    test_user_set($inserted_id, ['failed' => null, 'failed_last' => null]);
+}
+
 // 信頼済みのブラウザの判定テスト
 {
     // データ（コードの入力を省略するブラウザと、しないブラウザ）
@@ -780,7 +832,7 @@ restore_error_handler();
     $mail_config  = [$GLOBALS['config']['mail_send'], $GLOBALS['config']['mail_log']];
     $mail_setting = $GLOBALS['setting'] ?? null;
 
-    $GLOBALS['config']['mail_send'] = false;
+    $GLOBALS['config']['mail_send'] = null;
     $GLOBALS['config']['mail_log']  = true;
     $GLOBALS['setting'] = [
         'mail_twostep_subject' => '2段階認証のテスト',
@@ -1014,7 +1066,7 @@ restore_error_handler();
     $mail_config  = [$GLOBALS['config']['mail_send'], $GLOBALS['config']['mail_log']];
     $mail_setting = $GLOBALS['setting'] ?? null;
 
-    $GLOBALS['config']['mail_send'] = false;
+    $GLOBALS['config']['mail_send'] = null;
     $GLOBALS['config']['mail_log']  = true;
     $GLOBALS['setting'] = [
         'mail_password_subject' => 'パスワード再設定のテスト',

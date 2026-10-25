@@ -1,6 +1,7 @@
 <?php
 
 import('libs/modules/mail.php');
+import('libs/modules/smtp.php');
 import('libs/modules/string.php');
 
 /**
@@ -23,11 +24,22 @@ function service_mail_send($to, $subject, $message, $headers = [], $parameters =
     $result = false;
 
     // メールを送信
-    if ($GLOBALS['config']['mail_send'] === true) {
-        $result = mail_send($to, $subject, $message, $headers, $parameters);
+    if ($GLOBALS['config']['mail_send'] === 'sendmail') {
+        $result = mail_send($to, $subject, $message, $headers, $parameters, $files);
         if (!$result) {
             return $result;
         }
+    } elseif ($GLOBALS['config']['mail_send'] === 'smtp') {
+        $result = smtp_send($GLOBALS['config']['mail_smtp'], $to, $subject, $message, $headers, $files);
+        if (!$result) {
+            error_log('SMTP: ' . smtp_error());
+
+            return $result;
+        }
+    } elseif ($GLOBALS['config']['mail_send'] !== null) {
+        error_log('メールの送信方法（mail_send）の設定が正しくありません。');
+
+        return false;
     }
 
     // メールを記録

@@ -28,8 +28,8 @@ $GLOBALS['config']['option'] = app_config('APP_OPTION', [
         ],
         // 2段階認証
         'twostep' => [
-            1 => '設定する',
-            0 => '設定しない',
+            1 => '利用する',
+            0 => '利用しない',
         ],
     ],
     'entry' => [
@@ -122,18 +122,25 @@ $GLOBALS['config']['log_retention'] = app_config('APP_LOG_RETENTION', 180);
 /* 暗証コード・2段階認証用コードを続けて間違えられる回数（達したらそのコードを無効にする） */
 $GLOBALS['config']['code_failed_limit'] = app_config('APP_CODE_FAILED_LIMIT', 10);
 
-/* ストレージ */
-$GLOBALS['config']['storage_type'] = app_config('APP_STORAGE_TYPE', 'file');
-$GLOBALS['config']['storage_url'] = app_config('APP_STORAGE_URL', $GLOBALS['config']['http_url']);
+/* ストレージ（テスト中は設定に関係なくローカルのファイルを使う。テスト用データベースのIDで、実際のストレージのファイルを消さないため） */
+$GLOBALS['config']['storage_type'] = app_test() ? 'file' : app_config('APP_STORAGE_TYPE', 'file');
+$GLOBALS['config']['storage_url'] = app_test() ? $GLOBALS['config']['http_url'] : app_config('APP_STORAGE_URL', $GLOBALS['config']['http_url']);
 
-/* ファイルアップロード先 */
-$GLOBALS['config']['file_target'] = app_config('APP_FILE_TARGET', [
+/* ファイルアップロード先（テスト中は設定に関係なく tests の中を使う。テスト用データベースのIDで、実際のファイルを消さないため。scenario はシナリオテストのスクリーンショットの保存先） */
+$GLOBALS['config']['file_target'] = app_test() ? [
+    'entry'     => 'files/tests/entries/',
+    'field'     => 'files/tests/fields/',
+    'media'     => 'files/tests/medias/',
+    'thumbnail' => 'files/tests/thumbnails/',
+    'temp'      => 'files/temps/',
+    'scenario'  => 'files/scenarios/',
+] : app_config('APP_FILE_TARGET', [
     'entry'     => 'files/entries/',
     'field'     => 'files/fields/',
     'media'     => 'files/medias/',
-    'temp'      => 'files/temps/',
-    'test'      => 'files/tests/',
     'thumbnail' => 'files/thumbnails/',
+    'temp'      => 'files/temps/',
+    'scenario'  => null,
 ]);
 
 /* ファイルアップロード許可 */
@@ -228,6 +235,9 @@ $GLOBALS['config']['file_dummy'] = app_config('APP_FILE_DUMMY', [
     'image' => 'img/admin/no_file.png',
 ]);
 
+/* 一時ファイルを残す時間（秒。アップロードしたまま登録されなかった一時ファイルは、これより古くなったら削除する） */
+$GLOBALS['config']['temp_retention'] = app_config('APP_TEMP_RETENTION', 60 * 60 * 8);
+
 /* 画像リサイズ時のサイズ（メディアのサムネイルに使用。縦横比を保ってこの範囲に収める） */
 $GLOBALS['config']['resize_width'] = app_config('APP_RESIZE_WIDTH', 400);
 $GLOBALS['config']['resize_height'] = app_config('APP_RESIZE_HEIGHT', 400);
@@ -259,11 +269,21 @@ $GLOBALS['config']['cookie_domain'] = app_config('APP_COOKIE_DOMAIN', null);
 /* CookieをHTTPS接続の場合のみ送信（既定では、HTTPSで開いているときに有効。プロキシの背後でも判定する） */
 $GLOBALS['config']['cookie_secure'] = app_config('APP_COOKIE_SECURE', ssl(true));
 
-/* メールの送信 */
-$GLOBALS['config']['mail_send'] = app_config('APP_MAIL_SEND', true);
+/* メールの送信（null: 送信しない、sendmail: mail() で送信、smtp: mail_smtp の設定でSMTPサーバーから送信）。テスト中は設定に関係なく送信しない */
+$GLOBALS['config']['mail_send'] = app_test() ? null : app_config('APP_MAIL_SEND', 'sendmail');
 
-/* メールの記録 */
-$GLOBALS['config']['mail_log'] = app_config('APP_MAIL_LOG', false);
+/* メールの記録（テスト中は設定に関係なく記録する。シナリオテストが記録からメールの内容を確かめるため） */
+$GLOBALS['config']['mail_log'] = app_test() ? true : app_config('APP_MAIL_LOG', false);
+
+/* SMTPサーバー（mail_send が smtp のときに使う。encryption は tls（STARTTLS）・ssl・none） */
+$GLOBALS['config']['mail_smtp'] = app_config('APP_MAIL_SMTP', [
+    'host'       => '',
+    'port'       => 587,
+    'encryption' => 'tls',
+    'username'   => '',
+    'password'   => '',
+    'timeout'    => 10,
+]);
 
 /* プロキシの考慮 */
 $GLOBALS['config']['proxy'] = app_config('APP_PROXY', 0);
@@ -286,8 +306,8 @@ $GLOBALS['config']['aws_region'] = app_config('APP_AWS_REGION', null);
 $GLOBALS['config']['aws_version'] = app_config('APP_AWS_VERSION', null);
 $GLOBALS['config']['aws_bucket'] = app_config('APP_AWS_BUCKET', null);
 
-/* reCAPTCHA */
-$GLOBALS['config']['recaptcha_enable'] = app_config('APP_RECAPTCHA_ENABLE', false);
+/* reCAPTCHA（テスト中は設定に関係なく使わない。シナリオテストのブラウザでは確認を通れないため） */
+$GLOBALS['config']['recaptcha_enable'] = app_test() ? false : app_config('APP_RECAPTCHA_ENABLE', false);
 $GLOBALS['config']['recaptcha_site_key'] = app_config('APP_RECAPTCHA_SITE_KEY', null);
 $GLOBALS['config']['recaptcha_secret_key'] = app_config('APP_RECAPTCHA_SECRET_KEY', null);
 

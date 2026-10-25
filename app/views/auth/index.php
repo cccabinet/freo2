@@ -3,6 +3,7 @@
     <main class="form-login my-5 text-center">
         <?php if (empty($_view['twostep'])) : ?>
         <form action="<?php t(MAIN_FILE) ?>/auth/<?php empty($_GET['referer']) ? '' : t('?referer=' . rawurlencode($_GET['referer'])) ?>" method="post">
+            <input type="hidden" name="_token" value="<?php t($_view['token']) ?>" class="token">
             <h1 class="mb-4"><?php h($_view['title']) ?></h1>
             <?php e($GLOBALS['setting']['text_auth_index']) ?>
 
@@ -44,6 +45,7 @@
         <?php else : ?>
         <?php /* 送信時に common.js が送信ボタンを無効にする（無効なボタンの name・value は送られない）ので、exec は hidden で送る */ ?>
         <form action="<?php t(MAIN_FILE) ?>/auth/<?php empty($_GET['referer']) ? '' : t('?referer=' . rawurlencode($_GET['referer'])) ?>" method="post">
+            <input type="hidden" name="_token" value="<?php t($_view['token']) ?>" class="token">
             <input type="hidden" name="exec" value="twostep">
             <h1 class="mb-4"><?php h($_view['title']) ?></h1>
             <p>登録されたメールアドレスに、2段階認証用コードを送信しました。</p>
@@ -69,6 +71,7 @@
             </div>
         </form>
         <form action="<?php t(MAIN_FILE) ?>/auth/<?php empty($_GET['referer']) ? '' : t('?referer=' . rawurlencode($_GET['referer'])) ?>" method="post" class="mt-4">
+            <input type="hidden" name="_token" value="<?php t($_view['token']) ?>" class="token">
             <input type="hidden" name="exec" value="twostep_resend">
             <button type="submit" class="btn btn-link">コードを再送信する</button>
         </form>
