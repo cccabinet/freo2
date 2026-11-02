@@ -30,6 +30,21 @@ function app_test()
 }
 
 /**
+ * Return whether the page is rendered for the HTML export.
+ *
+ * @return bool
+ */
+function app_export()
+{
+    // HTML出力の処理がヘッダーで渡したトークンを、作業用のディレクトリがあるかで確かめる（設定の読み込みの後に呼ぶこと）
+    if (!isset($_SERVER['HTTP_X_FREO2_EXPORT']) || !preg_match('/^[0-9a-f]{32}$/', $_SERVER['HTTP_X_FREO2_EXPORT'])) {
+        return false;
+    }
+
+    return is_dir($GLOBALS['config']['file_target']['temp'] . 'export_' . $_SERVER['HTTP_X_FREO2_EXPORT'] . '/');
+}
+
+/**
  * Return the dataset from association.
  *
  * @param string $get_key
@@ -158,6 +173,28 @@ function app_draft_key($type_id = null, $entry_id = null)
     }
 
     return $key;
+}
+
+/**
+ * Return the URL for uploaded file.
+ *
+ * @param string     $target
+ * @param int|string $key
+ * @param string     $name
+ *
+ * @return string
+ */
+function app_file_url($target, $key, $name)
+{
+    // 保存したファイル名は rawurlencode() 済みなので、URLではもう一度エンコードする（そのまま並べると、日本語のファイル名がデコードされて開けない）
+    $name = rawurlencode($name);
+
+    // プログラムを通して表示する（$key はエントリーのID、フィールドなら「<エントリーのID>_<フィールドのID>」）
+    if ($GLOBALS['config']['storage_protect']) {
+        return MAIN_FILE . '/storage/' . $target . '/' . $key . '/' . $name;
+    }
+
+    return $GLOBALS['config']['storage_url'] . '/' . $GLOBALS['config']['file_target'][$target] . $key . '/' . $name;
 }
 
 /**

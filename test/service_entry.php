@@ -206,6 +206,29 @@ model('insert_attribute_sets', [
 
 // パスワード認証エントリーの表示制限テスト
 {
+    // データ（フィールドの値を1つ持たせる）
+    model('insert_fields', [
+        'values' => [
+            'type_id' => 1,
+            'code'    => 'test_password_field',
+            'name'    => 'テストフィールド',
+            'kind'    => 'file',
+            'sort'    => 1,
+        ],
+    ]);
+    $fields = model('select_fields', [
+        'where' => 'fields.code = ' . db_escape('test_password_field'),
+    ]);
+    $password_field_id = intval($fields[0]['id']);
+
+    model('insert_field_sets', [
+        'values' => [
+            'field_id' => $password_field_id,
+            'entry_id' => $entry_ids['pub_password'],
+            'text'     => 'secret.pdf',
+        ],
+    ]);
+
     // 取得（パスワードを入力していない状態）
     unset($_SESSION['entry_passwords']);
 
@@ -213,12 +236,13 @@ model('insert_attribute_sets', [
         'where' => 'entries.code = ' . db_escape('pub_password'),
     ]);
 
-    // 結果（タイトルに文言が付き、本文・画像・サムネイルが伏せられること）
+    // 結果（タイトルに文言が付き、本文・画像・サムネイル・フィールドの値が伏せられること）
     test_equals('select published entry (password)', count($entries), 1);
     test_equals('select published entry (password title)', $entries[0]['title'], '要認証: タイトル');
     test_equals('select published entry (password text)', $entries[0]['text'], '<p>パスワード認証により公開されます。</p>');
     test_equals('select published entry (password pictures)', $entries[0]['pictures'], null);
     test_equals('select published entry (password thumbnail)', $entries[0]['thumbnail'], null);
+    test_equals('select published entry (password field_sets)', $entries[0]['field_sets'], []);
 }
 
 // パスワード認証エントリーの表示（認証後）テスト
@@ -237,6 +261,96 @@ model('insert_attribute_sets', [
     test_equals('select published entry (authorized text)', $entries[0]['text'], '<p>認証後の本文です。</p>');
     test_equals('select published entry (authorized pictures)', $entries[0]['pictures'], ['a.jpg', 'b.jpg']);
     test_equals('select published entry (authorized thumbnail)', $entries[0]['thumbnail'], 'thumb.jpg');
+    test_equals('select published entry (authorized field_sets)', $entries[0]['field_sets'], [$password_field_id => 'secret.pdf']);
+}
+
+// ファイルのURLテスト
+{
+    // データ（設定を退避する）
+    $storage_protect = $GLOBALS['config']['storage_protect'];
+    $storage_url     = $GLOBALS['config']['storage_url'];
+
+    $GLOBALS['config']['storage_url'] = 'http://example.com';
+
+    // 確認（直接表示する）
+    $GLOBALS['config']['storage_protect'] = false;
+
+    $entry_url = app_file_url('entry', 1, 'a.jpg');
+    $field_url = app_file_url('field', '1_2', 'b.pdf');
+    $multi_url = app_file_url('entry', 1, '%E5%86%99.jpg');
+
+    // 結果（保存先のURLになり、保存したファイル名はもう一度エンコードされること）
+    test_equals('file url', $entry_url, 'http://example.com/' . $GLOBALS['config']['file_target']['entry'] . '1/a.jpg');
+    test_equals('file url (field)', $field_url, 'http://example.com/' . $GLOBALS['config']['file_target']['field'] . '1_2/b.pdf');
+    test_equals('file url (encoded)', $multi_url, 'http://example.com/' . $GLOBALS['config']['file_target']['entry'] . '1/%25E5%2586%2599.jpg');
+
+    // 確認（プログラムを通して表示する）
+    $GLOBALS['config']['storage_protect'] = true;
+
+    $entry_url = app_file_url('entry', 1, 'a.jpg');
+    $field_url = app_file_url('field', '1_2', 'b.pdf');
+    $multi_url = app_file_url('entry', 1, '%E5%86%99.jpg');
+
+    // 結果（/storage/ のURLになること）
+    test_equals('file url (protect)', $entry_url, MAIN_FILE . '/storage/entry/1/a.jpg');
+    test_equals('file url (protect field)', $field_url, MAIN_FILE . '/storage/field/1_2/b.pdf');
+    test_equals('file url (protect encoded)', $multi_url, MAIN_FILE . '/storage/entry/1/%25E5%2586%2599.jpg');
+
+    // 設定を戻す
+    $GLOBALS['config']['storage_protect'] = $storage_protect;
+    $GLOBALS['config']['storage_url']     = $storage_url;
+}
+
+// 公開側で表示できるファイルの判定テスト
+{
+    // データ（公開のエントリーにもフィールドの値を持たせる）
+    model('insert_field_sets', [
+        'values' => [
+            'field_id' => $password_field_id,
+            'entry_id' => $entry_ids['pub_all'],
+            'text'     => 'doc.pdf',
+        ],
+    ]);
+
+    unset($_SESSION['entry_passwords']);
+
+    $entry_target = $GLOBALS['config']['file_target']['entry'];
+    $field_target = $GLOBALS['config']['file_target']['field'];
+    $all_key      = $entry_ids['pub_all'];
+    $field_key    = $entry_ids['pub_all'] . '_' . $password_field_id;
+
+    // 結果（公開のエントリーの画像・サムネイル・フィールドのファイルは、保存先が返ること）
+    test_equals('file published', service_entry_file_published('entry', $all_key, 'a.jpg'), $entry_target . $all_key . '/a.jpg');
+    test_equals('file published (thumbnail)', service_entry_file_published('entry', $all_key, 'thumb.jpg'), $entry_target . $all_key . '/thumb.jpg');
+    test_equals('file published (field)', service_entry_file_published('field', $field_key, 'doc.pdf'), $field_target . $field_key . '/doc.pdf');
+
+    // 結果（エントリーに登録されていないファイルは表示できないこと）
+    test_equals('file published (not registered)', service_entry_file_published('entry', $all_key, 'c.jpg'), null);
+    test_equals('file published (not registered field)', service_entry_file_published('field', $field_key, 'other.pdf'), null);
+
+    // 結果（公開側で見えないエントリーのファイルは表示できないこと）
+    test_equals('file published (user)', service_entry_file_published('entry', $entry_ids['pub_user'], 'a.jpg'), null);
+    test_equals('file published (none)', service_entry_file_published('entry', $entry_ids['pub_none'], 'a.jpg'), null);
+    test_equals('file published (nothing)', service_entry_file_published('entry', 999999, 'a.jpg'), null);
+
+    // 結果（パスワード認証の前は表示できず、認証すると表示できること）
+    $password_key = $entry_ids['pub_password'] . '_' . $password_field_id;
+
+    test_equals('file published (password)', service_entry_file_published('entry', $entry_ids['pub_password'], 'a.jpg'), null);
+    test_equals('file published (password field)', service_entry_file_published('field', $password_key, 'secret.pdf'), null);
+
+    $_SESSION['entry_passwords'][$entry_ids['pub_password']] = true;
+
+    test_equals('file published (authorized)', service_entry_file_published('entry', $entry_ids['pub_password'], 'a.jpg'), $entry_target . $entry_ids['pub_password'] . '/a.jpg');
+    test_equals('file published (authorized field)', service_entry_file_published('field', $password_key, 'secret.pdf'), $field_target . $password_key . '/secret.pdf');
+
+    unset($_SESSION['entry_passwords']);
+
+    // 結果（対象・キーの形が正しくなければ表示できないこと）
+    test_equals('file published (target)', service_entry_file_published('media', $all_key, 'a.jpg'), null);
+    test_equals('file published (entry key)', service_entry_file_published('entry', $all_key . 'a', 'a.jpg'), null);
+    test_equals('file published (field key)', service_entry_file_published('field', $all_key, 'doc.pdf'), null);
+    test_equals('file published (entry key for field)', service_entry_file_published('entry', $field_key, 'a.jpg'), null);
 }
 
 // 本文形式の変換テスト
@@ -582,6 +696,81 @@ $inserted_id = intval($entries[0]['id']);
     test_equals('entry url (entry)', service_entry_url(['type_code' => 'entry', 'code' => 'hello']), '/entry/detail/hello');
     test_equals('entry url (page)', service_entry_url(['type_code' => 'page', 'code' => 'about/staff']), '/page/about/staff');
     test_equals('entry url (plugin type)', service_entry_url(['type_code' => 'gallery', 'code' => 'work1']), '/gallery/detail/work1');
+}
+
+// 公開側のエントリー一覧のURLの作成テスト
+{
+    // 結果（1ページ目は page/ を付けない。カテゴリーと年月の両方を渡したらカテゴリーを使う）
+    test_equals('list url', service_entry_list_url(), '/entry/');
+    test_equals('list url (page)', service_entry_list_url(null, null, 2), '/entry/page/2/');
+    test_equals('list url (category)', service_entry_list_url('news'), '/entry/category/news/');
+    test_equals('list url (category page)', service_entry_list_url('news', null, 3), '/entry/category/news/page/3/');
+    test_equals('list url (archive)', service_entry_list_url(null, '2026-10'), '/entry/archive/2026-10/');
+    test_equals('list url (archive page 1)', service_entry_list_url(null, '2026-10', 1), '/entry/archive/2026-10/');
+    test_equals('list url (both)', service_entry_list_url('news', '2026-10'), '/entry/category/news/');
+}
+
+// 公開側のエントリー一覧のパスの解析テスト
+{
+    // 結果（末尾のスラッシュの有無に関係なく解析する）
+    test_equals('list parse (empty)', service_entry_list_parse([]), ['category' => null, 'archive' => null, 'page' => 1]);
+    test_equals('list parse (slash)', service_entry_list_parse(['']), ['category' => null, 'archive' => null, 'page' => 1]);
+    test_equals('list parse (page)', service_entry_list_parse(['page', '2', '']), ['category' => null, 'archive' => null, 'page' => 2]);
+    test_equals('list parse (category)', service_entry_list_parse(['category', 'news', '']), ['category' => 'news', 'archive' => null, 'page' => 1]);
+    test_equals('list parse (category page)', service_entry_list_parse(['category', 'news', 'page', '3']), ['category' => 'news', 'archive' => null, 'page' => 3]);
+    test_equals('list parse (archive)', service_entry_list_parse(['archive', '2026-10', '']), ['category' => null, 'archive' => '2026-10', 'page' => 1]);
+
+    // 結果（形が正しくなければ null）
+    test_equals('list parse (unknown)', service_entry_list_parse(['foo']), null);
+    test_equals('list parse (category only)', service_entry_list_parse(['category', '']), null);
+    test_equals('list parse (archive format)', service_entry_list_parse(['archive', '2026-1']), null);
+    test_equals('list parse (page zero)', service_entry_list_parse(['page', '0']), null);
+    test_equals('list parse (page string)', service_entry_list_parse(['page', 'abc']), null);
+    test_equals('list parse (category and archive)', service_entry_list_parse(['category', 'news', 'archive', '2026-10']), null);
+    test_equals('list parse (page first)', service_entry_list_parse(['page', '2', 'category', 'news']), null);
+    test_equals('list parse (extra)', service_entry_list_parse(['category', 'news', 'page', '2', 'foo']), null);
+}
+
+// 公開側のエントリー一覧の絞り込み条件の変換テスト
+{
+    // データ（エントリーとページのカテゴリー）
+    foreach ([1 => 'test_list_entry', 2 => 'test_list_page'] as $type_id => $code) {
+        model('insert_categories', [
+            'values' => [
+                'type_id' => $type_id,
+                'code'    => $code,
+                'name'    => 'テスト',
+                'sort'    => 1,
+            ],
+        ]);
+    }
+    $list_categories = array_column(model('select_categories', [
+        'where' => 'code LIKE ' . db_escape('test_list_%'),
+    ]), 'id', 'code');
+
+    // 結果（カテゴリー1つ・年月・ページはパスで表せる。カテゴリーはコードにする）
+    test_equals('list filter (empty)', service_entry_list_filter([]), ['category' => null, 'archive' => null, 'page' => 1]);
+    test_equals('list filter (page)', service_entry_list_filter(['page' => '2']), ['category' => null, 'archive' => null, 'page' => 2]);
+    test_equals('list filter (page int)', service_entry_list_filter(['page' => 2]), ['category' => null, 'archive' => null, 'page' => 2]);
+    test_equals('list filter (category)', service_entry_list_filter(['category_sets' => [$list_categories['test_list_entry']], 'page' => '3']), ['category' => 'test_list_entry', 'archive' => null, 'page' => 3]);
+    test_equals('list filter (archive)', service_entry_list_filter(['archive' => '2026-10']), ['category' => null, 'archive' => '2026-10', 'page' => 1]);
+    test_equals('list filter (empty values)', service_entry_list_filter(['category_sets' => [], 'archive' => '', 'keyword' => '']), ['category' => null, 'archive' => null, 'page' => 1]);
+    test_equals('list filter (other key)', service_entry_list_filter(['test' => 'start', 'archive' => '2026-10']), ['category' => null, 'archive' => '2026-10', 'page' => 1]);
+
+    // 結果（パスで表せない絞り込みは null）
+    test_equals('list filter (categories)', service_entry_list_filter(['category_sets' => [$list_categories['test_list_entry'], $list_categories['test_list_entry']]]), null);
+    test_equals('list filter (category and archive)', service_entry_list_filter(['category_sets' => [$list_categories['test_list_entry']], 'archive' => '2026-10']), null);
+    test_equals('list filter (category of other type)', service_entry_list_filter(['category_sets' => [$list_categories['test_list_page']]]), null);
+    test_equals('list filter (category not found)', service_entry_list_filter(['category_sets' => [0]]), null);
+    test_equals('list filter (category string)', service_entry_list_filter(['category_sets' => 'abc']), null);
+    test_equals('list filter (category array)', service_entry_list_filter(['category_sets' => [['1']]]), null);
+    test_equals('list filter (archive format)', service_entry_list_filter(['archive' => '2026-1']), null);
+    test_equals('list filter (archive array)', service_entry_list_filter(['archive' => ['2026-10']]), null);
+    test_equals('list filter (page zero)', service_entry_list_filter(['page' => '0']), null);
+    test_equals('list filter (page string)', service_entry_list_filter(['page' => 'abc']), null);
+    test_equals('list filter (keyword)', service_entry_list_filter(['keyword' => 'a']), null);
+    test_equals('list filter (title)', service_entry_list_filter(['title' => 'a', 'page' => '2']), null);
+    test_equals('list filter (field_sets)', service_entry_list_filter(['field_sets' => ['1']]), null);
 }
 
 // パスワード認証テスト

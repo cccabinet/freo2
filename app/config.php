@@ -126,6 +126,12 @@ $GLOBALS['config']['code_failed_limit'] = app_config('APP_CODE_FAILED_LIMIT', 10
 $GLOBALS['config']['storage_type'] = app_test() ? 'file' : app_config('APP_STORAGE_TYPE', 'file');
 $GLOBALS['config']['storage_url'] = app_test() ? $GLOBALS['config']['http_url'] : app_config('APP_STORAGE_URL', $GLOBALS['config']['http_url']);
 
+/* エントリーの画像・フィールドのファイルをプログラムを通して表示するか（有効にすると、エントリーの公開範囲で表示できるかを判定する。直接のURLは、Webサーバーやバケットの設定で別に拒否する） */
+$GLOBALS['config']['storage_protect'] = app_config('APP_STORAGE_PROTECT', false);
+
+/* プログラムを通して表示するとき、S3 の署名付きURLを使える時間（秒） */
+$GLOBALS['config']['storage_signed_expire'] = app_config('APP_STORAGE_SIGNED_EXPIRE', 60 * 5);
+
 /* ファイルアップロード先（テスト中は設定に関係なく tests の中を使う。テスト用データベースのIDで、実際のファイルを消さないため。scenario はシナリオテストのスクリーンショットの保存先） */
 $GLOBALS['config']['file_target'] = app_test() ? [
     'entry'     => 'files/tests/entries/',
@@ -238,6 +244,15 @@ $GLOBALS['config']['file_dummy'] = app_config('APP_FILE_DUMMY', [
 /* 一時ファイルを残す時間（秒。アップロードしたまま登録されなかった一時ファイルは、これより古くなったら削除する） */
 $GLOBALS['config']['temp_retention'] = app_config('APP_TEMP_RETENTION', 60 * 60 * 8);
 
+/* HTML出力でページを取得するURL（サーバーの中から公開URLを開けない環境で変える） */
+$GLOBALS['config']['export_fetch_url'] = app_config('APP_EXPORT_FETCH_URL', $GLOBALS['config']['http_url']);
+
+/* HTML出力で1回に取得するページ数 */
+$GLOBALS['config']['export_step'] = app_config('APP_EXPORT_STEP', 5);
+
+/* HTML出力で複製する静的なファイル（公開ディレクトリからの相対パス。アップロードしたファイルは、ストレージがファイルのときに別に複製する） */
+$GLOBALS['config']['export_static'] = app_config('APP_EXPORT_STATIC', ['css/', 'js/', 'img/', 'themes/', 'plugins/']);
+
 /* 画像リサイズ時のサイズ（メディアのサムネイルに使用。縦横比を保ってこの範囲に収める） */
 $GLOBALS['config']['resize_width'] = app_config('APP_RESIZE_WIDTH', 400);
 $GLOBALS['config']['resize_height'] = app_config('APP_RESIZE_HEIGHT', 400);
@@ -274,6 +289,9 @@ $GLOBALS['config']['mail_send'] = app_test() ? null : app_config('APP_MAIL_SEND'
 
 /* メールの記録（テスト中は設定に関係なく記録する。シナリオテストが記録からメールの内容を確かめるため） */
 $GLOBALS['config']['mail_log'] = app_test() ? true : app_config('APP_MAIL_LOG', false);
+
+/* メールのエンベロープFrom（Return-Path になるメールアドレス。sendmail なら -f で渡し、smtp なら MAIL FROM に使う。null なら指定しない） */
+$GLOBALS['config']['mail_envelope'] = app_config('APP_MAIL_ENVELOPE', null);
 
 /* SMTPサーバー（mail_send が smtp のときに使う。encryption は tls（STARTTLS）・ssl・none） */
 $GLOBALS['config']['mail_smtp'] = app_config('APP_MAIL_SMTP', [
