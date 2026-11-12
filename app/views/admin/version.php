@@ -87,7 +87,7 @@
                             <dd class="col-sm-10"><?php if ($_view['aws_info']['protect']) : ?>署名付きURLで表示する<?php else : ?>直接のURLで表示する<?php endif ?></dd>
                             <dt class="col-sm-2">直接アクセス</dt>
                             <dd class="col-sm-10">
-                                <span class="badge bg-<?php t($_view['aws_info']['direct_level']) ?><?php if ($_view['aws_info']['direct_level'] === 'warning' || $_view['aws_info']['direct_level'] === 'info') : ?> text-dark<?php endif ?>"><?php h($_view['aws_info']['direct_label']) ?></span>
+                                <span class="badge text-bg-<?php t($_view['aws_info']['direct_level']) ?><?php if ($_view['aws_info']['direct_level'] === 'warning' || $_view['aws_info']['direct_level'] === 'info') : ?> text-dark<?php endif ?>"><?php h($_view['aws_info']['direct_label']) ?></span>
                                 <?php h($_view['aws_info']['direct_text']) ?>
                                 <?php if ($_view['aws_info']['direct_key'] !== null) : ?>
                                 <div class="small text-secondary mt-1">確認したファイル: <code><?php h($_view['aws_info']['direct_key']) ?></code><?php if ($_view['aws_info']['direct_status'] !== null) : ?>（HTTP <?php h($_view['aws_info']['direct_status']) ?>）<?php endif ?></div>

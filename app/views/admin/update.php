@@ -5,12 +5,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noindex">
         <title><?php h($_view['title']) ?></title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.9/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-yEPZ7jP9S0QKiUQ0m3jjsO4ProIW7wvR9gXkI7JOGa2XVsw53Yke2bsdkBbjmmiX" crossorigin="anonymous">
     </head>
     <body>
         <main class="container py-4" style="max-width: 720px;">
             <h1 class="h3 mb-2"><?php h($_view['title']) ?></h1>
-            <p class="text-muted mb-4">新しいバージョンのファイルをアップロードした後に、データベースの更新と不要なファイルの削除を行います。</p>
+            <p class="text-body-secondary mb-4">新しいバージョンのファイルをアップロードした後に、データベースの更新と不要なファイルの削除を行います。</p>
 
             <table class="table table-sm mb-4">
                 <tr>
@@ -34,9 +34,9 @@
                 <li>
                     <code><?php h($update_result['target']) ?></code>
                     <?php if ($update_result['error'] === null) : ?>
-                    <span class="badge bg-success">成功</span>
+                    <span class="badge text-bg-success">成功</span>
                     <?php else : ?>
-                    <span class="badge bg-danger">失敗</span>
+                    <span class="badge text-bg-danger">失敗</span>
                     <?php $update_migration = $update_result['migrations'][count($update_result['migrations']) - 1] ?>
                     <pre class="bg-light border p-2 mt-2 mb-1" style="white-space: pre-wrap;"><?php h($update_migration['sql']) ?></pre>
                     <pre class="text-danger mb-0" style="white-space: pre-wrap;"><?php h($update_result['error']) ?></pre>
