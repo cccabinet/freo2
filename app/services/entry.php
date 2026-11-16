@@ -307,7 +307,7 @@ function service_entry_file_published($target, $key, $name)
 /**
  * 公開側でファイルを出力
  *
- * /storage/<対象>/<キー>/<ファイル名> のコントローラーから呼ぶ。表示できなければ 404 で終了する
+ * /storage/<対象>/<キー>/<ファイル名> のコントローラーから呼ぶ。表示できなければ404で終了する
  *
  * @param string $target
  *
@@ -329,7 +329,7 @@ function service_entry_file_output($target)
         }
     }
 
-    // 表示できないときは、ファイルがあるかどうかも分からないよう、同じ 404 にする（画像の取得が多いので、画面は組み立てない）
+    // 表示できないときは、ファイルがあるかどうかも分からないよう、同じ404にする（画像の取得が多いので、画面は組み立てない）
     header('HTTP/1.0 404 Not Found');
     header('Content-Type: text/plain; charset=' . MAIN_CHARSET);
 
@@ -453,6 +453,123 @@ function service_entry_delete($queries, $options = [])
     }
 
     return $resource;
+}
+
+/**
+ * 型のIDを取得
+ *
+ * @param string $type 型のコード
+ *
+ * @return int|null 型が無ければ null
+ */
+function service_entry_type_id($type)
+{
+    $types = model('select_types', [
+        'select' => 'id',
+        'where'  => [
+            'code = :code',
+            [
+                'code' => $type,
+            ],
+        ],
+    ]);
+
+    return empty($types) ? null : intval($types[0]['id']);
+}
+
+/**
+ * 一括削除の対象を選ぶ（一覧のチェックボックスから、Ajaxで送られた値を型ごとにセッションへ控える）
+ *
+ * @param string $type 型のコード
+ * @param array  $post id と checked（1件）、または list（id => checked。一括選択）
+ *
+ * @return void
+ */
+function service_entry_bulk_select($type, $post)
+{
+    if (!isset($_SESSION['bulk']['entries'][$type])) {
+        $_SESSION['bulk']['entries'][$type] = [];
+    }
+
+    if (empty($post['id'])) {
+        $list = (isset($post['list']) && is_array($post['list'])) ? $post['list'] : [];
+    } else {
+        $list = [$post['id'] => isset($post['checked']) ? $post['checked'] : '0'];
+    }
+
+    foreach ($list as $id => $checked) {
+        $id = intval($id);
+        if ($id <= 0) {
+            continue;
+        }
+        if ($checked === '1') {
+            $_SESSION['bulk']['entries'][$type][$id] = true;
+        } else {
+            unset($_SESSION['bulk']['entries'][$type][$id]);
+        }
+    }
+}
+
+/**
+ * 一括削除の対象を取得（選んだもののうち、その型のものだけ）
+ *
+ * @param string $type 型のコード
+ *
+ * @return array
+ */
+function service_entry_bulk_entries($type)
+{
+    if (empty($_SESSION['bulk']['entries'][$type])) {
+        return [];
+    }
+
+    return model('select_entries', [
+        'where'    => [
+            'entries.id IN(' . implode(',', array_map('intval', array_keys($_SESSION['bulk']['entries'][$type]))) . ') AND types.code = :type',
+            [
+                'type' => $type,
+            ],
+        ],
+        'order_by' => 'entries.datetime DESC, entries.id',
+    ], [
+        'associate' => true,
+    ]);
+}
+
+/**
+ * 一括削除の対象を消す
+ *
+ * @param string $type 型のコード
+ *
+ * @return void
+ */
+function service_entry_bulk_clear($type)
+{
+    $_SESSION['bulk']['entries'][$type] = [];
+}
+
+/**
+ * 型を指定してエントリーを削除（ほかの型のIDが渡されても削除しない）
+ *
+ * @param string    $type 型のコード
+ * @param int|array $ids     ID、またはIDの配列
+ * @param array     $options service_entry_delete() のオプション
+ *
+ * @return resource|null 型が無いか、IDが無ければ null
+ */
+function service_entry_delete_typed($type, $ids, $options = [])
+{
+    $type_id = service_entry_type_id($type);
+    $ids     = array_values(array_filter(array_map('intval', (array)$ids), function ($id) {
+        return $id > 0;
+    }));
+    if ($type_id === null || empty($ids)) {
+        return null;
+    }
+
+    return service_entry_delete([
+        'where' => 'id IN(' . implode(',', $ids) . ') AND type_id = ' . $type_id,
+    ], $options);
 }
 
 /**

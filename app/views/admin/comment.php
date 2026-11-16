@@ -92,18 +92,16 @@
                             <?php foreach ($_view['comments'] as $comment) : ?>
                             <tr>
                                 <?php if ($GLOBALS['authority']['power'] >= 2) : ?>
-                                <td><input type="checkbox" name="bulks[]" value="<?php h($comment['id']) ?>"<?php isset($_SESSION['bulk']['comment'][$comment['id']]) ? e('checked="checked"') : '' ?> class="bulk"></td>
+                                <td><input type="checkbox" name="bulks[]" value="<?php h($comment['id']) ?>"<?php isset($_SESSION['bulk']['comments'][$comment['id']]) ? e('checked="checked"') : '' ?> class="bulk"></td>
                                 <?php endif ?>
                                 <td class="d-none d-md-table-cell"><?php h(localdate('Ymd', $comment['created']) == localdate('Ymd') ? localdate('H:i:s', $comment['created']) : localdate('Y/m/d', $comment['created'])) ?></td>
                                 <td class="d-none d-md-table-cell"><?php if ($comment['user_id'] && !preg_match('/^DELETED /', $comment['user_username'])) :?><code class="text-dark"><?php h($comment['user_id'] ? truncate($comment['user_username'], 50) : '') ?></code><?php endif ?></td>
                                 <td><?php h(truncate($comment['name'], 50)) ?></td>
                                 <td>
-                                    <?php if ($comment['type_code'] === 'entry') : ?>
-                                    <a href="<?php t(MAIN_FILE) ?>/<?php t($comment['type_code']) ?>/detail/<?php t($comment['entry_code']) ?>">エントリー</a>
-                                    <?php elseif ($comment['type_code'] === 'page') : ?>
-                                    <a href="<?php t(MAIN_FILE) ?>/<?php t($comment['type_code']) ?>/<?php t($comment['entry_code']) ?>">ページ</a>
-                                    <?php elseif ($comment['contact_id']) : ?>
-                                    <a href="<?php t(MAIN_FILE) ?>/admin/contact_view?id=<?php t($comment['contact_id']) ?>">お問い合わせ</a>
+                                    <?php if ($comment['target'] !== null && $comment['target']['url'] !== null) : ?>
+                                    <a href="<?php t(MAIN_FILE) ?><?php t($comment['target']['url']) ?>"><?php h($comment['target']['name']) ?></a>
+                                    <?php elseif ($comment['target'] !== null) : ?>
+                                    <?php h($comment['target']['name']) ?>
                                     <?php endif ?>
                                 </td>
                                 <?php if ($GLOBALS['setting']['comment_use_approve']) : ?>
